@@ -1,0 +1,41 @@
+# data and logs
+videos
+dataset_npz
+dataset_npz*
+*dataset_npz
+logs
+vislogs
+*logs
+*log*
+
+# vscode
+.vscode
+.vscode*
+
+# weight files
+*.npy
+
+
+# temp files
+.DS_Store
+__pycache__
+
+# test results
+VisualTrajs
+online_vis
+
+# others
+annotations.txt
+reference.jpg
+
+data/sdd
+test_log.txt
+
+null
+
+satoshi/IEEEtran
+
+*temp
+temp*
+
+playground.ipynb
