@@ -17,6 +17,7 @@ vislogs
 
 
 # temp files
+.*
 .DS_Store
 __pycache__
 

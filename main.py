@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-21 14:57:46
+@LastEditTime: 2021-06-22 20:09:24
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -45,8 +45,14 @@ def train_or_test(args:Args):
     elif model == 'sbt':
         trainingStructure = M.satoshi.sbt
     
-    elif model == 'st':
-        trainingStructure = M.satoshi.SatoshiTransformer
+    elif model == 'ia':
+        trainingStructure = M.iris.IrisAlpha
+
+    elif model == 'ib':
+        trainingStructure = M.iris.IrisBeta
+
+    elif model == 'iris':
+        trainingStructure = M.iris.Iris
 
     trainingStructure(args).run_train_or_test()
     

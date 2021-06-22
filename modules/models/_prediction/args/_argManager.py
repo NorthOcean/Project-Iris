@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2020-11-20 09:11:33
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-12 10:24:09
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2020-11-20 09:11:33
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-06-22 09:43:09
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 from ... import base
 
@@ -38,7 +40,7 @@ class TrainArgsManager(BasePredictArgs):
         self.train_percent = ['1.0_', 'Percent of training data used in ' +
                               'training datasets. Split with `_` if you want to specify ' +
                               'each dataset, for example `0.5_0.9_0.1`.', 'tp']
-        self.step = [4, 'Frame step for obtaining training data.']
+        self.step = [1, 'Frame step for obtaining training data.']
 
         self.add_noise = [0, 'Controls if add noise to training data']
         self.rotate = [0, 'Rotate dataset to obtain more available training data.' +

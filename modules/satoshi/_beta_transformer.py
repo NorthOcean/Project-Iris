@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-05-07 09:12:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-05-10 17:03:27
+@LastEditTime: 2021-06-21 15:19:40
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -71,40 +71,15 @@ class SatoshiBetaTransformerModel(M.prediction.Model):
         # concat, shape == (batch, obs+1, 128)
         concat_feature = self.concat([positions_embedding, context_feature])
 
-        if True:
-            t_inputs = concat_feature
-            t_outputs = linear_prediction(positions[:, -2:, :],
-                                          self.args.pred_frames,
-                                          return_zeros=False)
-            # return t_outputs
-            me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
-            predictions, _ = self.transformer(t_inputs, t_outputs, True,
-                                              me, mc, md)
+        t_inputs = concat_feature
+        t_outputs = linear_prediction(positions[:, -2:, :],
+                                      self.args.pred_frames,
+                                      return_zeros=False)
+        me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
+        predictions, _ = self.transformer(t_inputs, t_outputs, True,
+                                          me, mc, md)
 
-            return predictions
-
-        else:
-            t_inputs = concat_feature
-            outputs = positions_
-
-            for reapeat in range(self.args.pred_frames-1):
-                zero_blocks = tf.pad(
-                    destinations, [[0, 0], [self.args.pred_frames-1-reapeat, 0], [0, 0]])
-                t_outputs = tf.concat([outputs, zero_blocks], axis=1)
-
-                me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
-                predictions, _ = self.transformer(t_inputs, t_outputs, False,
-                                                  me, mc, md)
-
-                # 从 seq_len 维度选择最后一个词
-                # (batch_size, 1, 2)
-                predictions = predictions[:, self.args.obs_frames +
-                                          reapeat, :][:, tf.newaxis, :]
-                outputs = tf.concat([outputs, predictions], axis=1)
-
-            outputs = tf.concat([outputs, destinations], axis=1)
-
-            return outputs[:, self.args.obs_frames:, :]
+        return predictions
 
     # @tf.function
     def forward(self, model_inputs: Tuple[tf.Tensor],

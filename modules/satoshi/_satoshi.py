@@ -19,28 +19,33 @@ from ._beta import SatoshiBeta, SatoshiBetaModel
 
 
 class _SatoshiAlphaModelPlus(SatoshiAlphaModel):
-    def __init__(self, Args, training_structure=None, gcn_layer_count=2, intention_count=10, *args, **kwargs):
-        super().__init__(Args,
-                         training_structure=training_structure,
+    def __init__(self, Args, 
+                 training_structure=None, 
+                 gcn_layer_count=2, 
+                 intention_count=10, 
+                 *args, **kwargs):
+        
+        super().__init__(Args, training_structure=training_structure,
                          gcn_layer_count=gcn_layer_count,
                          intention_count=intention_count,
                          *args, **kwargs)
 
-    def post_process(self,
-                     outputs: Tuple[tf.Tensor],
+    def post_process(self, outputs: Tuple[tf.Tensor],
                      training=False,
                      **kwargs) -> Tuple[tf.Tensor]:
 
+        # shape = [(batch, K, 2)]
         outputs = super().post_process(outputs, training=training, **kwargs)
 
         if training:
             return outputs
         else:
-            model_inputs = kwargs['model_inputs']
+            model_inputs = kwargs['model_inputs']   # shape = (batch, obs, 2)
             K = outputs[0].shape[1]
 
-            new_inputs = tuple([tf.reshape(tf.repeat(tf.expand_dims(inputs, axis=1), K, axis=1), [
-                inputs.shape[0] * K, inputs.shape[1], inputs.shape[2]]) for inputs in model_inputs]) + (tf.reshape(outputs[0], [-1, 2]),)
+            new_inputs = tuple(
+                [tf.reshape(tf.repeat(tf.expand_dims(inputs, axis=1), K, axis=1), [inputs.shape[0] * K, inputs.shape[1], inputs.shape[2]]) 
+                for inputs in model_inputs]) + (tf.reshape(outputs[0], [-1, 2]),)
             stack_results = self.training_structure.beta(
                 new_inputs, return_numpy=False)[0]
             final_predictions = tf.reshape(

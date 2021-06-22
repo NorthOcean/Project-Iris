@@ -105,7 +105,11 @@ class Visualization():
             'Please rewrite this method in your subclass')
 
     @staticmethod
-    def add_png_to_source(source: np.ndarray, png: np.ndarray, position, alpha=1.0):
+    def add_png_to_source(source: np.ndarray, 
+                          png: np.ndarray, 
+                          position, 
+                          alpha=1.0):
+
         yc, xc = position
         xp, yp, _ = png.shape
         xs, ys, _ = source.shape
@@ -124,3 +128,17 @@ class Visualization():
                     np.minimum(source[x0:x0+xp, y0:y0+yp, 3:4] +
                                255 * alpha * png_mask, 255)
         return source
+
+    @staticmethod
+    def add_png_value(source, png, position, alpha=1.0):
+        yc, xc = position
+        xp, yp, _ = png.shape
+        xs, ys, _ = source.shape
+        x0, y0 = [xc-xp//2, yc-yp//2]
+
+        if x0 >= 0 and y0 >= 0 and x0 + xp <= xs and y0 + yp <= ys:
+            source[x0:x0+xp, y0:y0+yp, :3] = \
+                source[x0:x0+xp, y0:y0+yp, :3] + png[:, :, :3] * alpha * png[:, :, 3:]/255
+        
+        return source
+

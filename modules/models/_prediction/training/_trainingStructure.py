@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-05-08 10:35:34
+@LastEditTime: 2021-06-22 20:47:40
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -428,7 +428,7 @@ class Structure(base.Structure):
 
                 # draw as one image
                 tv.draw(agents=[agent],
-                        frame_name=float(agent.frame_list[-1]),
+                        frame_name=float(agent.frame_list[self.args.obs_frames]),
                         save_path=save_format.format(
                             testset_name, index, 'jpg'),
                         show_img=False,

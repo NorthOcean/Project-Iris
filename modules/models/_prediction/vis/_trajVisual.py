@@ -192,13 +192,13 @@ class TrajVisualization(base.Visualization):
             f = draw_traj(f, gt, self.gt_file, color=(
                 255, 255, 255), width=3, alpha=alpha)
 
-        if not type(pred) == type(None):
+        if pred is not None:
             if draw_distribution:
-                dis = np.zeros([f.shape[0], f.shape[1], 4])
+                dis = np.zeros([f.shape[0], f.shape[1], 3])
                 for p in pred:
-                    dis = base.Visualization.add_png_to_source(
+                    dis = base.Visualization.add_png_value(
                         dis, self.dis_file, p, alpha=0.5)
-                dis = dis[:, :, -1]  # alpha channel of distribution
+                dis = dis[:, :, -1]
 
                 if not dis.max() == 0:
                     dis = dis ** 0.2
