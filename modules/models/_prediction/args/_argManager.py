@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-22 09:43:09
+@LastEditTime: 2021-06-24 14:35:31
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -65,6 +65,7 @@ class TrainArgsManager(BasePredictArgs):
         # training settings
         self.epochs = [500, 'Training epochs.']
         self.batch_size = [5000, 'Training batch_size.']
+        self.max_batch_size_C = [20000, 'Maximun batch_size.']
         self.dropout = [0.5, 'Dropout rate.']
         self.lr = [1e-3, 'Learning rate.']
 

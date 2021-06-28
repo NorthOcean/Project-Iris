@@ -152,7 +152,7 @@ class Agent(base.Agent):
         else:
             log_format = 'Dataset `{}/{}` do not exist, start making...'
 
-        self.log(log_format.format(self.dataset_name,
+        self.logger.info(log_format.format(self.dataset_name,
                                    self.local_name))
 
         return check

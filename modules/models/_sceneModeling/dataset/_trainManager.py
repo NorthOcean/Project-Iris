@@ -201,7 +201,7 @@ class DatasetsManager(prediction.DatasetsManager):
             if mode == 'train':
                 # TODO dataset process
                 if balance := True:
-                    self.log('Start balancing train images...\n')
+                    self.logger.info('Start balancing train images...\n')
                     for agent in agents:
                         agent.balance()
 

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-21 15:05:18
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-22 20:16:48
+@LastEditTime: 2021-06-23 16:29:50
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -17,8 +17,6 @@ import tensorflow as tf
 from tensorflow import keras as keras
 
 from ..satoshi._args import SatoshiArgs
-from ..satoshi._beta_transformer import SatoshiBetaTransformer as SBT
-from ..satoshi._beta_transformer import SatoshiBetaTransformerModel as SBTM
 from ..satoshi._beta_transformer import linear_prediction
 
 
@@ -91,11 +89,18 @@ class Encoder(keras.Model):
 
 
 class Generator(keras.Model):
+    """
+    Generator in IrisBeta model.
+
+    :param inputs: a list of tensors, which contains
+        `inputs[0]`: features from encoder, shape = (batch, pred, 128)
+        `inputs[1]`: noise vector z, shape = (batch, pred, 128)
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Generator layers
-        self.g1 = keras.layers.Dense(128)
+        self.g1 = keras.layers.Dense(128, activation=tf.nn.relu)
         self.g2 = keras.layers.Dense(2)
 
     def call(self, inputs: List[tf.Tensor], training=None, mask=None):
@@ -104,28 +109,35 @@ class Generator(keras.Model):
 
         new_feature = features + z
         g1 = self.g1(new_feature)
-        g2 = self.g2(new_feature + g1)
+        g2 = self.g2(g1 + new_feature)
         return g2
 
 
 class Discriminator(keras.Model):
+    """
+    Discriminator in IrisBeta model.
+    
+    :param inputs: a list of tensors, which contains
+        `inputs[0]`: predictions, shape = (batch, pred, 2)
+        `inputs[1]`: observations, shape = (batch, obs, 2)
+    """
     def __init__(self, Args: SatoshiArgs, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.args = Args
 
         # Discriminator layers
         self.d1 = keras.layers.Dense(128, activation=tf.nn.relu)
-        self.d2 = keras.layers.Conv2D(2, (Args.pred_frames, 1), activation=tf.nn.relu)
+        self.d2 = keras.layers.Conv2D(4, (Args.pred_frames + Args.obs_frames, 1), activation=tf.nn.relu)
         self.d_flatten = keras.layers.Flatten()
         self.d3 = keras.layers.Dense(2, activation=tf.nn.sigmoid)
 
     def call(self, inputs: List[tf.Tensor], training=None, mask=None):
         pred = inputs[0]
-        features = inputs[1]
+        obs = inputs[1]
         
-        d1 = self.d1(pred)   # (batch, pred, 128)
-        d1 = tf.concat([d1, features], axis=-1)
-        d2 = self.d2(d1[:, :, :, tf.newaxis])[:, 0, :, :]   # (batch, 256, 2)
+        traj = tf.concat([obs, pred], axis=1)   # (batch, pred+obs, 2)
+        d1 = self.d1(traj)   # (batch, pred+obs, 128)
+        d2 = self.d2(d1[:, :, :, tf.newaxis])[:, 0, :, :]   # (batch, 128, 4)
         df = self.d_flatten(d2) # (batch, 512)
         logits = self.d3(df)
         return logits
@@ -145,7 +157,8 @@ class IrisBetaModel(M.prediction.Model):
     def call(self, inputs: List[tf.Tensor],
              outputs: tf.Tensor = None,
              training=None, mask=None):
-
+        
+        obs = inputs[0]
         features = self.E(inputs)
 
         if training:
@@ -154,10 +167,10 @@ class IrisBetaModel(M.prediction.Model):
             real_logits = []
 
             for repeat in range(self.args.K_train):
-                z = tf.random.normal([1, self.args.pred_frames, 128])
+                z = tf.random.normal(features.shape)
                 fake_outputs.append(fo := self.G([features, z]))
-                fake_logits.append(self.D([fo, features]))
-                real_logits.append(self.D([outputs, features]))
+                fake_logits.append(self.D([fo, obs]))
+                real_logits.append(self.D([outputs, obs]))
             
             fake_outputs = tf.transpose(tf.stack(fake_outputs), [1, 0, 2, 3])
             fake_logits = tf.transpose(tf.stack(fake_logits), [1, 0, 2])
@@ -168,7 +181,7 @@ class IrisBetaModel(M.prediction.Model):
         else:
             all_outputs = []
             for repeat in range(self.args.K):
-                z = tf.random.normal([1, self.args.pred_frames, 128])
+                z = tf.random.normal(features.shape, mean=0, stddev=self.args.sigma)
                 outputs = self.G([features, z])
                 all_outputs.append(outputs)
 
@@ -187,7 +200,10 @@ class IrisBetaModel(M.prediction.Model):
         :return output: model's output. type=`List[tf.Tensor]`
         """
         model_inputs_processed = self.pre_process(model_inputs, training)
-        destination_processed = self.pre_process([model_inputs[-1][:, tf.newaxis, :]],
+
+        d = model_inputs[-1]
+        des = d if len(d.shape) == 3 else d[:, tf.newaxis, :]
+        destination_processed = self.pre_process([des],
                                                  training,
                                                  use_new_para_dict=False)
 
@@ -221,7 +237,7 @@ class IrisBeta(M.prediction.Structure):
         self.set_loss_weights(0.8, 0.2, 1.0)
 
         self.set_metrics('ade', 'fde')
-        self.set_metrics_weights(1.0, 0.0)
+        self.set_metrics_weights(0.3, 0.7)
 
     def create_model(self, model_type=IrisBetaModel):
         model = model_type(self.args, training_structure=self)

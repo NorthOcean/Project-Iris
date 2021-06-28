@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-22 16:45:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-22 20:07:51
+@LastEditTime: 2021-06-24 09:51:49
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -15,9 +15,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras as keras
 
-from ._alpha import IrisAlpha, IrisAlphaModel
 from ..satoshi._args import SatoshiArgs
+from ._alpha import IrisAlpha, IrisAlphaModel
 from ._beta import IrisBeta, IrisBetaModel
+from ._beta_cvae import IrisBetaCVAE, IrisBetaCVAEModel
 
 
 class _IrisAlphaModelPlus(IrisAlphaModel):
@@ -114,7 +115,7 @@ class Iris(IrisAlpha):
     model paths with args `--loada` and `--loadb` to use them together.
     """
 
-    def __init__(self, args):
+    def __init__(self, args, beta_model=IrisBeta):
         super().__init__(args)
 
         # set inputs and groundtruths
@@ -127,7 +128,7 @@ class Iris(IrisAlpha):
         
         # assign alpha model and beta model containers
         self.alpha = self
-        self.beta = IrisBeta(args)
+        self.beta = beta_model(args)
         self.linear_predict = False
 
         # load weights
@@ -145,6 +146,7 @@ class Iris(IrisAlpha):
         self.alpha._model = self.alpha.load_from_checkpoint(args.loada)
     
     def run_train_or_test(self):
+        self.logger.info('Start test model from `{}` and `{}`'.format(self.args.loada, self.args.loadb))
         self.run_test()
 
     def create_model(self, model_type=None):
@@ -158,10 +160,25 @@ class Iris(IrisAlpha):
         dataset = kwargs['dataset_name']
         self.log_parameters(title='test results', **
                             dict({'dataset': dataset}, **loss_dict))
-        with open('./test_log.txt', 'a') as f:
-            f.write('{}, {}, {}, {}, {}\n'.format(
-                'Iris',
-                self.args.loada,
-                self.args.loadb,
-                dataset,
-                loss_dict))
+        # with open('./test_log.txt', 'a') as f:
+        #     f.write('{}, {}, {}, {}, {}, K={}, sigma={}\n'.format(
+        #         'Iris',
+        #         self.args.loada,
+        #         self.args.loadb,
+        #         dataset,
+        #         loss_dict,
+        #         self.args.K,
+        #         self.args.sigma))
+
+        self.logger.info('Results: {}, {}, {}, {}, K={}, sigma={}'.format(
+            self.args.loada,
+            self.args.loadb,
+            dataset,
+            loss_dict,
+            self.args.K,
+            self.args.sigma))
+
+
+class IrisCVAE(Iris):
+    def __init__(self, args, beta_model=IrisBetaCVAE):
+        super().__init__(args, beta_model=beta_model)

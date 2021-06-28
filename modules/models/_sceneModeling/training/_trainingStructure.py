@@ -222,7 +222,7 @@ class Structure(base.Structure):
             save_base_path = dir_check(
                 os.path.join(save_base_path, 'VisualScenes'))
 
-            self.log('Start saving images at {}'.format(save_base_path))
+            self.logger.info('Start saving images at {}'.format(save_base_path))
 
             img_count = 0
             for index, agent in self.log_timebar(agents, 'Saving images...'):

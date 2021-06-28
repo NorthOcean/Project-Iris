@@ -195,6 +195,8 @@ class Structure(BaseObject):
     datasetsManager_type = DatasetsManager
 
     def __init__(self, args: arg_type, arg_type=arg_type):
+        super().__init__()
+
         self.__args = args
         self._arg_type = arg_type
         self._gpu_config()
@@ -492,10 +494,12 @@ class Structure(BaseObject):
                 # restore weights from files
                 self._model = self.load_from_checkpoint(self.args.restore)
 
+            self.logger.info('Start training with args={}'.format(self.args))
             self.train()
 
         # prepare test
         else:
+            self.logger.info('Start test model from `{}`'.format(self.args.load))
             self._model = self.load_from_checkpoint(self.args.load)
             self.run_test()
 
@@ -599,13 +603,13 @@ class Structure(BaseObject):
                 '{}.{}'.format(self.args.model_name, self.args.save_format))
 
             self.save_model(model_save_path)
-            self.log(('Trained model is saved at `{}`.\n' +
+            self.logger.info(('Trained model is saved at `{}`.\n' +
                       'To re-test this model, please use ' +
                       '`python main.py --load {}`.').format(model_save_path,
                                                             self.args.log_dir))
 
     def print_training_done_info(self, **kwargs):
-        self.log(('Training done.' +
+        self.logger.info(('Training done.' +
                   'Tensorboard training log file is saved at `{}`' +
                   'To open this log file, please use `tensorboard ' +
                   '--logdir {}`').format(self.args.log_dir, self.args.log_dir))
@@ -621,7 +625,7 @@ class Structure(BaseObject):
         dataset_test = self.load_test_dataset(**kwargs)
 
         # Start test
-        model_inputs_all = []
+        # model_inputs_all = []
         model_outputs_all = []
         label_all = []
         loss_dict_all = {}
@@ -632,8 +636,8 @@ class Structure(BaseObject):
             model_outputs, loss, loss_dict = self._run_one_step(
                 test_data[:-1], test_data[-1])
 
-            model_inputs_all = append_results_to_list(
-                test_data[:-1], model_inputs_all)
+            # model_inputs_all = append_results_to_list(
+                # test_data[:-1], model_inputs_all)
             model_outputs_all = append_results_to_list(
                 model_outputs, model_outputs_all)
             label_all = append_results_to_list(test_data[-1:], label_all)
@@ -642,19 +646,22 @@ class Structure(BaseObject):
                 if not key in loss_dict_all:
                     loss_dict_all[key] = []
                 loss_dict_all[key].append(loss_dict[key])
-
-        model_inputs_all = stack_results(model_inputs_all)
-        model_outputs_all = stack_results(model_outputs_all)
-        label_all = stack_results(label_all)
-
+            
+            # self.logger.info(loss_dict)
+        
         for key in loss_dict_all:
             loss_dict_all[key] = tf.reduce_mean(
                 tf.stack(loss_dict_all[key])).numpy()
 
         # Write test results
         self.print_test_result_info(loss_dict_all, **kwargs)
+
+        # model_inputs_all = stack_results(model_inputs_all)
+        model_outputs_all = stack_results(model_outputs_all)
+        label_all = stack_results(label_all)
+
         self.write_test_results(model_outputs_all,
-                                model_inputs=model_inputs_all,
+                                model_inputs=None, # model_inputs_all,
                                 labels=label_all,
                                 **kwargs)
 

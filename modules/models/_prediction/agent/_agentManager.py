@@ -337,7 +337,7 @@ class MapManager(base.BaseObject):
         return guidance_map, W, b
 
     def build_guidance_map(self, agents: List[BaseAgentManager], source=None, regulation=True) -> np.ndarray:
-        self.log('Building Guidance Map...', end='\t')
+        self.logger.info('Building Guidance Map...', end='\t')
 
         if type(source) == type(None):
             source = self.void_map
@@ -362,7 +362,7 @@ class MapManager(base.BaseObject):
         if regulation:
             source = 1 - source / np.max(source)
 
-        self.log('Done.')
+        self.logger.info('Done.')
         self.guidance_map = source
         return source
 

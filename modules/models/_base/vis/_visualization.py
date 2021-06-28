@@ -73,7 +73,7 @@ class Visualization():
         """
         Transfer coordinates from real scale to pixels.
 
-        :param real_pos: coordinates, shape = [(batch,) 2]
+        :param real_pos: coordinates, shape = (n, 2) or (k, n, 2)
         :return pixel_pos: coordinates in pixels
         """
         weights = self.video_weights
@@ -81,24 +81,31 @@ class Visualization():
         if type(real_pos) == list:
             real_pos = np.array(real_pos)
 
-        if len(real_pos.shape) == 3:
-            real_pos = real_pos.reshape([-1, 2])
+        if len(real_pos.shape) == 2:
+            real_pos = real_pos[np.newaxis, :, :]
 
-        if len(weights) == 4:
-            return np.column_stack([
-                weights[2] * real_pos.T[1] + weights[3],
-                weights[0] * real_pos.T[0] + weights[1],
-            ]).astype(np.int32)
-        else:
-            H = weights[0]
-            real = np.ones([real_pos.shape[0], 3])
-            real[:, :2] = real_pos
-            pixel = np.matmul(real, np.linalg.inv(H))
-            pixel = pixel[:, :2].astype(np.int32)
-            return np.column_stack([
-                weights[1] * pixel.T[0] + weights[2],
-                weights[3] * pixel.T[1] + weights[4],
-            ]).astype(np.int32)
+        all_results = []
+        for step in range(real_pos.shape[1]):
+            r = real_pos[:, step, :]
+            if len(weights) == 4:
+                result = np.column_stack([
+                    weights[2] * r.T[1] + weights[3],
+                    weights[0] * r.T[0] + weights[1],
+                ]).astype(np.int32)
+            else:
+                H = weights[0]
+                real = np.ones([r.shape[0], 3])
+                real[:, :2] = r
+                pixel = np.matmul(real, np.linalg.inv(H))
+                pixel = pixel[:, :2].astype(np.int32)
+                result = np.column_stack([
+                    weights[1] * pixel.T[0] + weights[2],
+                    weights[3] * pixel.T[1] + weights[4],
+                ]).astype(np.int32)
+            
+            all_results.append(result)
+        
+        return np.array(all_results)
 
     def draw(self, *args, **kwargs):
         raise NotImplementedError(

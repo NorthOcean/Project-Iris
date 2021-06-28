@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2021-04-01 20:28:00
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-12 10:33:51
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2021-04-01 20:28:00
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-06-24 09:22:57
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 import modules.models as M
 
@@ -13,8 +15,10 @@ class SatoshiArgs(M.prediction.TrainArgs):
     def __init__(self):
         super().__init__()
 
-        self.loada_C = ['null', 'Path for Satoshi Alpha model', 'a']
-        self.loadb_C = ['null', 'Path for Satoshi Beta model', 'b']
+        self.loada_C = ['null', 'Path for Satoshi Alpha model', 'la']
+        self.loadb_C = ['null', 'Path for Satoshi Beta model', 'lb']
+        self.loadc_C = ['null', 'Path for Satoshi Gamma model', 'lc']
+        self.linear = [0, 'Controls whether use linear prediction in the last stage', 'linear']
         self.H = [3, 'number of observed trajectories used']
         self.force_pred_frames_C = [-1,
                                     'force setting of predict frames when test']

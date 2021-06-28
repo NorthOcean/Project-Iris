@@ -143,7 +143,7 @@ class DatasetManager(base.DatasetManager):
         frame_list = list(set(data.T[0].astype(np.int32)))
         frame_list.sort()
 
-        self.log('Load dataset {} done.'.format(csv_file_path))
+        self.logger.info('Load dataset {} done.'.format(csv_file_path))
         return person_data, frame_list
 
     def _prepare_agent_data(self) -> List[EntireTrajectory]:
@@ -300,13 +300,13 @@ class DatasetsManager(base.DatasetsManager):
 
         elif prepare_type == 'test':
             for index, dataset in enumerate(test_list):
-                self.log('Preparing {}/{}...'.format(index+1, len(test_list)))
+                self.logger.info('Preparing {}/{}...'.format(index+1, len(test_list)))
                 self.prepare_train_files([DatasetManager(self.args, dataset)])
 
         elif '_' in prepare_type:
             set_list = prepare_type.split('_')
             for index, dataset in enumerate(set_list):
-                self.log('Preparing {}/{}...'.format(index+1, len(set_list)))
+                self.logger.info('Preparing {}/{}...'.format(index+1, len(set_list)))
                 self.prepare_train_files([DatasetManager(self.args, dataset)])
         else:
             pass

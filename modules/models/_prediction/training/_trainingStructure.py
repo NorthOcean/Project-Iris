@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-22 20:47:40
+@LastEditTime: 2021-06-23 15:49:55
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -417,7 +417,7 @@ class Structure(base.Structure):
             save_format = os.path.join(dir_check(os.path.join(
                 save_base_path, 'VisualTrajs')), '{}_{}.{}')
 
-            self.log('Start saving images at {}'.format(
+            self.logger.info('Start saving images at {}'.format(
                 os.path.join(save_base_path, 'VisualTrajs')))
 
             for index, agent in self.log_timebar(agents, 'Saving...'):
@@ -441,5 +441,5 @@ class Structure(base.Structure):
                 #     draw_distribution=self.args.draw_distribution,
                 # )
 
-            self.log('Prediction result images are saved at {}'.format(
+            self.logger.info('Prediction result images are saved at {}'.format(
                 os.path.join(save_base_path, 'VisualTrajs')))

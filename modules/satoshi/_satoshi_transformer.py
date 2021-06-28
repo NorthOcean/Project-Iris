@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-05-08 15:50:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-07 17:02:02
+@LastEditTime: 2021-06-25 09:51:50
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -29,7 +29,7 @@ class _SatoshiAlphaTransformerGenerativeModel(SatoshiAlphaTransformerModel):
         outputs = super().post_process(outputs, training=training, **kwargs)
         K = outputs[0].shape[1]
 
-        if training or K <= self.args.K:
+        if True: # training or K <= self.args.K:
             return outputs
 
         else:
@@ -131,10 +131,8 @@ class SatoshiTransformer(SatoshiAlphaTransformer):
         dataset = kwargs['dataset_name']
         self.log_parameters(title='test results', **
                             dict({'dataset': dataset}, **loss_dict))
-        with open('./test_log.txt', 'a') as f:
-            f.write('{}, {}, {}, {}, {}\n'.format(
-                'SatoshiTransformer',
-                self.args.loada,
-                self.args.loadb,
-                dataset,
-                loss_dict))
+        self.logger.info('Results from {}, {}, {}, {}'.format(
+            self.args.loada,
+            self.args.loadb,
+            dataset,
+            loss_dict))

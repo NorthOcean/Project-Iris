@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple
 
 import cv2
 import numpy as np
+import tensorflow as tf
 
 from ... import base
 from ..agent._agentManager import TrainAgentManager
@@ -36,6 +37,10 @@ class TrajVisualization(base.Visualization):
         self.pred_file = cv2.imread(PRED_IMAGE, -1)
         self.gt_file = cv2.imread(GT_IMAGE, -1)
         self.dis_file = cv2.imread(DISTRIBUTION_IMAGE, -1)
+
+        self.conv_layer = tf.keras.layers.Conv2D(
+            1, (20, 20), (1, 1), 'same', 
+            kernel_initializer=tf.initializers.constant(1/(20*20)))
 
         # color bar in BGR format
         # rgb(0, 0, 178) -> rgb(252, 0, 0) -> rgb(255, 255, 10)
@@ -171,7 +176,7 @@ class TrajVisualization(base.Visualization):
             video_list.append(f)
             VideoWriter.write(f)
 
-    def _visualization(self, f: np.ndarray, obs=None, gt=None, pred=None, draw_distribution=False, alpha=1.0):
+    def _visualization(self, f: np.ndarray, obs=None, gt=None, pred=None, draw_distribution: int =None, alpha=1.0):
         """
         Draw one agent's observations, predictions, and groundtruths.
 
@@ -184,37 +189,48 @@ class TrajVisualization(base.Visualization):
         """
         f_original = f.copy()
         f = np.zeros([f.shape[0], f.shape[1], 4])
-        if not type(obs) == type(None):
-            f = draw_traj(f, obs, self.obs_file, color=(
-                255, 255, 255), width=3, alpha=alpha)
+        if obs is not None:
+            f = draw_traj(f, obs, self.obs_file, 
+                          color=(255, 255, 255), 
+                          width=3, alpha=alpha)
 
-        if not type(gt) == type(None):
-            f = draw_traj(f, gt, self.gt_file, color=(
-                255, 255, 255), width=3, alpha=alpha)
+        if gt is not None:
+            f = draw_traj(f, gt, self.gt_file,
+                          color=(255, 255, 255), 
+                          width=3, alpha=alpha)
 
+        f = base.Visualization.add_png_to_source(f_original, f, 
+                                                 [f.shape[1]//2, f.shape[0]//2], 
+                                                 alpha)
         if pred is not None:
-            if draw_distribution:
-                dis = np.zeros([f.shape[0], f.shape[1], 3])
-                for p in pred:
-                    dis = base.Visualization.add_png_value(
-                        dis, self.dis_file, p, alpha=0.5)
-                dis = dis[:, :, -1]
-
-                if not dis.max() == 0:
-                    dis = dis ** 0.2
-                    alpha_channel = (255 * dis/dis.max()).astype(np.int32)
-                    color_map = self.color_bar[alpha_channel]
-                    distribution = np.concatenate(
-                        [color_map, np.expand_dims(alpha_channel, -1)], axis=-1)
-                    f = base.Visualization.add_png_to_source(
-                        f, distribution, [f.shape[1]//2, f.shape[0]//2], alpha=1.0)
+            background = np.zeros(f.shape[:2] + (4,))
+            if draw_distribution == 1:
+                f1 = draw_dis(background, pred.reshape([-1, 2]), 
+                              self.dis_file, self.color_bar, 
+                              alpha=0.5)
+            
+            elif draw_distribution == 2:
+                all_steps = pred.shape[0]
+                for index, step in enumerate(pred):
+                    f1 = draw_dis(background, step, self.dis_file, 
+                                  index/all_steps * self.color_bar,
+                                  alpha=1.0)
+            
+            if draw_distribution > 0:
+                f_smooth = self.conv_layer(np.transpose(f1.astype(np.float32), [2, 0, 1])[:, :, :, np.newaxis]).numpy()
+                f_smooth = np.transpose(f_smooth[:, :, :, 0], [1, 2, 0])
+                f1 = f_smooth
 
             else:
-                for p in pred:
-                    f = base.Visualization.add_png_to_source(
+                for p in pred.reshape([-1, 2]):
+                    f1 = base.Visualization.add_png_to_source(
                         f, self.pred_file, p, alpha=1.0)
 
-        return base.Visualization.add_png_to_source(f_original, f, [f.shape[1]//2, f.shape[0]//2], alpha)
+        
+        return base.Visualization.add_png_to_source(
+            f, f1, 
+            [f.shape[1]//2, f.shape[0]//2], 
+            alpha=0.8)
 
 
 def draw_traj(source, trajs, png_file, color=(255, 255, 255), width=3, alpha=1.0):
@@ -222,6 +238,9 @@ def draw_traj(source, trajs, png_file, color=(255, 255, 255), width=3, alpha=1.0
     Draw lines and points.
     `color` in (B, G, R)
     """
+    if (len(s := trajs.shape) == 3) and (s[1] == 1):
+        trajs = trajs[:, 0, :]
+
     if len(trajs) >= 2:
         for left, right in zip(trajs[:-1, :], trajs[1:, :]):
             cv2.line(source, (left[0], left[1]),
@@ -235,6 +254,24 @@ def draw_traj(source, trajs, png_file, color=(255, 255, 255), width=3, alpha=1.0
         source = base.Visualization.add_png_to_source(
             source, png_file, trajs[0])
 
+    return source
+
+
+def draw_dis(source, trajs, png_file, color_bar: np.ndarray, alpha=1.0):
+    dis = np.zeros([source.shape[0], source.shape[1], 3])
+    for p in trajs:
+        dis = base.Visualization.add_png_value(dis, png_file, p, alpha)
+    dis = dis[:, :, -1]
+
+    if not dis.max() == 0:
+        dis = dis ** 0.2
+        alpha_channel = (255 * dis/dis.max()).astype(np.int32)
+        color_map = color_bar[alpha_channel]
+        distribution = np.concatenate(
+            [color_map, np.expand_dims(alpha_channel, -1)], axis=-1)
+        source = base.Visualization.add_png_to_source(
+            source, distribution, [source.shape[1]//2, source.shape[0]//2], alpha)
+    
     return source
 
 
