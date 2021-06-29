@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-24 09:14:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-24 20:08:08
+@LastEditTime: 2021-06-29 11:27:28
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -38,26 +38,29 @@ class Iris3Model(IrisAlphaModel):
 
         # shape = [(batch, obs, 2), (batch, 100, 100), None]
         model_inputs = kwargs['model_inputs']
+        batch = outputs[0].shape[0]
         Kc = outputs[0].shape[1]
         K = self.args.K
+        des = tf.reshape(outputs[0], [-1, 1, 2])
 
         # prepare new inputs into beta model
         # new batch_size (total) is batch*Kc
         Kc_per_batch = self.args.max_batch_size // self.args.batch_size
         beta_results = []
-        for k_point in range(0, Kc, Kc_per_batch):
-            k_start = k_point
-            k_end = min(k_point + Kc_per_batch, Kc)
-            k = k_end - k_start
-
-            beta_inputs = [tf.repeat(inp, k, axis=0) for inp in model_inputs]
-            beta_inputs.append(tf.reshape(outputs[0][:, k_start:k_end, :], [-1, 1, 2]))
+        batchindex = BatchIndex(batch_size=self.args.max_batch_size//Kc, 
+                                length=batch)
+        
+        while (index := batchindex.get_new()) is not None:
+            [k0, k1, k] = index
+            beta_inputs = [tf.repeat(inp[k0:k1], Kc, axis=0) for inp in model_inputs]
+            beta_inputs.append(des[k0*Kc : k1*Kc])
+            
             beta_results.append(self.training_structure.beta(
                 beta_inputs,
                 return_numpy=False)[0][:, :, -1:, :])
 
         # choose beta destinations
-        beta_des = tf.concat(beta_results, axis=1)
+        beta_des = tf.concat(beta_results, axis=0)
         beta_des = tf.reshape(beta_des, [-1, 1, 2])  # (batch*Kc*K, 1, 2)
 
         if self.args.linear or self.args.loadc.startswith('l'):
@@ -80,22 +83,31 @@ class Iris3Model(IrisAlphaModel):
         else:
             # prepare new inputs into gamma model
             # new batch_size is batch*Kc*K
-            gamma_inputs = [tf.repeat(inp, K, axis=0) for inp in beta_inputs[:-1]]
-            gamma_inputs.append(beta_des)
+            
+            final_results = []
+            batchindex = BatchIndex(batch_size=self.args.max_batch_size//(K*Kc), 
+                                    length=batch)
+            
+            while (index := batchindex.get_new()) is not None:
+                [k0, k1, k] = index
+                gamma_inputs = [tf.repeat(inp[k0:k1], K*Kc, axis=0) for inp in model_inputs[:-1]]
+                gamma_inputs.append(beta_des[k0*K*Kc:k1*K*Kc])
 
-            # feed into gamma model
-            # output shape = (batch*Kc*K, pred, 2)
-            gamma_results = self.training_structure.gamma(
-                gamma_inputs,
-                return_numpy=False)[0]
+                # feed into gamma model
+                # output shape = (batch*Kc*K, pred, 2)
+                gamma_results = self.training_structure.gamma(
+                    gamma_inputs,
+                    return_numpy=False)[0]
+                
+                final_results.append(gamma_results)
 
             # re-organize outputs
             # shape = (batch, K*K_c, pred, 2)
             final_results = tf.reshape(
-                beta_results,
+                tf.concat(final_results, axis=0),
                 [-1, K*Kc, self.args.pred_frames, 2])
 
-        return M.prediction.Process.update((final_results,), outputs)
+        return (final_results,)
 
 
 class Iris3(IrisAlpha):
@@ -163,3 +175,31 @@ class Iris3(IrisAlpha):
             loss_dict,
             self.args.K,
             self.args.sigma))
+
+
+class BatchIndex():
+    def __init__(self, batch_size, length):
+        super().__init__()
+
+        self.bs = batch_size
+        self.l = length
+
+        self.start = 0
+        self.end = 0
+
+    def init(self):
+        self.start = 0
+        self.end = 0
+
+    def get_new(self):
+        if self.start >= self.l:
+            return None
+        
+        start = self.start
+        self.end = self.start + self.bs
+        if self.end > self.l:
+            self.end = self.l
+            
+        self.start += self.bs
+
+        return [start, self.end, self.end - self.start]
