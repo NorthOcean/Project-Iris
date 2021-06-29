@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-24 09:14:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-29 11:27:28
+@LastEditTime: 2021-06-29 20:17:40
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -47,14 +47,15 @@ class Iris3Model(IrisAlphaModel):
         # new batch_size (total) is batch*Kc
         Kc_per_batch = self.args.max_batch_size // self.args.batch_size
         beta_results = []
-        batchindex = BatchIndex(batch_size=self.args.max_batch_size//Kc, 
+        batchindex = BatchIndex(batch_size=self.args.max_batch_size//Kc,
                                 length=batch)
-        
+
         while (index := batchindex.get_new()) is not None:
             [k0, k1, k] = index
-            beta_inputs = [tf.repeat(inp[k0:k1], Kc, axis=0) for inp in model_inputs]
-            beta_inputs.append(des[k0*Kc : k1*Kc])
-            
+            beta_inputs = [tf.repeat(inp[k0:k1], Kc, axis=0)
+                           for inp in model_inputs]
+            beta_inputs.append(des[k0*Kc: k1*Kc])
+
             beta_results.append(self.training_structure.beta(
                 beta_inputs,
                 return_numpy=False)[0][:, :, -1:, :])
@@ -83,14 +84,15 @@ class Iris3Model(IrisAlphaModel):
         else:
             # prepare new inputs into gamma model
             # new batch_size is batch*Kc*K
-            
+
             final_results = []
-            batchindex = BatchIndex(batch_size=self.args.max_batch_size//(K*Kc), 
+            batchindex = BatchIndex(batch_size=self.args.max_batch_size//(K*Kc),
                                     length=batch)
-            
+
             while (index := batchindex.get_new()) is not None:
                 [k0, k1, k] = index
-                gamma_inputs = [tf.repeat(inp[k0:k1], K*Kc, axis=0) for inp in model_inputs[:-1]]
+                gamma_inputs = [tf.repeat(inp[k0:k1], K*Kc, axis=0)
+                                for inp in model_inputs]
                 gamma_inputs.append(beta_des[k0*K*Kc:k1*K*Kc])
 
                 # feed into gamma model
@@ -98,7 +100,7 @@ class Iris3Model(IrisAlphaModel):
                 gamma_results = self.training_structure.gamma(
                     gamma_inputs,
                     return_numpy=False)[0]
-                
+
                 final_results.append(gamma_results)
 
             # re-organize outputs
@@ -106,6 +108,11 @@ class Iris3Model(IrisAlphaModel):
             final_results = tf.reshape(
                 tf.concat(final_results, axis=0),
                 [-1, K*Kc, self.args.pred_frames, 2])
+
+        if self.args.check:
+            final_results = angle_check(pred=final_results,
+                                        obs=model_inputs[0],
+                                        max_angle=135)
 
         return (final_results,)
 
@@ -135,9 +142,9 @@ class Iris3(IrisAlpha):
         # load gamma weights
         if ('null' in [self.args.loada, self.args.loadb]) and \
                 (self.args.loadc == 'null' and self.args.linear == 0):
-            self.logger.error(e := ('`IrisAlpha` or `IrisBeta` or `IrisGamma` not' + 
-                              ' found! Please specific their paths via' + 
-                              ' `--loada` or `--loadb`.'))
+            self.logger.error(e := ('`IrisAlpha` or `IrisBeta` or `IrisGamma` not' +
+                              ' found! Please specific their paths via' +
+                                    ' `--loada` or `--loadb`.'))
             raise FileNotFoundError(e)
 
         if self.args.loadc.startswith('l'):
@@ -194,12 +201,45 @@ class BatchIndex():
     def get_new(self):
         if self.start >= self.l:
             return None
-        
+
         start = self.start
         self.end = self.start + self.bs
         if self.end > self.l:
             self.end = self.l
-            
+
         self.start += self.bs
 
         return [start, self.end, self.end - self.start]
+
+
+def angle_check(pred: tf.Tensor, obs: tf.Tensor, max_angle=135):
+    """
+    Check angle of predictions, and remove error ones.
+
+    :param pred: predictions, shape = (batch, K, pred, 2)
+    :param obs: observations, shape = (batch, obs, 2)
+    :return pred_checked: predictions without wrong ones,
+        shape = (batch, K, pred, 2)
+    """
+    obs = obs[:, tf.newaxis, :, :]
+
+    obs_vec = obs[:, :, -1, :] - obs[:, :, 0, :]
+    pred_vec = pred[:, :, -1, :] - pred[:, :, 0, :]
+
+    dot = tf.reduce_sum(obs_vec * pred_vec, axis=-1)
+    len_obs = tf.linalg.norm(obs_vec, axis=-1)
+    len_pred = tf.linalg.norm(pred_vec, axis=-1)
+
+    cosine = (dot + 0.0001) / ((len_obs * len_pred) + 0.0001)
+
+    mask = tf.cast(cosine > tf.cos(max_angle/180 * 3.1415926),
+                   tf.float32)   # (batch, K)
+    true_item = tf.gather_nd(
+        pred,
+        tf.transpose([tf.range(0, obs.shape[0]),
+                      tf.argsort(mask, axis=-1)[:, -1]])
+    )[:, tf.newaxis, :, :]
+
+    mask = mask[:, :, tf.newaxis, tf.newaxis]
+    pred_checked = pred * mask + true_item * (1.0 - mask)
+    return pred_checked
