@@ -18,7 +18,7 @@ from tensorflow.python.keras import backend as K
 from tqdm import tqdm
 
 
-def dir_check(target_dir):
+def dir_check(target_dir) -> str:
     """
     Used for check if the `target_dir` exists.
     """

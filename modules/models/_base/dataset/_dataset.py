@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2020-11-10 09:31:24
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-01 20:16:35
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2020-11-10 09:31:24
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-07-06 10:54:33
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 from typing import Dict, List, Tuple
 
@@ -52,14 +54,23 @@ class Dataset():
 
     @property
     def dataset_dir(self):
+        """
+        Dataset folder, which contains a `*.txt` or `*.csv` dataset file, and a scene image `reference.jpg`
+        """
         return self._dataset_dir
 
     @property
     def order(self):
+        """
+        order for coordinates, (x, y) -> `[0, 1]`, (y, x) -> `[1, 0]`
+        """
         return self._order
 
     @property
     def paras(self):
+        """
+        [sample_step, frame_rate]
+        """
         return self._paras
     
     @property

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-25 09:41:01
+@LastEditTime: 2021-07-06 19:43:03
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -65,6 +65,9 @@ def train_or_test(args:Args):
 
     elif model == 'iris3':
         trainingStructure = M.iris.Iris3
+
+    elif model == 'image':
+        trainingStructure = M.IMAGE.IMAGEStructure
 
     trainingStructure(args).run_train_or_test()
     

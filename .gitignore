@@ -30,11 +30,13 @@ annotations.txt
 reference.jpg
 
 data/sdd
+dataset_json
+dataset_json*
+samples
+samples*
 test_log.txt
 
 null
-
-satoshi/IEEEtran
 
 *temp
 temp*
