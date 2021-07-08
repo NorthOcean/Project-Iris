@@ -122,8 +122,12 @@ class Visualization():
         xs, ys, _ = source.shape
         x0, y0 = [xc-xp//2, yc-yp//2]
 
-        png_mask = png[:, :, 3:4]/255
-        png_file = png[:, :, :3]
+        if png.shape[-1] == 4:
+            png_mask = png[:, :, 3:4]/255
+            png_file = png[:, :, :3]
+        else:
+            png_mask = np.ones_like(png)
+            png_file = png
 
         if x0 >= 0 and y0 >= 0 and x0 + xp <= xs and y0 + yp <= ys:
             source[x0:x0+xp, y0:y0+yp, :3] = \

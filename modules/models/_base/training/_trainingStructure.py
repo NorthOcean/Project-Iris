@@ -412,10 +412,10 @@ class Structure(BaseObject):
                                         **kwargs)
             loss_move_average = 0.7 * loss + 0.3 * loss_move_average
 
-        grads = tape.gradient(
-            loss_move_average, self.model.trainable_variables)
-        self.optimizer.apply_gradients(
-            zip(grads, self.model.trainable_variables))
+        grads = tape.gradient(loss_move_average,
+                              self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads,
+                                           self.model.trainable_variables))
 
         return loss, loss_dict, loss_move_average
 
@@ -544,7 +544,10 @@ class Structure(BaseObject):
 
             # Run eval
             if ((epoch >= self.args.start_test_percent * self.args.epochs)
-                    and (epoch % self.args.test_step == 0) and (not epoch in test_epochs)):
+                    and ((epoch - 1) % self.args.test_step == 0) 
+                    and (not epoch in test_epochs)
+                    and (epoch > 0)):
+
                 metrics_all = []
                 loss_dict_all = {}
                 test_epochs.append(epoch)
@@ -656,12 +659,12 @@ class Structure(BaseObject):
         # Write test results
         self.print_test_result_info(loss_dict_all, **kwargs)
 
-        # model_inputs_all = stack_results(model_inputs_all)
+        model_inputs_all = list(dataset_test.as_numpy_iterator())
         model_outputs_all = stack_results(model_outputs_all)
         label_all = stack_results(label_all)
 
         self.write_test_results(model_outputs_all,
-                                model_inputs=None, # model_inputs_all,
+                                model_inputs=model_inputs_all,
                                 labels=label_all,
                                 **kwargs)
 

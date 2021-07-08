@@ -2,30 +2,35 @@
 @Author: Conghao Wong
 @Date: 2021-07-06 16:10:10
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-06 21:45:03
+@LastEditTime: 2021-07-07 21:06:16
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
+import os
 from typing import Any, List, Tuple
 
+import cv2
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
 from .. import models as M
-from ._dataset import DatasetLoader
 from ..satoshi._args import SatoshiArgs
+from ._dataset import DatasetLoader
 
 
 class IMAGEEncoderLayer(keras.layers.Layer):
     def __init__(self, filters: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.conv1 = keras.layers.Conv2D(
-            filters, [3, 3], activation=tf.nn.relu, padding='same')
-        self.conv2 = keras.layers.Conv2D(
-            filters, [3, 3], activation=tf.nn.relu, padding='same')
+        self.conv1 = keras.layers.Conv2D(filters, [3, 3],
+                                         activation=tf.nn.relu,
+                                         padding='same')
+        self.conv2 = keras.layers.Conv2D(filters, [3, 3],
+                                         activation=tf.nn.relu,
+                                         padding='same')
         self.bn1 = keras.layers.BatchNormalization()
         self.bn2 = keras.layers.BatchNormalization()
         self.maxpooling = keras.layers.MaxPooling2D((2, 2))
@@ -49,12 +54,9 @@ class IMAGEDecoderLayer(keras.layers.Layer):
         self.conv1 = keras.layers.Conv2D(filters, [3, 3], padding='same')
         self.conv2 = keras.layers.Conv2D(filters, [3, 3], padding='same')
 
-    def call(self, inputs, **kwargs):
-        f_last = inputs[0]
-        f_res = inputs[1]
-
+    def call(self, f_last, f_res, **kwargs):
         convT = self.convT(f_last)
-        concat = self.concat([convT, f_res[:, :convT.shape[1], :convT.shape[2], :]])
+        concat = self.concat([convT, f_res])
         conv1 = self.conv1(concat)
         conv2 = self.conv2(conv1)
         return conv2
@@ -69,56 +71,53 @@ class IMAGEModel(M.prediction.Model):
         self.num_decoder_layers = 3
         self.init_filters = 16
 
+        if self.args.draw_results:
+            self.image_dir = M.helpMethods.dir_check(
+                os.path.join(self.args.log_dir,
+                             'predictions'))
+
         self.layer_list = []
         for i in range(self.num_encoder_layers):
             self.layer_list.append(IMAGEEncoderLayer(
                 self.init_filters * (2 ** i)
             ))
-        
-        for i in range(self.num_decoder_layers):
+
+        for i in range(self.num_encoder_layers - 1):
             self.layer_list.append(IMAGEDecoderLayer(
-                self.init_filters * (2 ** (self.num_decoder_layers - i - 1))
+                self.init_filters * (2 ** (self.num_encoder_layers - i - 1))
             ))
 
-        self.dense = keras.layers.Dense(1)
+        self.conv = keras.layers.Conv2D(self.args.pred_frames, (128, 127))
 
     def call(self, inputs: tf.Tensor,
              training=None, mask=None):
 
+        scene_img, traj_img, traj = inputs[:3]
+
         res_features = []
-        f_last = inputs
+        f_last = tf.concat([scene_img, traj_img], axis=-1)
         for i in range(self.num_encoder_layers):
             [f_last, f_res] = self.layer_list[i](f_last)
-            res_features.append(f_res)    
+            res_features.append(f_res)
 
-        for i in range(self.num_decoder_layers):
-            f_last = self.layer_list[self.num_encoder_layers + i]([
+        for i in range(self.num_encoder_layers - 1):
+            f_last = self.layer_list[self.num_encoder_layers + i](
                 f_last,
-                res_features[-1-i],
-            ])
+                res_features[-1-i])
 
-        return self.dense(f_last)
+        return tf.transpose(self.conv(f_last)[:, 0, :, :], [0, 2, 1])
 
     def pre_process(self, tensors: Tuple[tf.Tensor],
-                    training=False,
+                    training=None,
                     **kwargs) -> Tuple[tf.Tensor]:
-        """
-        Pre-processing before inputting to the model
-        """
-        all_images = []
 
-        scene = tf.stack([self.load_image(img) for img in tensors[0][:, 0]])
-        trajs = tf.stack([self.load_image(img) for img in tensors[0][:, 1]])
-        return tf.concat([scene, trajs], axis=-1)
+        [img_s_paths, img_t_paths, trajs] = tensors[:3]
+        scene = tf.stack([load_image(img) for img in img_s_paths])
+        traj_imgs = tf.stack([load_image(img)[:, :, :2]
+                             for img in img_t_paths])
 
-    def load_image(self, image_file, 
-                   reshape=True, 
-                   reshape_size=(200, 200)) -> tf.Tensor:
-        image = tf.io.read_file(image_file)
-        image = tf.image.decode_jpeg(image)
-        if reshape:
-            image = tf.image.resize(image, reshape_size)
-        return image
+        self.file_names = img_t_paths
+        return (scene, traj_imgs, trajs)
 
 
 class IMAGEStructure(M.prediction.Structure):
@@ -131,15 +130,26 @@ class IMAGEStructure(M.prediction.Structure):
         self.root_ds_dir = './dataset_json'
         self.root_sample_dir = './samples'
 
+        self.set_loss('ade')
+        self.set_loss_weights(1.0)
+
+        self.set_metrics('ade', 'fde')
+        self.set_metrics_weights(0.7, 0.3)
+
         self.dl = DatasetLoader(grid_shape=self.grid_shape,
                                 distribution_radius=self.radius,
                                 distribution_value_range=self.range,
                                 root_dataset_dir=self.root_ds_dir,
                                 root_sample_dir=self.root_sample_dir)
-    
+
     def create_model(self) -> Tuple[Any, keras.optimizers.Optimizer]:
         model = IMAGEModel(self.args)
         opt = keras.optimizers.Adam(self.args.lr)
+
+        model.build([[None, 256, 256, 3],
+                     [None, 256, 256, 2],
+                     [None, self.args.obs_frames, 2]])
+        model.summary()
         return model, opt
 
     def run_test(self):
@@ -199,4 +209,62 @@ class IMAGEStructure(M.prediction.Structure):
                                        self.args.pred_frames,
                                        self.args.step)
 
-    
+    def write_test_results(self,
+                           model_outputs: List[tf.Tensor],
+                           model_inputs: List[List[Any]],
+                           labels: List[tf.Tensor],
+                           datasets: List[str],
+                           dataset_name: str,
+                           *args, **kwargs):
+
+        if (not self.args.draw_results) or (dataset_name.startswith('mix')):
+            return
+
+        scene_image = cv2.imread(model_inputs[0][1].decode())
+        tv = M.prediction.TrajVisualization(dataset=None)
+        save_base_path = M.helpMethods.dir_check(self.args.log_dir) \
+            if self.args.load == 'null' \
+            else self.args.load
+
+        save_format = os.path.join((base_path := M.helpMethods.dir_check(os.path.join(
+            save_base_path, 'VisualTrajs_{}'.format(dataset_name)))), '{}.jpg')
+
+        for predictions, inputs in self.log_timebar(
+                inputs=zip(model_outputs[0].numpy(), model_inputs),
+                text='Saving...',
+                return_enumerate=False):
+
+            file_name = inputs[0].decode().split('/')[-1]
+
+            obs = inputs[2].astype(np.int)[:, ::-1]
+            gt = inputs[3].astype(np.int)[:, ::-1]
+            pred = predictions.astype(np.int)[:, ::-1]
+
+            scene = tv._visualization(scene_image, obs, gt, pred,
+                                      self.args.draw_distribution)
+
+            cv2.imwrite(save_format.format(file_name), scene)
+
+        self.logger.info(
+            'Prediction result images are saved at {}'.format(base_path))
+
+
+def load_image(image_file: str,
+               reshape=True,
+               reshape_size=(256, 256)) -> tf.Tensor:
+    image = tf.io.read_file(image_file)
+    image = tf.image.decode_jpeg(image)
+    if reshape:
+        image = tf.image.resize(image, reshape_size)
+    return image
+
+
+def save_image(image_file: tf.Tensor, path: str):
+    if path.endswith('jpg'):
+        image = tf.image.encode_jpeg(image_file)
+    elif path.endswith('png'):
+        image = tf.image.encode_png(image_file)
+    else:
+        raise NotImplementedError
+
+    tf.io.write_file(path, image)

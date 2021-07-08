@@ -27,11 +27,12 @@ DISTRIBUTION_IMAGE = './vis_pngs/dis.png'
 class TrajVisualization(base.Visualization):
     def __init__(self, dataset):
         super().__init__()
-
-        self.DM = PredictionDatasetManager()(dataset)
-        self.set_video(video_capture=cv2.VideoCapture(self.DM.video_path),
-                       video_paras=self.DM.paras,
-                       video_weights=self.DM.weights)
+        
+        if dataset:
+            self.DM = PredictionDatasetManager()(dataset)
+            self.set_video(video_capture=cv2.VideoCapture(self.DM.video_path),
+                        video_paras=self.DM.paras,
+                        video_weights=self.DM.weights)
 
         self.obs_file = cv2.imread(OBS_IMAGE, -1)
         self.pred_file = cv2.imread(PRED_IMAGE, -1)

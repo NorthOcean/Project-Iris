@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-01 20:28:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-29 19:21:06
+@LastEditTime: 2021-07-07 09:51:41
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -22,7 +22,7 @@ class SatoshiArgs(M.prediction.TrainArgs):
         self.H = [3, 'number of observed trajectories used']
         self.force_pred_frames_C = [-1,
                                     'force setting of predict frames when test']
-        self.check_C = [0]
+        self.check_C = [0, 'Controls whether apply the results choosing strategy']
 
     def args(self):
         _args = super().args()

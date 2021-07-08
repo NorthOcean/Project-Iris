@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-05 16:35:51
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-06 21:24:59
+@LastEditTime: 2021-07-07 19:29:43
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -77,8 +77,54 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
             y_file_list = set([int(p[2]) for f in file_list if (p := re.match(self.get_filename(
                 None, '(y', ')([0-9]+)(', obs_length, pred_length, '[0-9]+', 'jpg)'), f))])
 
-            if (train_id.issubset(x_file_list) and
-                    train_id.issubset(y_file_list)):
+            if (train_id.issubset(x_file_list)
+                    and train_id.issubset(y_file_list)):
+
+                checked = True
+
+        except:
+            pass
+
+        return checked
+
+    def check_trajs(self, dataset: str,
+                    obs_length: int,
+                    pred_length: int,
+                    save_path: str = None) -> bool:
+
+        checked = False
+
+        if save_path is None:
+            save_path = os.path.join(self.sample_path, dataset)
+
+        try:
+            image_index = np.loadtxt(self.get_filename(save_path, 'id', -1,
+                                                       obs_length, pred_length,
+                                                       -1, 'txt'))
+
+            train_id = set(image_index[:, 0].astype(np.int))
+            train_frames = set(image_index[:, 1].astype(np.int))
+
+            traj_data = np.load(self.get_filename(save_path, 'traj', -1,
+                                                  obs_length, pred_length,
+                                                  -1, 'npy'),
+                                allow_pickle=True).item()
+
+            traj_id_list = set([int(p[2]) for f in traj_data.keys()
+                                if (p := re.match(
+                                    self.get_filename(None, '(traj', ')([0-9]+)(',
+                                                      obs_length, pred_length,
+                                                      '[0-9]+)(', 'total)'), f))])
+
+            frame_id_list = set([int(p[4]) for f in traj_data.keys()
+                                 if (p := re.match(
+                                     self.get_filename(None, '(traj', ')([0-9]+)(',
+                                                       obs_length, pred_length,
+                                                       ')([0-9]+)(', 'total)'), f))])
+
+            if (train_id.issubset(traj_id_list)
+                    and train_frames.issubset(frame_id_list)):
+
                 checked = True
 
         except:
@@ -101,13 +147,15 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
         if not '__len__' in dataset.__dir__():
             dataset = [dataset]
 
-        x_list = []
-        y_list = []
+        x_list = [[], [], []]
+        y_list = [[], [], []]
 
         for ds in dataset:
-            if not self.check_status(ds, obs_length, pred_length):
-                dataset_info = self.dataset_info(ds)
+            image_state = self.check_status(ds, obs_length, pred_length)
+            traj_state = self.check_trajs(ds, obs_length, pred_length)
 
+            if (not image_state) or (not traj_state):
+                dataset_info = self.dataset_info(ds)
                 ds_step, ds_rate = dataset_info.paras
                 if (ds_rate * 0.4) % ds_step == 0:
                     frame_rate = ds_rate * 0.4
@@ -121,26 +169,37 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
                                                     frame_rate,
                                                     strategy='sampleFromPerson')
 
-                self.make_dataset(samples_file,
-                                  H='auto',
-                                  obs_length=obs_length,
-                                  pred_length=pred_length,
-                                  dataset_info=dataset_info)
+                if not image_state:
+                    self.make_dataset_images(samples_file,
+                                             H='auto',
+                                             obs_length=obs_length,
+                                             pred_length=pred_length,
+                                             dataset_info=dataset_info)
+
+                if not traj_state:
+                    self.make_dataset_trajs(samples_file,
+                                            H='auto',
+                                            obs_length=obs_length,
+                                            pred_length=pred_length,
+                                            dataset_info=dataset_info)
 
             x, y = self.load_dataset(ds, obs_length, pred_length)
-            x_list += x
-            y_list += y
 
-        return tf.data.Dataset.from_tensor_slices((x_list, y_list))
+            for index in range(len(x)):
+                x_list[index] += x[index]
+            for index in range(len(y)):
+                y_list[index] += y[index]
 
-    def make_dataset(self, samples: List[Dict[int, List[float]]],
-                     H: Union[np.ndarray, str],
-                     obs_length: int,
-                     pred_length: int,
-                     save_path: str = None,
-                     scene_image: str = None,
-                     dataset_info: M.base.Dataset = None,
-                     *args, **kwargs):
+        return tf.data.Dataset.from_tensor_slices((tuple(x_list) + (y_list[-1],)))
+
+    def make_dataset_images(self, samples: List[Dict[int, List[float]]],
+                            H: Union[np.ndarray, str],
+                            obs_length: int,
+                            pred_length: int,
+                            save_path: str = None,
+                            scene_image: str = None,
+                            dataset_info: M.base.Dataset = None,
+                            *args, **kwargs):
         """
         Make dataset images
 
@@ -181,12 +240,12 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
         if H == 'auto':
             if dataset_info is None:
                 raise ValueError
-            
+
             order = dataset_info.order
             X = self.grid_shape[order[0]] / original_shape[1]
             Y = self.grid_shape[order[1]] / original_shape[0]
             H = np.array([[0, X], [Y, 0]])
-            
+
             if dataset_info.dataset in self.dataset_info.dataset_list['ethucy']:
                 H = [H, dataset_info]
 
@@ -202,7 +261,7 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
                 frame_data = np.array(frame_data)
                 t_map = self.add_to_grid(
                     t_map, real2grid(frame_data[:1, 1:], H), amp)
-                
+
                 if len(frame_data) == 1:
                     continue
 
@@ -215,9 +274,7 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
 
             if n_map.max() * t_map.max() * n_map_x.max() * t_map_x.max() == 0:
                 continue
-            
-            if sample_index == 240:
-                print('!')
+
             frame_id = list(sample.keys())[obs_length]
             train_id.append([sample_index, frame_id])
             n_map /= np.max(n_map)
@@ -243,6 +300,60 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
                    pred_length, -1, 'txt'), np.array(train_id))
         self.logger.info('Dataset samples saved at `{}`.'.format(save_path))
 
+    def make_dataset_trajs(self, samples: List[Dict[int, List[float]]],
+                           H: Union[np.ndarray, str],
+                           obs_length: int, pred_length: int,
+                           save_path: str = None,
+                           scene_image: str = None,
+                           dataset_info: M.base.Dataset = None):
+        """
+        Make dataset trajectories
+        """
+        if scene_image is None:
+            if dataset_info is None:
+                raise ValueError
+
+            scene_image = os.path.join(
+                dataset_info.dataset_dir, 'reference.jpg')
+
+        scene_image = cv2.imread(scene_image)
+        original_shape = scene_image.shape[:-1]
+
+        if save_path is None:
+            if dataset_info is None:
+                raise ValueError
+
+            save_path = os.path.join(self.sample_path, dataset_info.dataset)
+
+        M.helpMethods.dir_check(save_path)
+
+        if H == 'auto':
+            if dataset_info is None:
+                raise ValueError
+
+            order = dataset_info.order
+            X = self.grid_shape[order[0]] / original_shape[1]
+            Y = self.grid_shape[order[1]] / original_shape[0]
+            H = np.array([[0, X], [Y, 0]])
+
+            if dataset_info.dataset in self.dataset_info.dataset_list['ethucy']:
+                H = [H, dataset_info]
+
+        all_trajs = {}
+        for sample_index, sample in self.log_timebar(samples):
+            frame_id = list(sample.keys())[obs_length]
+            key = self.get_filename(None, 'traj', sample_index,
+                                    obs_length, pred_length, frame_id, 'total')
+            real_traj = np.array([sample[k][0][1:] for k in sample.keys()])
+            all_trajs[key] = real2grid(real_traj, H).astype(np.float32)
+
+        np.save(self.get_filename(save_path, 'traj', -1,
+                                  obs_length, pred_length,
+                                  -1, 'npy'),
+                all_trajs)
+
+        self.logger.info('Trajectores saved at `{}`.'.format(save_path))
+
     def load_dataset(self, dataset: str,
                      obs_length: int,
                      pred_length: int,
@@ -253,14 +364,33 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
 
         train_id = np.loadtxt(self.get_filename(
             save_path, 'id', -1, obs_length, pred_length, -1, 'txt')).astype(np.int)
+        traj_data = np.load(self.get_filename(save_path, 'traj', -1,
+                                              obs_length, pred_length,
+                                              -1, 'npy'),
+                            allow_pickle=True).item()
 
-        inputs = []
-        labels = []
+        inputs = [[], [], []]
+        labels = [[], [], []]
         for s_id, f_id in train_id:
-            inputs.append([self.get_filename(save_path, 'x', s_id, obs_length, pred_length, f_id, 'jpg'),
-                           self.get_filename(save_path, 'scene', -1, obs_length, pred_length, -1, 'jpg')])
-            labels.append(self.get_filename(save_path, 'y', s_id,
-                          obs_length, pred_length, f_id, 'jpg'))
+            inputs[0].append(self.get_filename(save_path, 'x', s_id,
+                                               obs_length, pred_length,
+                                               f_id, 'jpg'))
+            inputs[1].append(self.get_filename(save_path, 'scene', -1,
+                                               obs_length, pred_length,
+                                               -1, 'jpg'))
+            inputs[2].append(traj_data[self.get_filename(None, 'traj', s_id,
+                                                         obs_length, pred_length,
+                                                         f_id, 'total')][:obs_length].astype(np.float32))
+
+            labels[0].append(self.get_filename(save_path, 'y', s_id,
+                                               obs_length, pred_length,
+                                               f_id, 'jpg'))
+            labels[1].append(self.get_filename(save_path, 'scene', -1,
+                                               obs_length, pred_length,
+                                               -1, 'jpg'))
+            labels[2].append(traj_data[self.get_filename(None, 'traj', s_id,
+                                                         obs_length, pred_length,
+                                                         f_id, 'total')][obs_length:].astype(np.float32))
 
         return inputs, labels
 
@@ -342,7 +472,7 @@ class DatasetLoader(M.datasetProcess.SampleLoader):
             train_list = [i for i in dataset_list if not i in
                           self.dataset_info.sdd_test_sets + self.dataset_info.sdd_val_sets]
             val_list = self.dataset_info.sdd_test_sets
-        
+
         return train_list, val_list
 
 
@@ -350,11 +480,12 @@ def real2grid(real: np.ndarray, H: np.ndarray):
     if (type(H) is list) and (type(H[1]) is M.base.Dataset):
         real = real2pixel(real, H[1].weights)[:, 0, :]
         H = H[0]
-        
+
     if len(real.shape) == 1:
         real = real[np.newaxis, :]  # shape = (batch, 2)
 
     return np.matmul(real, H).astype(np.int)   # output_shape = (batch, 2)
+
 
 def real2pixel(real_pos, weights):
     """
@@ -387,7 +518,7 @@ def real2pixel(real_pos, weights):
                 weights[1] * pixel.T[1] + weights[2],
                 weights[3] * pixel.T[0] + weights[4],
             ]).astype(np.int32)
-        
+
         all_results.append(result)
-    
+
     return np.array(all_results)
