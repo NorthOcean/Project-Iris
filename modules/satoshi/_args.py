@@ -2,18 +2,19 @@
 @Author: Conghao Wong
 @Date: 2021-04-01 20:28:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 13:20:25
+@LastEditTime: 2021-07-09 16:33:09
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-import argparse
+from typing import List
+
 import modules.models as M
 
 
 class SatoshiArgs(M.prediction.TrainArgs):
-    def __init__(self, args: argparse.Namespace):
+    def __init__(self, args: List[str]):
         super().__init__(args)
 
         if self._args.force_pred_frames != -1:
@@ -70,6 +71,6 @@ class SatoshiArgs(M.prediction.TrainArgs):
 
 
 class SatoshiOnlineArgs(SatoshiArgs, M.prediction.OnlineArgs):
-    def __init__(self):
-        SatoshiArgs.__init__(self)
-        M.prediction.OnlineArgs.__init__(self)
+    def __init__(self, args: List[str]):
+        SatoshiArgs.__init__(self, args)
+        M.prediction.OnlineArgs.__init__(self, args)

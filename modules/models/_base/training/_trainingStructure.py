@@ -42,7 +42,7 @@ class Model(keras.Model):
 
     These methods must be rewritten:
     ```python
-    def __init__(self, ArgType: arg_type, training_structure=None, *args, **kwargs):
+    def __init__(self, [FIXME] ):
         # please clearfy all layers used in the model
         # like below:
         super().__init__(ArgType, training_structure, *args, **kwargs)
@@ -65,20 +65,10 @@ class Model(keras.Model):
     ```
     """
 
-    arg_type = ArgType
-
-    def __init__(self, ArgType: arg_type, training_structure=None, *args, **kwargs):
+    def __init__(self, Args, training_structure=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._args = ArgType
-        self._training_structure = training_structure
-
-    # @property
-    # def args(self) -> arg_type:
-    #     return self._args
-
-    @property
-    def training_structure(self):
-        return self._training_structure
+        self.args = Args
+        self.training_structure = training_structure
 
     def call(self, inputs, training=None, mask=None):
         raise 'Model is not set!'

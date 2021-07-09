@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 15:41:58
+@LastEditTime: 2021-07-09 16:39:11
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -34,10 +34,8 @@ UPSAMPLING = 'UPSAMPLING'
 
 class Model(base.Model):
 
-    arg_type = PredictionArgs
-
-    def __init__(self, Args, training_structure=None, *args, **kwargs):
-        super().__init__(Args, training_structure=training_structure, *args, **kwargs)
+    def __init__(self, Args, training_structure, *args, **kwargs):
+        super().__init__(Args, training_structure, *args, **kwargs)
 
         self._preprocess_list = []
         self._preprocess_para = {
@@ -47,10 +45,6 @@ class Model(base.Model):
             UPSAMPLING: 4,
         }
         self._preprocess_variables = {}
-
-    @property
-    def args(self) -> PredictionArgs:
-        return self._args
 
     def set_preprocess(self, *args):
         self._preprocess_list = []

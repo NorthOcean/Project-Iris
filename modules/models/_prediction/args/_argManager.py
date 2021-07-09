@@ -2,18 +2,19 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 15:56:50
+@LastEditTime: 2021-07-09 16:32:32
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-import argparse
+from typing import List
+
 from ... import base
 
 
 class BasePredictArgs(base.Args):
-    def __init__(self, args: argparse.Namespace):
+    def __init__(self, args: List[str]):
         super().__init__(args)
 
     @property
@@ -32,7 +33,7 @@ class BasePredictArgs(base.Args):
 
 
 class TrainArgsManager(BasePredictArgs):
-    def __init__(self, args: argparse.Namespace):
+    def __init__(self, args: List[str]):
         super().__init__(args)
         
     @property
@@ -261,7 +262,7 @@ class TrainArgsManager(BasePredictArgs):
 
 
 class OnlineArgsManager(TrainArgsManager):
-    def __init__(self, args: argparse.Namespace):
+    def __init__(self, args: List[str]):
         super().__init__(args)
 
     @property

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 16:02:59
+@LastEditTime: 2021-07-09 16:49:43
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -22,13 +22,14 @@ TIME = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
 
 class BaseArgsManager():
     def __init__(self, args: List[str]):
-        arg_list = [s for s in self.__dir__() if not s.startswith('_')]
+        self._arg_list = [s for s in self.__dir__() if not s.startswith('_')]
+        self._arg_list.sort()
 
         self._args_load = None
         self._args = ArgParse.parse(
             argv=args,
-            names=arg_list,
-            values=[getattr(self, s) for s in arg_list])
+            names=self._arg_list,
+            values=[getattr(self, s) for s in self._arg_list])
 
         if (p := self.load) != 'null':
             try:
@@ -144,3 +145,11 @@ class BaseArgsManager():
             value = default
 
         return value
+
+    def _print(self):
+        dic = {}
+        for arg in self._arg_list:
+            dic[arg] = getattr(self, arg)
+        
+        
+        print(dic)
