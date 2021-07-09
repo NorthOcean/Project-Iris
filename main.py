@@ -2,13 +2,14 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-06 19:43:03
+@LastEditTime: 2021-07-09 15:28:19
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import os
+import re
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'        # 去除TF输出
 import time
@@ -16,13 +17,30 @@ import time
 import numpy as np
 import modules as M
 
-Args = M.satoshi.SatoshiArgs
+import argparse
+import sys
 
-TIME = time.strftime('%Y%m%d-%H%M%S',time.localtime(time.time()))
+def get_args() -> argparse.Namespace:
+    arg_str = ''
+    for s in sys.argv[1:]:
+        arg_str += s + ' '
+
+    accept_str = ''
+    load = re.findall('(.*)(--load [^-^ ]+)', arg_str)
+    model = re.findall('(.*)(--model [^-^ ]+)', arg_str)
+    for l in [load, model]:
+        for s in l:
+            accept_str += s[1]
+
+    parser = argparse.ArgumentParser(description='Main args', )
+    parser.add_argument('--load', type=str, default='null')
+    parser.add_argument('--model', type=str, default='null')
+
+    return parser.parse_args(accept_str.split(' '))
 
 
-def train_or_test(args:Args):
-    if not args.load == 'null':
+def train_or_test(args: argparse.Namespace):
+    if args.load != 'null':
         current_args = args
         try:
             arg_paths = [os.path.join(current_args.load, item) for item in os.listdir(current_args.load) if (item.endswith('args.npy') or item.endswith('args.json'))]
@@ -30,6 +48,7 @@ def train_or_test(args:Args):
         except IndexError as e:
             save_args = current_args
         model = save_args.model
+        args = save_args
     else:
         model = args.model
 
@@ -68,11 +87,17 @@ def train_or_test(args:Args):
 
     elif model == 'image':
         trainingStructure = M.IMAGE.IMAGEStructure
+    
+    # elif model == 'imagelite':
+    #     trainingStructure = M.IMAGE.IMAGELite
 
-    trainingStructure(args).run_train_or_test()
+    elif model == 'vb':
+        trainingStructure = M.Vertical.VIrisBeta
+
+    trainingStructure(sys.argv).run_train_or_test()
     
 def main():
-    args = Args().args()
+    args = get_args()
     train_or_test(args)
 
 

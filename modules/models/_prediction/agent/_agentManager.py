@@ -293,6 +293,9 @@ class MapManager(base.BaseObject):
         :param agents: a list of `BaseAgentManager` in init the map
         :init_manager: a map manager to init this (available)
         """
+
+        super().__init__()
+
         self.args = args
         self.agents = agents
 
@@ -337,7 +340,7 @@ class MapManager(base.BaseObject):
         return guidance_map, W, b
 
     def build_guidance_map(self, agents: List[BaseAgentManager], source=None, regulation=True) -> np.ndarray:
-        self.logger.info('Building Guidance Map...', end='\t')
+        self.logger.info('Building Guidance Map...')
 
         if type(source) == type(None):
             source = self.void_map

@@ -63,7 +63,7 @@ class Linear(M.prediction.Structure):
         return self.args
         
     def load_from_checkpoint(self, model_path=None):
-        self._model, _ = self.create_model()
+        self.model, _ = self.create_model()
         return self.model
 
     def create_model(self):

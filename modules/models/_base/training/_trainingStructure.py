@@ -8,22 +8,21 @@ Description: file content
 
 import copy
 import os
+import re
 import time
-from typing import Dict, List, Tuple
+from argparse import Namespace
+from typing import Dict, List, Tuple, Type, TypeVar
 
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tqdm import tqdm
 
 from ..._helpmethods import dir_check
 from .._baseObject import BaseObject
 from ..agent._agent import Agent
-from ..args._argManager import BaseArgsManager as Args
+from ..args._argManager import BaseArgsManager as ArgType
 from ..args._argParse import ArgParse
 from ..dataset._datasetManager import DatasetsManager
-
-TIME = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
 
 
 class Model(keras.Model):
@@ -37,16 +36,16 @@ class Model(keras.Model):
     When training or test new models, please subclass this class like:
     ```python
     class MyModel(Model):
-        def __init__(self, Args, training_structure=None, *args, **kwargs):
-            super().__init__(Args, training_structure, *args, **kwargs)
+        def __init__(self, ArgType, training_structure=None, *args, **kwargs):
+            super().__init__(ArgType, training_structure, *args, **kwargs)
     ```
 
     These methods must be rewritten:
     ```python
-    def __init__(self, Args: arg_type, training_structure=None, *args, **kwargs):
+    def __init__(self, ArgType: arg_type, training_structure=None, *args, **kwargs):
         # please clearfy all layers used in the model
         # like below:
-        super().__init__(Args, training_structure, *args, **kwargs)
+        super().__init__(ArgType, training_structure, *args, **kwargs)
         self.dense = tf.keras.layers.Dense(4, activation=tf.nn.relu)
 
     def call(self, inputs, training=None, mask=None):
@@ -66,11 +65,11 @@ class Model(keras.Model):
     ```
     """
 
-    arg_type = Args
+    arg_type = ArgType
 
-    def __init__(self, Args: arg_type, training_structure=None, *args, **kwargs):
+    def __init__(self, ArgType: arg_type, training_structure=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._args = Args
+        self._args = ArgType
         self._training_structure = training_structure
 
     # @property
@@ -132,7 +131,7 @@ class Structure(BaseObject):
     When training or test new models, please subclass this class like:
     ```python
     class MyTrainingStructure(Structure):
-        def __init__(self, args, arg_type=Args):
+        def __init__(self, args, arg_type=ArgType):
             super().__init__(args, arg_type=arg_type)
     ```
 
@@ -152,7 +151,7 @@ class Structure(BaseObject):
     --------------
     ```python
     # Load args
-    >>> self.load_args(current_args, load_path, arg_type=Args)
+    >>> self.load_args(current_args, load_path, arg_type=ArgType)
 
     # ----Models----
     # Load model
@@ -190,73 +189,43 @@ class Structure(BaseObject):
     ```
     """
 
-    arg_type = Args
+    arg_type = ArgType
     agent_type = Agent
     datasetsManager_type = DatasetsManager
 
-    def __init__(self, args: arg_type, arg_type=arg_type):
+    def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__()
 
-        self.__args = args
-        self._arg_type = arg_type
-        self._gpu_config()
-        self.load_args(args, args.load, arg_type=self._arg_type)
-        self._model = None
+        self.model = None
 
-    @property
-    def model(self) -> Model:
-        return self._model
+        self.args = ArgType(Args)
+        self.gpu_config()
 
-    @property
-    def args(self) -> arg_type:
-        return self.__args
 
-    def _gpu_config(self):
+    def gpu_config(self):
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = self.args.gpu.replace('_', ',')
         gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
 
-    def load_args(self, current_args, load_path, arg_type=arg_type):
+    def load_args(self, current_args: List[str],
+                  load_path: str) -> Namespace:
         """
         Load args (`Namespace`) from `load_path` into `self.__args`
 
         :param current_args: default args
         :param load_path: path of new args to load
-        :param arg_type: type of new args, default is args in `TrainArgsManager`
         """
-        if load_path != 'null':
-            try:
-                arg_paths = [os.path.join(load_path, item) for item in os.listdir(load_path) if (item.endswith('args.npy') or item.endswith('args.json'))]
-                save_args = ArgParse.load(arg_paths)
-            except:
-                save_args = current_args
 
-            arg_manager = arg_type()
-            do_not_update_list = arg_manager._get_do_not_update_list()
-            arg_list = arg_manager._get_arg_list()
 
-            for item_name in dir(current_args):
-                if (not item_name in do_not_update_list) and (not item_name.startswith('_')):
-                    if item_name in dir(save_args):
-                        setattr(current_args, item_name,
-                                getattr(save_args, item_name))
-                    if not item_name in arg_list:
-                        delattr(current_args, item_name)
+        try:
+            arg_paths = [os.path.join(load_path, item) for item in os.listdir(load_path) if (item.endswith('args.npy') or item.endswith('args.json'))]
+            save_args = ArgParse.load(arg_paths)
+        except:
+            save_args = current_args
 
-        if current_args.force_set != 'null':
-            current_args.test_set = current_args.force_set
-
-        if current_args.log_dir == 'null':
-            log_dir_current = TIME + current_args.model_name + \
-                current_args.model + str(current_args.test_set)
-            current_args.log_dir = os.path.join(
-                dir_check(current_args.save_base_dir), log_dir_current)
-        else:
-            current_args.log_dir = dir_check(current_args.log_dir)
-
-        self.__args = copy.copy(current_args)
+        return save_args
 
     def load_model(self, model_path: str) -> Model:
         """
@@ -488,11 +457,11 @@ class Structure(BaseObject):
         """
         # prepare training
         if self.args.load == 'null':
-            self._model, self.optimizer = self.create_model()
+            self.model, self.optimizer = self.create_model()
 
             if self.args.restore != 'null':
                 # restore weights from files
-                self._model = self.load_from_checkpoint(self.args.restore)
+                self.model = self.load_from_checkpoint(self.args.restore)
 
             self.logger.info('Start training with args={}'.format(self.args))
             self.train()
@@ -500,7 +469,7 @@ class Structure(BaseObject):
         # prepare test
         else:
             self.logger.info('Start test model from `{}`'.format(self.args.load))
-            self._model = self.load_from_checkpoint(self.args.load)
+            self.model = self.load_from_checkpoint(self.args.load)
             self.run_test()
 
     def train(self):

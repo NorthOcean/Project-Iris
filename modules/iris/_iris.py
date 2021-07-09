@@ -140,10 +140,10 @@ class Iris(IrisAlpha):
             self.linear_predict = True
         else:
             self.beta.load_args(args, args.loadb, SatoshiArgs)
-            self.beta._model = self.beta.load_from_checkpoint(args.loadb)
+            self.beta.model = self.beta.load_from_checkpoint(args.loadb)
 
         self.alpha.load_args(args, args.loada, SatoshiArgs)
-        self.alpha._model = self.alpha.load_from_checkpoint(args.loada)
+        self.alpha.model = self.alpha.load_from_checkpoint(args.loada)
     
     def run_train_or_test(self):
         self.logger.info('Start test model from `{}` and `{}`'.format(self.args.loada, self.args.loadb))

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-23 15:49:55
+@LastEditTime: 2021-07-09 15:41:58
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,7 +10,8 @@
 
 import os
 import re
-from typing import Any, Dict, List, Tuple, TypeVar, Union
+from argparse import Namespace
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -20,11 +21,10 @@ from ... import base
 from ..._helpmethods._helpmethods import dir_check
 from .._utils import IO, Loss, Process
 from ..agent._agentManager import TrainAgentManager as Agent
-from ..args._argManager import TrainArgsManager as Args
+from ..args._argManager import TrainArgsManager as PredictionArgs
 from ..dataset._datasetManager import PredictionDatasetManager
 from ..dataset._trainManager import DatasetsManager
 from ..vis._trajVisual import TrajVisualization
-
 
 MOVE = 'MOVE'
 ROTATE = 'ROTATE'
@@ -34,7 +34,7 @@ UPSAMPLING = 'UPSAMPLING'
 
 class Model(base.Model):
 
-    arg_type = Args
+    arg_type = PredictionArgs
 
     def __init__(self, Args, training_structure=None, *args, **kwargs):
         super().__init__(Args, training_structure=training_structure, *args, **kwargs)
@@ -49,7 +49,7 @@ class Model(base.Model):
         self._preprocess_variables = {}
 
     @property
-    def args(self) -> Args:
+    def args(self) -> PredictionArgs:
         return self._args
 
     def set_preprocess(self, *args):
@@ -203,12 +203,15 @@ class Structure(base.Structure):
     ```
     """
 
-    arg_type = Args
+    arg_type = PredictionArgs
     agent_type = Agent
     datasetsManager_type = DatasetsManager
+    
+    def __init__(self, Args: List[str], *args, **kwargs):
+        super().__init__(Args, *args, **kwargs)
 
-    def __init__(self, args, arg_type=datasetsManager_type):
-        super().__init__(args, arg_type=arg_type)
+        self.args = PredictionArgs(Args)
+
         self.model_inputs = ['TRAJ']
         self.model_groundtruths = ['GT']
 
