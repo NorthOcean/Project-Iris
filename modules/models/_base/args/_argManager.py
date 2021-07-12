@@ -2,30 +2,44 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 16:49:43
+@LastEditTime: 2021-07-12 16:50:00
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-import argparse
+from argparse import Namespace
 import copy
 import os
 import time
-from typing import Any, List
+from typing import Any, List, Union
 
 from ..._helpmethods import dir_check
-from ._argParse import ArgParse
+from . import _argParse as ArgParse
+from ._base import BaseArgs
 
 TIME = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
 
 
-class BaseArgsManager():
-    def __init__(self, args: List[str]):
+class BaseArgsManager(BaseArgs):
+    def __init__(self, args: List[str],
+                 default_args: Union[Namespace, dict] = None):
+        
+        super().__init__()
+
         self._arg_list = [s for s in self.__dir__() if not s.startswith('_')]
         self._arg_list.sort()
 
         self._args_load = None
+        self._force_args = default_args
+        
+        if type(args) == Namespace:
+            arg_list = ['main.py']
+            for key, value in args.__dict__.items():
+                arg_list.append('--{}'.format(key))
+                arg_list.append('{}'.format(value))
+            args = arg_list
+            
         self._args = ArgParse.parse(
             argv=args,
             names=self._arg_list,
@@ -136,8 +150,9 @@ class BaseArgsManager():
     def _get(self, name: str, default: Any, changeable=False):
         try:
             if (not changeable) and (self._args_load):
-            # if (self._args_load):
                 value = getattr(self._args_load, name)
+            elif changeable and self._force_args:
+                value = getattr(self._force_args, name)
             else:
                 value = getattr(self._args, name)
 

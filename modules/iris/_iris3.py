@@ -151,13 +151,13 @@ class Iris3(IrisAlpha):
             self.args.linear = 1
         else:
             self.gamma.load_args(args, args.loadc, SatoshiArgs)
-            self.gamma.model = self.gamma.load_from_checkpoint(args.loadc)
+            self.gamma._model = self.gamma.load_from_checkpoint(args.loadc)
 
         # load other weights
         self.alpha.load_args(args, args.loada, SatoshiArgs)
         self.beta.load_args(args, args.loadb, SatoshiArgs)
-        self.alpha.model = self.alpha.load_from_checkpoint(args.loada)
-        self.beta.model = self.beta.load_from_checkpoint(args.loadb)
+        self.alpha._model = self.alpha.load_from_checkpoint(args.loada)
+        self.beta._model = self.beta.load_from_checkpoint(args.loadb)
 
     def run_train_or_test(self):
         self.logger.info(

@@ -116,14 +116,14 @@ class Satoshi(SatoshiAlpha):
 
         if not self.args.loadb.startswith('l'):
             self.__beta.load_args(args, args.loadb, arg_type=SatoshiArgs)
-            self.__beta.model = self.beta.load_from_checkpoint(
+            self.__beta._model = self.beta.load_from_checkpoint(
                 self.args.loadb)
         else:
             self.linear_prediction = True
 
         # alpha model: load networks and weights
         self.__alpha.load_args(args, args.loada, arg_type=SatoshiArgs)
-        self.__alpha.model = self.alpha.load_from_checkpoint(self.args.loada)
+        self.__alpha._model = self.alpha.load_from_checkpoint(self.args.loada)
         self.__alpha.set_metrics('ade', 'fde')
         self.__alpha.set_metrics_weights(1.0, 0.0)
 

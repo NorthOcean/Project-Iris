@@ -109,14 +109,14 @@ class SatoshiTransformer(SatoshiAlphaTransformer):
         if not self.args.loadb.startswith('l'):
             self.beta = SatoshiBetaTransformer(args)
             self.beta.load_args(args, args.loadb, arg_type=SatoshiArgs)
-            self.beta.model = self.beta.load_from_checkpoint(
+            self.beta._model = self.beta.load_from_checkpoint(
                 self.args.loadb)
         else:
             self.linear_prediction = True
 
         # alpha model: load networks and weights
         self.alpha.load_args(args, args.loada, arg_type=SatoshiArgs)
-        self.alpha.model = self.alpha.load_from_checkpoint(self.args.loada)
+        self.alpha._model = self.alpha.load_from_checkpoint(self.args.loada)
         self.alpha.set_metrics('ade', 'fde')
         self.alpha.set_metrics_weights(1.0, 0.0)
 

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 20:58:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 14:21:13
+@LastEditTime: 2021-07-12 15:06:00
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -20,8 +20,10 @@ from ._args import VArgs
 from ._layers import ContextEncoding, TrajEncoding
 from ._utils import Utils as U
 
+from ..satoshi._alpha_transformer import SatoshiAlphaTransformerModel as VIrisAlphaModel
 
-class VIrisAlphaModel(M.prediction.Model):
+
+class __VIrisAlphaModel(M.prediction.Model):
     def __init__(self, Args,
                  training_structure=None,
                  *args, **kwargs):
@@ -67,7 +69,7 @@ class VIrisAlphaModel(M.prediction.Model):
 
 class VIrisAlpha(M.prediction.Structure):
 
-    def __init__(self, Args: Namespace, *args, **kwargs):
+    def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
         
         self.args = VArgs(Args)
@@ -81,11 +83,16 @@ class VIrisAlpha(M.prediction.Structure):
         self.set_metrics(self.min_FDE)
         self.set_metrics_weights(1.0)
 
-    def create_model(self, model_type=None):
+    def create_model(self, model_type=None,
+                     *args, **kwargs):
+
         if model_type is None:
             model_type = VIrisAlphaModel
+            
+        model = model_type(self.args, 
+                           training_structure=self,
+                           *args, **kwargs)
 
-        model = model_type(self.args, training_structure=self)
         opt = keras.optimizers.Adam(self.args.lr)
         return model, opt
 

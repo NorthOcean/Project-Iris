@@ -21,7 +21,7 @@ from ..._helpmethods import dir_check
 from .._baseObject import BaseObject
 from ..agent._agent import Agent
 from ..args._argManager import BaseArgsManager as ArgType
-from ..args._argParse import ArgParse
+from ..args import _argParse as ArgParse
 from ..dataset._datasetManager import DatasetsManager
 
 
@@ -70,7 +70,7 @@ class Model(keras.Model):
         self.args = Args
         self.training_structure = training_structure
 
-    def call(self, inputs, training=None, mask=None):
+    def call(self, inputs, training=None, mask=None, *args, **kwargs):
         raise 'Model is not set!'
         return super().call(inputs, training=training, mask=mask)
 
@@ -186,11 +186,14 @@ class Structure(BaseObject):
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__()
 
-        self.model = None
+        self._model = None
 
         self.args = ArgType(Args)
         self.gpu_config()
 
+    @property
+    def model(self) -> Model:
+        return self._model
 
     def gpu_config(self):
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -208,7 +211,6 @@ class Structure(BaseObject):
         :param load_path: path of new args to load
         """
 
-
         try:
             arg_paths = [os.path.join(load_path, item) for item in os.listdir(load_path) if (item.endswith('args.npy') or item.endswith('args.json'))]
             save_args = ArgParse.load(arg_paths)
@@ -217,18 +219,18 @@ class Structure(BaseObject):
 
         return save_args
 
-    def load_model(self, model_path: str) -> Model:
+    def load_model(self, model_path: str, *args, **kwargs) -> Model:
         """
         Load already trained models from checkpoint files.
 
         :param model_path: path of model
         :return model: loaded model
         """
-        model, _ = self.create_model()
+        model, _ = self.create_model(*args, **kwargs)
         model.load_weights(model_path)
         return model
 
-    def load_from_checkpoint(self, model_path):
+    def load_from_checkpoint(self, model_path, *args, **kwargs):
         """
         Load already trained models from `.h5` or `.tf` files according to args.
 
@@ -259,14 +261,16 @@ class Structure(BaseObject):
                 best_epoch = np.loadtxt(os.path.join(model_path, 'best_ade_epoch.txt'))[
                     1].astype(int)
                 model = self.load_model(base_path.format(
-                    '_epoch{}{}'.format(best_epoch, save_format)))
+                    '_epoch{}{}'.format(best_epoch, save_format)),
+                    *args, **kwargs)
             else:
-                model = self.load_model(base_path.format(save_format))
+                model = self.load_model(base_path.format(save_format),
+                                        *args, **kwargs)
 
         except:
             model_name = name_list[0]
             base_path = os.path.join(model_path, model_name + save_format)
-            model = self.load_model(base_path)
+            model = self.load_model(base_path, *args, **kwargs)
 
         return model
 
@@ -447,11 +451,11 @@ class Structure(BaseObject):
         """
         # prepare training
         if self.args.load == 'null':
-            self.model, self.optimizer = self.create_model()
+            self._model, self.optimizer = self.create_model()
 
             if self.args.restore != 'null':
                 # restore weights from files
-                self.model = self.load_from_checkpoint(self.args.restore)
+                self._model = self.load_from_checkpoint(self.args.restore)
 
             self.logger.info('Start training with args={}'.format(self.args))
             self.train()
@@ -459,7 +463,7 @@ class Structure(BaseObject):
         # prepare test
         else:
             self.logger.info('Start test model from `{}`'.format(self.args.load))
-            self.model = self.load_from_checkpoint(self.args.load)
+            self._model = self.load_from_checkpoint(self.args.load)
             self.run_test()
 
     def train(self):

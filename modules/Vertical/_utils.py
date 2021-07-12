@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 10:40:52
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 10:47:00
+@LastEditTime: 2021-07-09 18:07:38
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -30,14 +30,22 @@ class Utils():
         """
 
         model_inputs_processed = self.pre_process(model_inputs, training)
+        destination_processed = self.pre_process([model_inputs[-1]],
+                                                 training,
+                                                 use_new_para_dict=False)
+
+        model_inputs_processed = (model_inputs_processed[0],
+                                  model_inputs_processed[1],
+                                  model_inputs_processed[2],
+                                  destination_processed[0])
 
         if training:
             gt_processed = self.pre_process([kwargs['gt']],
                                             use_new_para_dict=False)
 
         # use `self.call()` to debug
-        output = self.call(inputs=model_inputs_processed,
-                           outputs=gt_processed[0] if training else None,
+        output = self.call(model_inputs_processed,
+                           gt_processed[0] if training else None,
                            training=training)
 
         if not (type(output) == list or type(output) == tuple):

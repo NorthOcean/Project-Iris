@@ -2,20 +2,20 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 15:26:01
+@LastEditTime: 2021-07-12 15:52:26
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 from argparse import Namespace
-from typing import Tuple
+from typing import List, Tuple
 
 import tensorflow as tf
 
-from .. import models as M
 from ._args import VArgs
-from ._VirisAlpha import VIrisAlpha, VIrisAlphaModel
+from ..satoshi._alpha_transformer import SatoshiAlphaTransformerModel as VIrisAlphaModel
+from ._VirisAlpha import VIrisAlpha #, VIrisAlphaModel
 from ._VirisBeta import VIrisBeta, VIrisBetaModel
 
 
@@ -47,7 +47,7 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
         # shape = (batch*Kc, 1, 2)
         proposals = tf.reshape(outputs[0], [-1, 1, 2])
         current_inputs = kwargs['model_inputs']
-    
+
         if self.linear:
             start = current_inputs[0][:, -1:, :]    # (batch, 1, 2)
             end = outputs[0]    # (batch, Kc, 2)
@@ -77,24 +77,23 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
                 # beta outputs shape = (batch*Kc, pred, 2)
                 beta_results.append(self.training_structure.beta(
                     beta_inputs,
-                    return_numpy=False)[0][:, :, -1:, :])
+                    return_numpy=False)[0])
 
             beta_results = tf.concat(beta_results, axis=0)
             beta_results = tf.reshape(beta_results, [batch, Kc, pred, 2])
             return (beta_results,)
 
 
-class VIris(M.prediction.Structure):
+class VIris(VIrisAlpha):
     """
     Structure for Vertical prediction
     ---------------------------------
-    
+
     """
 
-    def __init__(self, Args: Namespace,
-                 *args, **kwargs):
-                 
+    def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
+        
         self.args = VArgs(Args)
 
         # set inputs and groundtruths
@@ -104,25 +103,49 @@ class VIris(M.prediction.Structure):
         # set metrics
         self.set_metrics('ade', 'fde')
         self.set_metrics_weights(1.0, 0.0)
-        
+
         # assign alpha model and beta model containers
-        self.alpha = VIrisAlpha(self._Args)
-        self.beta = VIrisBeta(self._Args)
+        self.alpha = self
+        self.beta = VIrisBeta(Args)
         self.linear_predict = False
 
         # load weights
         if 'null' in [self.args.loada, self.args.loadb]:
             raise ('`IrisAlpha` or `IrisBeta` not found!' +
                    ' Please specific their paths via `--loada` or `--loadb`.')
-        
+
         if self.args.loadb.startswith('l'):
             self.linear_predict = True
         else:
-            self.beta.load_args(Args, self.args.loadb)
-            self.beta.model = self.beta.load_from_checkpoint(args.loadb)
+            self.beta.args = VArgs(self.beta.load_args(Args, self.args.loadb))
+            self.beta._model = self.beta.load_from_checkpoint(self.args.loadb)
 
+        self.alpha.args = VArgs(
+            args=self.alpha.load_args(Args, self.args.loada),
+            default_args=self.args._args
+        )
+        
+        self.alpha._model = self.alpha.load_from_checkpoint(
+            self.args.loada,
+            linear_prediction=self.linear_predict
+        )
 
+    def run_train_or_test(self):
+        self.run_test()
 
+    def create_model(self, *args, **kwargs):
+        return super().create_model(model_type=_VIrisAlphaModelPlus,
+                                    *args, **kwargs)
+
+    def print_test_result_info(self, loss_dict, **kwargs):
+        dataset = kwargs['dataset_name']
+        self.log_parameters(title='test results', **
+                            dict({'dataset': dataset}, **loss_dict))
+        self.logger.info('Results from {}, {}, {}, {}'.format(
+            self.args.loada,
+            self.args.loadb,
+            dataset,
+            loss_dict))
 
 
 class BatchIndex():

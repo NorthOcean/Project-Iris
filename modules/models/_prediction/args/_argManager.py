@@ -2,20 +2,23 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 16:32:32
+@LastEditTime: 2021-07-12 15:53:02
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
+from argparse import Namespace
+from typing import List, Union
 
 from ... import base
 
 
 class BasePredictArgs(base.Args):
-    def __init__(self, args: List[str]):
-        super().__init__(args)
+    def __init__(self, args: List[str], 
+                 default_args: Union[Namespace, dict] = None):
+
+        super().__init__(args, default_args=default_args)
 
     @property
     def obs_frames(self) -> int:
@@ -33,8 +36,10 @@ class BasePredictArgs(base.Args):
 
 
 class TrainArgsManager(BasePredictArgs):
-    def __init__(self, args: List[str]):
-        super().__init__(args)
+    def __init__(self, args: List[str], 
+                 default_args: Union[Namespace, dict] = None):
+                 
+        super().__init__(args, default_args)
         
     @property
     def draw_results(self) -> int:
