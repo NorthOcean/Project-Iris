@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 10:50:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-12 15:53:21
+@LastEditTime: 2021-07-13 19:14:01
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -23,6 +23,15 @@ class VArgs(M.prediction.TrainArgs):
 
         if self._args.force_pred_frames != -1:
             self._args.pred_frames = self._args.force_pred_frames
+
+    @property
+    def p_index(self) -> str:
+        """
+        Index of predicted points at the first stage.
+        Split with `_`.
+        For example, `'0_4_8_11'`.
+        """
+        return self._get('p_index', '11', changeable=False)
 
     @property
     def K_train(self) -> int:

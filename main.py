@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-12 14:34:54
+@LastEditTime: 2021-07-13 14:40:37
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -26,11 +26,10 @@ def get_args() -> argparse.Namespace:
         arg_str += s + ' '
 
     accept_str = ''
-    load = re.findall('(.*)(--load [^-^ ]+)', arg_str)
-    model = re.findall('(.*)(--model [^-^ ]+)', arg_str)
-    for l in [load, model]:
-        for s in l:
-            accept_str += s[1]
+    for name in ['load', 'model']:
+        if  p := re.match('(.*)(--{} -?[^-^ ]+[^ ]*)( .*)'.format(name), 
+                            arg_str):
+            accept_str += p[2] + ''
 
     parser = argparse.ArgumentParser(description='Main args', )
     parser.add_argument('--load', type=str, default='null')
@@ -85,11 +84,8 @@ def train_or_test(args: argparse.Namespace):
     elif model == 'iris3':
         trainingStructure = M.iris.Iris3
 
-    elif model == 'image':
-        trainingStructure = M.IMAGE.IMAGEStructure
-    
-    # elif model == 'imagelite':
-    #     trainingStructure = M.IMAGE.IMAGELite
+    elif model == 'va':
+        trainingStructure = M.Vertical.VIrisAlpha
 
     elif model == 'vb':
         trainingStructure = M.Vertical.VIrisBeta

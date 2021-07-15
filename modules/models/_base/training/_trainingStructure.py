@@ -457,7 +457,7 @@ class Structure(BaseObject):
                 # restore weights from files
                 self._model = self.load_from_checkpoint(self.args.restore)
 
-            self.logger.info('Start training with args={}'.format(self.args))
+            self.logger.info('Start training with args={}'.format(self.args.__dict__))
             self.train()
 
         # prepare test

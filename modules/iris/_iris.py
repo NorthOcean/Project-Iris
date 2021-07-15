@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-22 16:45:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-24 09:51:49
+@LastEditTime: 2021-07-14 10:59:29
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -115,8 +115,13 @@ class Iris(IrisAlpha):
     model paths with args `--loada` and `--loadb` to use them together.
     """
 
-    def __init__(self, args, beta_model=IrisBeta):
-        super().__init__(args)
+    def __init__(self, Args: List[str],
+                 beta_model=IrisBeta,
+                 *args, **kwargs):
+
+        super().__init__(Args, *args, **kwargs)
+
+        self.args = SatoshiArgs(Args)
 
         # set inputs and groundtruths
         self.set_model_inputs('trajs', 'maps', 'map_paras')
@@ -128,7 +133,7 @@ class Iris(IrisAlpha):
         
         # assign alpha model and beta model containers
         self.alpha = self
-        self.beta = beta_model(args)
+        self.beta = beta_model(Args)
         self.linear_predict = False
 
         # load weights
@@ -139,11 +144,14 @@ class Iris(IrisAlpha):
         if self.args.loadb.startswith('l'):
             self.linear_predict = True
         else:
-            self.beta.load_args(args, args.loadb, SatoshiArgs)
-            self.beta._model = self.beta.load_from_checkpoint(args.loadb)
+            self.beta.args = SatoshiArgs(self.beta.load_args(Args, self.args.loadb))
+            self.beta._model = self.beta.load_from_checkpoint(self.args.loadb)
 
-        self.alpha.load_args(args, args.loada, SatoshiArgs)
-        self.alpha._model = self.alpha.load_from_checkpoint(args.loada)
+        self.alpha.args = SatoshiArgs(
+            args=self.alpha.load_args(Args, self.args.loada),
+            default_args=self.args._args
+        )
+        self.alpha._model = self.alpha.load_from_checkpoint(self.args.loada)
     
     def run_train_or_test(self):
         self.logger.info('Start test model from `{}` and `{}`'.format(self.args.loada, self.args.loadb))

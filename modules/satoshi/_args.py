@@ -2,20 +2,23 @@
 @Author: Conghao Wong
 @Date: 2021-04-01 20:28:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-09 16:33:09
+@LastEditTime: 2021-07-14 10:58:26
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
+from argparse import Namespace
+from typing import List, Union
 
 import modules.models as M
 
 
 class SatoshiArgs(M.prediction.TrainArgs):
-    def __init__(self, args: List[str]):
-        super().__init__(args)
+    def __init__(self, args: List[str],
+                 default_args: Union[Namespace, dict]=None):
+                
+        super().__init__(args, default_args=default_args)
 
         if self._args.force_pred_frames != -1:
             self._args.pred_frames = self._args.force_pred_frames

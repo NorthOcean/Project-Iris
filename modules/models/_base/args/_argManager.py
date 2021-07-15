@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-12 16:50:00
+@LastEditTime: 2021-07-13 20:56:27
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -24,7 +24,7 @@ TIME = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
 class BaseArgsManager(BaseArgs):
     def __init__(self, args: List[str],
                  default_args: Union[Namespace, dict] = None):
-        
+
         super().__init__()
 
         self._arg_list = [s for s in self.__dir__() if not s.startswith('_')]
@@ -32,14 +32,14 @@ class BaseArgsManager(BaseArgs):
 
         self._args_load = None
         self._force_args = default_args
-        
+
         if type(args) == Namespace:
             arg_list = ['main.py']
             for key, value in args.__dict__.items():
                 arg_list.append('--{}'.format(key))
                 arg_list.append('{}'.format(value))
             args = arg_list
-            
+
         self._args = ArgParse.parse(
             argv=args,
             names=self._arg_list,
@@ -47,10 +47,21 @@ class BaseArgsManager(BaseArgs):
 
         if (p := self.load) != 'null':
             try:
-                arg_paths = [os.path.join(p, item) for item in os.listdir(p) if (item.endswith('args.npy') or item.endswith('args.json'))]
+                arg_paths = [os.path.join(p, item) for item in os.listdir(p) if (
+                    item.endswith('args.npy') or item.endswith('args.json'))]
                 self._args_load = ArgParse.load(arg_paths)
             except:
                 raise FileNotFoundError('Arg file {} not found'.format(p))
+
+        if self._args.log_dir == 'null':
+            log_dir_current = (TIME +
+                               self.model_name +
+                               self.model +
+                               self.test_set)
+            self._args.log_dir = os.path.join(dir_check(self.save_base_dir),
+                                log_dir_current)
+        else:
+            dir_check(self._args.log_dir)
 
     @property
     def force_set(self) -> str:
@@ -97,16 +108,7 @@ class BaseArgsManager(BaseArgs):
         Log dir for saving logs. If set to `null`,
         logs will save at `save_base_dir/current_model`.
         """
-        log_dir = self._get('log_dir', 'null', changeable=False)
-        if log_dir == 'null':
-            log_dir_current = (TIME +
-                               self.model_name +
-                               self.model + 
-                               self.test_set)
-            return os.path.join(dir_check(self.save_base_dir), 
-                                log_dir_current)
-        else:
-            return dir_check(log_dir)
+        return self._get('log_dir', 'null', changeable=False)
 
     @property
     def load(self) -> str:
@@ -165,6 +167,5 @@ class BaseArgsManager(BaseArgs):
         dic = {}
         for arg in self._arg_list:
             dic[arg] = getattr(self, arg)
-        
-        
+
         print(dic)

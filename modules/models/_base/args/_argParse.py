@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-11 10:01:50
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-12 19:13:27
+@LastEditTime: 2021-07-13 14:49:22
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -47,7 +47,7 @@ def save(path:str, args: Union[dict, Namespace, BaseArgs]):
     elif d == Namespace:
         write_json(path, args.__dict__)
     
-    elif issubclass(BaseArgs, d):
+    elif issubclass(d, BaseArgs):
         keys = args._arg_list
         values = [getattr(args, k) for k in keys]
         write_json(path, dict(zip(keys, values)))

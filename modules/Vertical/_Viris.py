@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-12 15:52:26
+@LastEditTime: 2021-07-14 10:10:29
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -14,18 +14,19 @@ from typing import List, Tuple
 import tensorflow as tf
 
 from ._args import VArgs
-from ..satoshi._alpha_transformer import SatoshiAlphaTransformerModel as VIrisAlphaModel
-from ._VirisAlpha import VIrisAlpha #, VIrisAlphaModel
+from ._VirisAlpha import VIrisAlpha, VIrisAlphaModel
 from ._VirisBeta import VIrisBeta, VIrisBetaModel
 
 
 class _VIrisAlphaModelPlus(VIrisAlphaModel):
-    def __init__(self, Args,
+    def __init__(self, Args: VArgs,
+                 pred_number: int,
                  linear_prediction=False,
-                 training_structure=None,
+                 training_structure: VIrisAlpha = None,
                  *args, **kwargs):
 
-        super().__init__(Args, training_structure,
+        super().__init__(Args, pred_number,
+                         training_structure,
                          *args, **kwargs)
 
         self.linear = linear_prediction
@@ -34,30 +35,43 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
                      training=None,
                      **kwargs) -> Tuple[tf.Tensor]:
 
-        # shape = ((batch, Kc, 2))
+        # shape = ((batch, Kc, n, 2))
         outputs = super().post_process(outputs, training, **kwargs)
 
         if training:
             return outputs
 
         batch, Kc = outputs[0].shape[:2]
+        n = self.n_pred
+        pos = self.training_structure.p_index
         pred = self.args.pred_frames
         K = self.args.K
 
-        # shape = (batch*Kc, 1, 2)
-        proposals = tf.reshape(outputs[0], [-1, 1, 2])
+        # shape = (batch, Kc, n, 2)
+        proposals = outputs[0]
         current_inputs = kwargs['model_inputs']
 
-        if self.linear:
-            start = current_inputs[0][:, -1:, :]    # (batch, 1, 2)
-            end = outputs[0]    # (batch, Kc, 2)
+        if True:
+            # Piecewise linear interpolation
+            pos = tf.cast(pos, tf.float32)
+            pos = tf.concat([[-1], pos], axis=0)
+            obs = current_inputs[0][:, tf.newaxis, -1:, :]
+            proposals = tf.concat([tf.repeat(obs, Kc, 1), proposals], axis=-2)
 
             linear_results = []
-            for p in range(1, pred + 1):
-                linear_results.append(
-                    (end - start) * p / pred
-                    + start
-                )   # (batch, Kc, 2)
+            for output_index in range(n):
+                p_start = pos[output_index]
+                p_end = pos[output_index+1]
+
+                # shape = (batch, Kc, 2)
+                start = proposals[:, :, output_index, :]
+                end = proposals[:, :, output_index+1, :]
+
+                for p in tf.range(p_start+1, p_end+1):
+                    linear_results.append(
+                        (end - start) * (p - p_start) / (p_end - p_start)
+                        + start
+                    )   # (batch, Kc, 2)
 
             return (tf.transpose(linear_results, [1, 2, 0, 3]),)
 
@@ -93,7 +107,7 @@ class VIris(VIrisAlpha):
 
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
-        
+
         self.args = VArgs(Args)
 
         # set inputs and groundtruths
@@ -124,7 +138,7 @@ class VIris(VIrisAlpha):
             args=self.alpha.load_args(Args, self.args.loada),
             default_args=self.args._args
         )
-        
+
         self.alpha._model = self.alpha.load_from_checkpoint(
             self.args.loada,
             linear_prediction=self.linear_predict
@@ -141,9 +155,10 @@ class VIris(VIrisAlpha):
         dataset = kwargs['dataset_name']
         self.log_parameters(title='test results', **
                             dict({'dataset': dataset}, **loss_dict))
-        self.logger.info('Results from {}, {}, {}, {}'.format(
+        self.logger.info('Results from {}, {}, {}, {}, {}'.format(
             self.args.loada,
             self.args.loadb,
+            self.args.p_index,
             dataset,
             loss_dict))
 

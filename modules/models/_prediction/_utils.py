@@ -82,7 +82,7 @@ class Loss():
         :param GT: ground truth future traj, shape = `[batch, pred, 2]`
         :return loss_ade:
             Return `ADE` when input_shape = [batch, pred_frames, 2];
-            Return `minADE` when input_shape = [K, batch, pred_frames, 2].
+            Return `minADE` when input_shape = [batch, K, pred_frames, 2].
         """
 
         pred = tf.cast(pred, tf.float32)
@@ -413,6 +413,8 @@ class Process():
 
     @staticmethod
     def update(new: Tuple[tf.Tensor], old: Tuple[tf.Tensor]) -> Tuple[tf.Tensor]:
+        if type(old) == list:
+            old = tuple(old)
         if len(new) < len(old):
             return new + old[len(new):]
         else:

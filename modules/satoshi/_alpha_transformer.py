@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-05-06 11:06:15
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-05-10 11:26:30
+@LastEditTime: 2021-07-14 10:37:36
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -121,8 +121,10 @@ class SatoshiAlphaTransformerModel(M.prediction.Model):
 
 
 class SatoshiAlphaTransformer(M.prediction.Structure):
-    def __init__(self, args, arg_type=SatoshiArgs):
-        super().__init__(args, arg_type=arg_type)
+    def __init__(self, Args: List[str], *args, **kwargs):
+        super().__init__(Args, *args, **kwargs)
+
+        self.args = SatoshiArgs(Args)
 
         self.set_model_inputs('traj', 'maps')
         self.set_model_groundtruths('destination')

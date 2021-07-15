@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:17:59
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-08 20:02:28
+@LastEditTime: 2021-07-12 21:09:41
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -133,10 +133,10 @@ class LinearPrediction(keras.layers.Layer):
 
     def __init__(self, useFFT=None, include_obs=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.useFFT = useFFT
         self.include_obs = include_obs
-        
+
         if self.useFFT:
             self.fft = FFTlayer()
 
@@ -150,7 +150,7 @@ class LinearPrediction(keras.layers.Layer):
             results.append((end - start) * p + start)
 
         results.append(end)
-        pred = self.concat(results) # (batch, n, 2)
+        pred = self.concat(results)  # (batch, n, 2)
 
         # output shape = (batch, obs+n, 2)
         if self.include_obs:
@@ -159,6 +159,33 @@ class LinearPrediction(keras.layers.Layer):
         # output shape = (batch, obs+n, 4)
         if self.useFFT:
             pred_r, pred_i = self.fft(pred)
-            pred = self.concat1([pred_r, pred_i])   
+            pred = self.concat1([pred_r, pred_i])
 
         return pred
+
+
+class GraphConv(keras.layers.Layer):
+    """
+    Graph conv layer
+
+    parameters when call:
+    :param features: feature sequences, shape = (batch, N, M)
+    :param adjMatrix: adj matrix, shape = (batch, N, N)
+    :param outputs: shape = (batch, N, units)
+    """
+    def __init__(self, units: int,
+                 activation=None,
+                 *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+        
+        self.fc = keras.layers.Dense(units, activation)
+        
+    def call(self, features: tf.Tensor,
+             adjMatrix: tf.Tensor,
+             *args, **kwargs):
+        
+        dot = tf.matmul(adjMatrix, features)
+        return self.fc(dot)
+        
+        

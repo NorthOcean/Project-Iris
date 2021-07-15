@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-05-08 15:50:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-25 09:51:50
+@LastEditTime: 2021-07-14 10:38:19
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -90,8 +90,10 @@ class _SatoshiAlphaTransformerModelLinear(_SatoshiAlphaTransformerGenerativeMode
 
 
 class SatoshiTransformer(SatoshiAlphaTransformer):
-    def __init__(self, args, arg_type=SatoshiArgs):
-        super().__init__(args, arg_type=arg_type)
+    def __init__(self, Args: List[str], *args, **kwargs):
+        super().__init__(Args, *args, **kwargs)
+
+        self.args = SatoshiArgs(Args)
 
         # model inputs and groundtruths
         self.set_model_inputs('trajs', 'maps', 'map_paras')

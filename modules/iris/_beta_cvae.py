@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-23 16:21:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-23 16:44:22
+@LastEditTime: 2021-07-14 10:43:03
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -90,8 +90,10 @@ class IrisBetaCVAEModel(M.prediction.Model):
 
 
 class IrisBetaCVAE(M.prediction.Structure):
-    def __init__(self, args, arg_type=SatoshiArgs):
-        super().__init__(args, arg_type=arg_type)
+    def __init__(self, Args: List[str], *args, **kwargs):
+        super().__init__(Args, *args, **kwargs)
+
+        self.args = SatoshiArgs(Args)
 
         self.set_model_inputs('trajs', 'maps', 'paras', 'destinations')
         self.set_model_groundtruths('gt')

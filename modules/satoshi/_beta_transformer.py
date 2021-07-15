@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-05-07 09:12:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-06-21 15:19:40
+@LastEditTime: 2021-07-14 10:43:34
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -117,8 +117,10 @@ class SatoshiBetaTransformerModel(M.prediction.Model):
 
 
 class SatoshiBetaTransformer(M.prediction.Structure):
-    def __init__(self, args, arg_type=SatoshiArgs):
-        super().__init__(args, arg_type=arg_type)
+    def __init__(self, Args: List[str], *args, **kwargs):
+        super().__init__(Args, *args, **kwargs)
+
+        self.args = SatoshiArgs(Args)
 
         self.set_model_inputs('trajs', 'maps', 'paras', 'destinations')
         self.set_model_groundtruths('gt')
