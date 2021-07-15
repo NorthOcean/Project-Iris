@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-12 15:53:02
+@LastEditTime: 2021-07-15 09:54:39
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -210,13 +210,6 @@ class TrainArgsManager(BasePredictArgs):
         return self._get('map_half_size', 50, changeable=False)
 
     @property
-    def gcn_layers(self) -> int:
-        """
-        Number of GCN layers used in GAN model.
-        """
-        return self._get('gcn_layers', 3, changeable=False)
-
-    @property
     def K(self) -> int:
         """
         Number of multiple generation when test.
@@ -250,20 +243,6 @@ class TrainArgsManager(BasePredictArgs):
         Prepare argument. Do Not Change it.
         """
         return self._get('prepare_type', 'test', changeable=True)
-
-    @property
-    def spring_number(self) -> int:
-        """
-        Experimental.
-        """
-        return self._get('spring_number', 4, changeable=False)
-
-    @property
-    def focus_mode(self) -> int:
-        """
-        Experimental.
-        """
-        return self._get('focus_mode', 0, changeable=False)
 
 
 class OnlineArgsManager(TrainArgsManager):
@@ -311,13 +290,6 @@ class OnlineArgsManager(TrainArgsManager):
         None
         """
         return self._get('img_save_base_path', './online_vis', changeable=False)
-
-    @property
-    def focus_mode(self) -> int:
-        """
-        None
-        """
-        return self._get('focus_mode', 0, changeable=False)
 
     @property
     def run_frames(self) -> int:

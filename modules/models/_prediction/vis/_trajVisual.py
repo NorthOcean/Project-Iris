@@ -23,16 +23,16 @@ GT_IMAGE = './vis_pngs/gt_small.png' if SMALL_POINTS else './vis_pngs/gt.png'
 PRED_IMAGE = './vis_pngs/pred_small.png' if SMALL_POINTS else './vis_pngs/pred.png'
 DISTRIBUTION_IMAGE = './vis_pngs/dis.png'
 
-    
+
 class TrajVisualization(base.Visualization):
     def __init__(self, dataset):
         super().__init__()
-        
+
         if dataset:
             self.DM = PredictionDatasetManager()(dataset)
             self.set_video(video_capture=cv2.VideoCapture(self.DM.video_path),
-                        video_paras=self.DM.paras,
-                        video_weights=self.DM.weights)
+                           video_paras=self.DM.paras,
+                           video_weights=self.DM.weights)
 
         self.obs_file = cv2.imread(OBS_IMAGE, -1)
         self.pred_file = cv2.imread(PRED_IMAGE, -1)
@@ -40,7 +40,7 @@ class TrajVisualization(base.Visualization):
         self.dis_file = cv2.imread(DISTRIBUTION_IMAGE, -1)
 
         self.conv_layer = tf.keras.layers.Conv2D(
-            1, (20, 20), (1, 1), 'same', 
+            1, (20, 20), (1, 1), 'same',
             kernel_initializer=tf.initializers.constant(1/(20*20)))
 
         # color bar in BGR format
@@ -61,9 +61,7 @@ class TrajVisualization(base.Visualization):
              frame_name,
              save_path='null',
              show_img=False,
-             draw_distribution=False,
-             focus_mode=False,
-             draw_relations=False):
+             draw_distribution=False):
         """
         Draw trajecotries on images.
 
@@ -72,41 +70,23 @@ class TrajVisualization(base.Visualization):
         :param save_path: save path
         :param show_img: controls if show results in opencv window
         :draw_distrubution: controls if draw as distribution for generative models
-        :focus_model: controls if highlight someone, canbe `False` or a one-hot array
-        :draw_relations: controls if draw relations between the focused agent and others
         """
         obs_frame = frame_name
         time = 1000 * obs_frame / self.video_paras[1]
         self.video_capture.set(cv2.CAP_PROP_POS_MSEC, time - 1)
         _, f = self.video_capture.read()
 
-        if type(focus_mode) == bool and (not focus_mode):
-            for agent in agents:
-                obs = self.real2pixel(agent.traj)
-                pred = self.real2pixel(agent.pred)
-                gt = self.real2pixel(agent.groundtruth) if len(
-                    agent.groundtruth) else None
-                f = self._visualization(
-                    f, obs, gt, pred, draw_distribution, alpha=1.0)
-        else:
-            for agent, label in zip(agents, focus_mode):
-                obs = self.real2pixel(agent.traj)
-                pred = self.real2pixel(agent.pred)
-                gt = self.real2pixel(agent.groundtruth) if len(
-                    agent.groundtruth) else None
-                f = self._visualization(
-                    f, obs, gt, pred, draw_distribution, alpha=0.3 if label == 0 else 1.0)
-
-        if not type(draw_relations) == bool:
-            for point in draw_relations:
-                f = draw_relation(f, self.real2pixel(
-                    [agents[np.where(np.array(focus_mode) == 1)[0][0]].traj[-1], point]), self.gt_file)
+        for agent in agents:
+            obs = self.real2pixel(agent.traj)
+            pred = self.real2pixel(agent.pred)
+            gt = self.real2pixel(agent.groundtruth) \
+                if len(agent.groundtruth) else None
+            f = self._visualization(f, obs, gt, pred,
+                                    draw_distribution,
+                                    alpha=1.0)
 
         f = cv2.putText(f, self.DM.dataset + ' ' + str(int(frame_name)).zfill(6),
                         (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 2)
-        if not type(focus_mode) == bool:
-            f = cv2.putText(f, 'Focus Mode', (10, 70),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 2)
 
         if self.DM.scale > 1:
             original_shape = f.shape
@@ -177,7 +157,7 @@ class TrajVisualization(base.Visualization):
             video_list.append(f)
             VideoWriter.write(f)
 
-    def _visualization(self, f: np.ndarray, obs=None, gt=None, pred=None, draw_distribution: int =None, alpha=1.0):
+    def _visualization(self, f: np.ndarray, obs=None, gt=None, pred=None, draw_distribution: int = None, alpha=1.0):
         """
         Draw one agent's observations, predictions, and groundtruths.
 
@@ -191,34 +171,35 @@ class TrajVisualization(base.Visualization):
         f_original = f.copy()
         f = np.zeros([f.shape[0], f.shape[1], 4])
         if obs is not None:
-            f = draw_traj(f, obs, self.obs_file, 
-                          color=(255, 255, 255), 
+            f = draw_traj(f, obs, self.obs_file,
+                          color=(255, 255, 255),
                           width=3, alpha=alpha)
 
         if gt is not None:
             f = draw_traj(f, gt, self.gt_file,
-                          color=(255, 255, 255), 
+                          color=(255, 255, 255),
                           width=3, alpha=alpha)
 
-        f = base.Visualization.add_png_to_source(f_original, f, 
-                                                 [f.shape[1]//2, f.shape[0]//2], 
+        f = base.Visualization.add_png_to_source(f_original, f,
+                                                 [f.shape[1]//2, f.shape[0]//2],
                                                  alpha)
         if pred is not None:
             background = np.zeros(f.shape[:2] + (4,))
             if draw_distribution == 1:
-                f1 = draw_dis(background, pred.reshape([-1, 2]), 
-                              self.dis_file, self.color_bar, 
+                f1 = draw_dis(background, pred.reshape([-1, 2]),
+                              self.dis_file, self.color_bar,
                               alpha=0.5)
-            
+
             elif draw_distribution == 2:
                 all_steps = pred.shape[0]
                 for index, step in enumerate(pred):
-                    f1 = draw_dis(background, step, self.dis_file, 
+                    f1 = draw_dis(background, step, self.dis_file,
                                   index/all_steps * self.color_bar,
                                   alpha=1.0)
-            
+
             if draw_distribution > 0:
-                f_smooth = self.conv_layer(np.transpose(f1.astype(np.float32), [2, 0, 1])[:, :, :, np.newaxis]).numpy()
+                f_smooth = self.conv_layer(np.transpose(f1.astype(np.float32), [2, 0, 1])[
+                                           :, :, :, np.newaxis]).numpy()
                 f_smooth = np.transpose(f_smooth[:, :, :, 0], [1, 2, 0])
                 f1 = f_smooth
 
@@ -227,10 +208,9 @@ class TrajVisualization(base.Visualization):
                     f1 = base.Visualization.add_png_to_source(
                         f, self.pred_file, p, alpha=1.0)
 
-        
         return base.Visualization.add_png_to_source(
-            f, f1, 
-            [f.shape[1]//2, f.shape[0]//2], 
+            f, f1,
+            [f.shape[1]//2, f.shape[0]//2],
             alpha=0.8)
 
 
@@ -272,7 +252,7 @@ def draw_dis(source, trajs, png_file, color_bar: np.ndarray, alpha=1.0):
             [color_map, np.expand_dims(alpha_channel, -1)], axis=-1)
         source = base.Visualization.add_png_to_source(
             source, distribution, [source.shape[1]//2, source.shape[0]//2], alpha)
-    
+
     return source
 
 
