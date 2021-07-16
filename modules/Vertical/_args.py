@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 10:50:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-13 19:14:01
+@LastEditTime: 2021-07-16 11:19:01
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -15,8 +15,8 @@ from typing import List, Union
 import modules.models as M
 
 
-class VArgs(M.prediction.TrainArgs):
-    def __init__(self, args: List[str], 
+class VArgs(M.prediction.PredictionArgs):
+    def __init__(self, args: Union[Namespace, List[str]], 
                  default_args: Union[Namespace, dict] = None):
                  
         super().__init__(args, default_args)
@@ -69,22 +69,22 @@ class VArgs(M.prediction.TrainArgs):
         return self._get('linear', 0, changeable=False)
 
     @property
-    def H(self) -> int:
-        """
-        number of observed trajectories used
-        """
-        return self._get('H', 3, changeable=False)
-
-    @property
     def force_pred_frames(self) -> int:
         """
-        force setting of predict frames when test
+        force setting of predict frames when test.
         """
         return self._get('force_pred_frames', -1, changeable=True)
 
     @property
     def check(self) -> int:
         """
-        Controls whether apply the results choosing strategy
+        Controls whether apply the results choosing strategy.
         """
         return self._get('check', 0, changeable=True)
+
+    @property
+    def points(self) -> int:
+        """
+        Controls number of points input to the beta model.
+        """
+        return self._get('points', 1, changeable=False)

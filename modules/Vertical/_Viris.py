@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-14 10:10:29
+@LastEditTime: 2021-07-15 16:25:40
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -12,10 +12,12 @@ from argparse import Namespace
 from typing import List, Tuple
 
 import tensorflow as tf
+from tqdm.std import tqdm
 
 from ._args import VArgs
 from ._VirisAlpha import VIrisAlpha, VIrisAlphaModel
 from ._VirisBeta import VIrisBeta, VIrisBetaModel
+from ._utils import Utils as U
 
 
 class _VIrisAlphaModelPlus(VIrisAlphaModel):
@@ -51,29 +53,14 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
         proposals = outputs[0]
         current_inputs = kwargs['model_inputs']
 
-        if True:
+        if self.linear:
             # Piecewise linear interpolation
             pos = tf.cast(pos, tf.float32)
             pos = tf.concat([[-1], pos], axis=0)
             obs = current_inputs[0][:, tf.newaxis, -1:, :]
             proposals = tf.concat([tf.repeat(obs, Kc, 1), proposals], axis=-2)
 
-            linear_results = []
-            for output_index in range(n):
-                p_start = pos[output_index]
-                p_end = pos[output_index+1]
-
-                # shape = (batch, Kc, 2)
-                start = proposals[:, :, output_index, :]
-                end = proposals[:, :, output_index+1, :]
-
-                for p in tf.range(p_start+1, p_end+1):
-                    linear_results.append(
-                        (end - start) * (p - p_start) / (p_end - p_start)
-                        + start
-                    )   # (batch, Kc, 2)
-
-            return (tf.transpose(linear_results, [1, 2, 0, 3]),)
+            return (U.LinearInterpolation(x=pos, y=proposals),)
 
         else:
             # prepare new inputs into beta model
@@ -81,8 +68,10 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
             batch_size = self.args.max_batch_size // Kc
             batch_index = BatchIndex(batch_size, batch)
 
+            proposals = tf.reshape(proposals, [batch*Kc, n, 2])
+
             beta_results = []
-            while (index := batch_index.get_new()) is not None:
+            for index in tqdm(batch_index.index):
                 [start, end, length] = index
                 beta_inputs = [tf.repeat(inp[start:end], Kc, axis=0)
                                for inp in current_inputs]
@@ -128,18 +117,22 @@ class VIris(VIrisAlpha):
             raise ('`IrisAlpha` or `IrisBeta` not found!' +
                    ' Please specific their paths via `--loada` or `--loadb`.')
 
-        if self.args.loadb.startswith('l'):
-            self.linear_predict = True
-        else:
-            self.beta.args = VArgs(self.beta.load_args(Args, self.args.loadb))
-            self.beta._model = self.beta.load_from_checkpoint(self.args.loadb)
-
         self.alpha.args = VArgs(
             args=self.alpha.load_args(Args, self.args.loada),
             default_args=self.args._args
         )
 
-        self.alpha._model = self.alpha.load_from_checkpoint(
+        if self.args.loadb.startswith('l'):
+            self.linear_predict = True
+        
+        else:
+            self.beta.args = VArgs(self.beta.load_args(Args, self.args.loadb))
+            self.beta.model = self.beta.load_from_checkpoint(
+                self.args.loadb,
+                asSecondStage=True,
+                p_index=self.alpha.args.p_index)
+
+        self.alpha.model = self.alpha.load_from_checkpoint(
             self.args.loada,
             linear_prediction=self.linear_predict
         )
@@ -172,6 +165,10 @@ class BatchIndex():
 
         self.start = 0
         self.end = 0
+        
+        self.index = []
+        while (i := self.get_new()) is not None:
+            self.index.append(i)
 
     def init(self):
         self.start = 0

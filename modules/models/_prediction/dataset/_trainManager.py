@@ -14,19 +14,19 @@ import numpy as np
 from tqdm import tqdm
 
 from ... import base
-from ..._helpmethods import dir_check
-from ..agent._agentManager import MapManager, TrainAgentManager
-from ..args._argManager import TrainArgsManager as Args
-from ..training._entireTraj import EntireTrajectory
+from ...helpmethods import dir_check
+from ..agent import MapManager, TrainAgentManager
+from ..args import PredictionArgs
+from ..traj import EntireTrajectory
 from ._datasetManager import PredictionDatasetManager
 
 
 class DatasetManager(base.DatasetManager):
 
-    arg_type = Args
+    arg_type = PredictionArgs
     agent_type = TrainAgentManager
 
-    def __init__(self, args: Args, dataset_name: str, custom_list=[]):
+    def __init__(self, args: PredictionArgs, dataset_name: str, custom_list=[]):
         """
         init parameters:
         :param args: train args, type = `NameSpace`.
@@ -272,12 +272,12 @@ class DatasetsManager(base.DatasetsManager):
     ```
     """
 
-    arg_type = Args
+    arg_type = PredictionArgs
     datasetInfo_type = PredictionDatasetManager
     agent_type = TrainAgentManager
     datasetManager_type = DatasetManager
 
-    def __init__(self, args: Args, prepare_type='all'):
+    def __init__(self, args: PredictionArgs, prepare_type='all'):
         super().__init__(args)
         self.prepare_datasets(prepare_type)
 

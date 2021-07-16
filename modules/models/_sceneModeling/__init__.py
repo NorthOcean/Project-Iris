@@ -1,12 +1,14 @@
-'''
-Author: Conghao Wong
-Date: 2021-01-08 10:15:42
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-15 14:43:35
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2021-01-08 10:15:42
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-07-16 11:09:41
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
-from .agent._agent import Agent
-from .dataset._trainManager import DatasetManager, DatasetsManager
-from .training._trainingStructure import Model, Structure
-from .vis._sceneVisual import Visualization
+from .agent import Agent
+from .structure import Model, Structure
+from .trainManager import DatasetManager, DatasetsManager
+from .vis import Visualization

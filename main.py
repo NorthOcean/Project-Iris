@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-13 14:40:37
+@LastEditTime: 2021-07-16 16:09:24
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -51,49 +51,34 @@ def train_or_test(args: argparse.Namespace):
     else:
         model = args.model
 
-    if model == 'l':
-        trainingStructure = M.linear.LinearPrediction
 
-    elif model == 'test':
-        trainingStructure = M.satoshi.Satoshi
-
-    elif model == 'sat':
-        trainingStructure = M.satoshi.sat
     
-    elif model == 'sbt':
-        trainingStructure = M.satoshi.sbt
+
+    if model == 'msn':
+        structure = M.MSN.MSN_D
+
+    elif model == 'msng':
+        structure = M.MSN.MSN_G
     
-    elif model == 'st':
-        trainingStructure = M.satoshi.SatoshiTransformer
-    
-    elif model == 'ia':
-        trainingStructure = M.iris.IrisAlpha
+    elif model == 'msna':
+        structure = M.MSN.MSNAlpha
 
-    elif model == 'ib':
-        trainingStructure = M.iris.IrisBeta
+    elif model == 'msnb':
+        structure = M.MSN.MSNBeta_D
 
-    elif model == 'iris':
-        trainingStructure = M.iris.Iris
-
-    elif model == 'ibc':
-        trainingStructure = M.iris.IrisBetaCVAE
-
-    elif model == 'irisc':
-        trainingStructure = M.iris.IrisCVAE
-
-    elif model == 'iris3':
-        trainingStructure = M.iris.Iris3
+    elif model == 'msnc':
+        structure = M.MSN.MSNBeta_G
 
     elif model == 'va':
-        trainingStructure = M.Vertical.VIrisAlpha
+        structure = M.Vertical.VIrisAlpha
 
     elif model == 'vb':
-        trainingStructure = M.Vertical.VIrisBeta
+        structure = M.Vertical.VIrisBeta
 
     elif model == 'viris':
-        trainingStructure = M.Vertical.VIris
+        structure = M.Vertical.VIris
 
-    trainingStructure(sys.argv).run_train_or_test()
+    structure(sys.argv).run_train_or_test()
     
 def main():
     args = get_args()

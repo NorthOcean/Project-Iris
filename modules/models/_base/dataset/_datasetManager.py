@@ -6,14 +6,14 @@ LastEditTime: 2021-04-15 09:38:34
 Description: file content
 '''
 
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
-from ..._helpmethods._helpmethods import dir_check
-from ..agent._agent import Agent
-from ..args._argManager import BaseArgsManager as Args
+from ...helpmethods import dir_check
+from ..baseObject import BaseObject
+from ..agent import Agent
+from ..args.args import BaseArgsManager as Args
 from ._dataset import Dataset
 from ._datasetInfo import DatasetInfo
-from .._baseObject import BaseObject
 
 
 class DatasetManager(BaseObject):
