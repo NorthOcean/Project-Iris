@@ -1,0 +1,33 @@
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Author: Conghao Wong
+%% Date: 2021-07-19 19:16:52
+%% LastEditors: Conghao Wong
+%% LastEditTime: 2021-07-19 19:50:11
+%% Description: file content
+%% Github: https://github.com/conghaowoooong
+%% Copyright 2021 Conghao Wong, All Rights Reserved.
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[../paper.tex]{subfiles}
+
+\begin{document}
+    
+\section{\MODEL}
+
+Given a video clip that contains $N$ agents' observed trajectories during some period, the trajectory prediction is to forecast their future trajectories according to both their observations and their context.
+Let $p_t = ({p_x}_t, {p_y}_t)$ be some agent's 2D coordinate at time $t$ in the scene, we have the observation sequence $x = (p_1, p_2, ..., p_{t_h})$ among all $t_h$ observed steps.
+The prediction task is to find as much as possible future predictions $\hat{y} = (p_{t_h + 1}, p_{t_h + 2}, ..., p_{t_h + t_f})$ for each observed agent in future $t_f$ steps.
+
+\subfile{_fig_intro.tex}
+\FIG{fig_overview} shows the main structure of our proposed \MODEL.
+It contains two main designs, the \ALPHAMODEL~and \BETAMODEL.
+
+\subsection{Representative Points}
+
+\subsection{Frequency Domain Interpolation}
+
+\subsection{Multiple Future Prediction}
+
+\subsection{Loss Functions}
+
+\end{document}

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:09:24
+@LastEditTime: 2021-07-19 14:38:56
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -50,9 +50,6 @@ def train_or_test(args: argparse.Namespace):
         args = save_args
     else:
         model = args.model
-
-
-    
 
     if model == 'msn':
         structure = M.MSN.MSN_D
