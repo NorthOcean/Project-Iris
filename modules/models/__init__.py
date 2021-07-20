@@ -89,7 +89,7 @@ to change your loss functions and metrics.
 2. For trajectory prediction models, what your should do is to rewrite the
 `prediction.Structure.create_model` method.
 Default dataset used for training is `ETH-UCY` or `SDD`, which can be changed by
-subclassing `prediction.PredictionDatasetManager`.
+subclassing `prediction.PredictionDatasetInfo`.
 
 ```python
 class MyPredictionTrainingStructure(M.prediction.Structure):
@@ -131,7 +131,7 @@ base.Structure  # a base structure for training, eval, and test models
     It contains these public classes:
     1. Agent managers
 ```python
-prediction.TrainAgentManager    # for training, eval, and test
+prediction.PredictionAgent    # for training, eval, and test
 prediction.OnlineAgentManager   # for online implemention
 ```
 

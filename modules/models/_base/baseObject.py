@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-15 09:26:41
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 10:58:32
+@LastEditTime: 2021-07-20 15:26:05
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -13,20 +13,34 @@ import logging
 import tensorflow as tf
 from tqdm import tqdm
 
-from .writefunction import LogFunction
-
 
 class BaseObject():
+    """
+    BaseObject
+    ----------
+    Base class for all structures.
+    
+    Public Methods
+    --------------
+    ```python
+    # log information
+    (method) log: (self: BaseObject, s: str, level: str = 'info') -> None
 
-    log_function = LogFunction
+    # print parameters with the format
+    (method) print_parameters: (title='null', **kwargs) -> None
+
+    # timebar
+    (method) log_timebar: (inputs, text='', return_enumerate=True) -> (enumerate | tqdm)
+    ```
+    """
 
     def __init__(self):
         super().__init__()
-        
+
         # create a logger
         logger = logging.getLogger(name=type(self).__name__)
         logger.setLevel(logging.INFO)
-        
+
         # add file handler
         fhandler = logging.FileHandler(filename='./test.log', mode='a')
         fhandler.setLevel(logging.INFO)
@@ -36,49 +50,61 @@ class BaseObject():
         thandler.setLevel(logging.INFO)
 
         # add formatter
-        fformatter = logging.Formatter('[%(asctime)s][%(levelname)s] `%(name)s`: %(message)s')
+        fformatter = logging.Formatter(
+            '[%(asctime)s][%(levelname)s] `%(name)s`: %(message)s')
         fhandler.setFormatter(fformatter)
-        
-        tformatter = logging.Formatter('[%(levelname)s] `%(name)s`: %(message)s')
+
+        tformatter = logging.Formatter(
+            '[%(levelname)s] `%(name)s`: %(message)s')
         thandler.setFormatter(tformatter)
 
         logger.addHandler(fhandler)
         logger.addHandler(thandler)
 
         self.logger = logger
+
+    def log(self, s: str, level: str = 'info'):
+        """
+        Log infomation to files and console
+
+        :param s: text to log
+        :param level: log level, canbe `'info'` or `'error'` or `'debug'`
+        """
+        if level == 'info':
+            self.logger.info(s)
         
-
-    @classmethod
-    def log(cls, s: str, end='\n'):
-        cls.log_function.log(s, end)
-
-    @classmethod
-    def log_timebar(cls, inputs, text='', return_enumerate=True):
-        log_function = cls.log_function
-        try:
-            itera = tqdm(inputs, desc=text, file=log_function)
-        except:
-            itera = tqdm(inputs, desc=text)
+        elif level == 'error':
+            self.logger.error(s)
+        
+        elif level == 'debug':
+            self.logger.debug(s)
+        
+        else:
+            raise NotImplementedError
+    
+    @staticmethod
+    def log_timebar(inputs, text='', return_enumerate=True):
+        itera = tqdm(inputs, desc=text)
 
         if return_enumerate:
             return enumerate(itera)
         else:
             return itera
 
-    @classmethod
-    def log_parameters(cls, title='null', **kwargs):
-        cls.log('>>> ' + title + ':')
+    @staticmethod
+    def print_parameters(title='null', **kwargs):
+        print('>>> ' + title + ':')
         for key in kwargs:
-            cls.log('    - {} is {}.'.format(
+            print('    - {} is {}.'.format(
                 key,
                 kwargs[key].numpy() if type(kwargs[key]) == tf.Tensor
                 else kwargs[key]
             ))
-        cls.log('\n')
+        print('\n')
 
-    @classmethod
-    def log_bar(cls, percent, total_length=30):
-        
+    @staticmethod
+    def log_bar(percent, total_length=30):
+
         bar = (''.join('=' * (int(percent * total_length) - 1))
                + '>')
         return bar

@@ -2,16 +2,15 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:45:53
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:13:57
+@LastEditTime: 2021-07-20 11:10:29
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from argparse import Namespace
 from typing import List, Tuple
-import numpy as np
 
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
@@ -76,7 +75,7 @@ class VIrisBetaModel(M.prediction.Model):
              points_index: tf.Tensor,
              training=None, mask=None):
         """
-        :param inputs:
+        :param inputs: a list of trajs, maps
         :param points: pred points, shape = `(batch, n, 2)`
         :param points_index: pred index, shape = `(n)`
         """
@@ -187,10 +186,10 @@ class VIrisBeta(M.prediction.Structure):
         return tf.data.Dataset.from_tensor_slices((trajs, maps, paras, proposals))
 
     def print_test_result_info(self, loss_dict, dataset_name, **kwargs):
-        self.log_parameters(title='rest results',
+        self.print_parameters(title='rest results',
                             **dict({'dataset': dataset_name}, **loss_dict))
 
-        self.logger.info('Results: {}, {}, {}.'.format(
+        self.log('Results: {}, {}, {}.'.format(
             self.args.load,
             dataset_name,
             loss_dict

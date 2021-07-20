@@ -2,16 +2,15 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 20:58:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-14 09:39:54
+@LastEditTime: 2021-07-20 11:10:42
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from argparse import Namespace
 from typing import List, Tuple
-import numpy as np
 
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
@@ -20,7 +19,6 @@ from .. import models as M
 from ._args import VArgs
 from ._layers import (ContextEncoding, FFTlayer, GraphConv, IFFTlayer,
                       TrajEncoding)
-from ._utils import Utils as U
 
 
 class VIrisAlphaModel(M.prediction.Model):
@@ -79,7 +77,6 @@ class VIrisAlphaModel(M.prediction.Model):
         self.reshape = keras.layers.Reshape([Args.K_train, self.n_pred, 2])
 
     def call(self, inputs: List[tf.Tensor],
-             outputs: tf.Tensor = None,
              training=None, mask=None):
 
         # unpack inputs
@@ -110,12 +107,6 @@ class VIrisAlphaModel(M.prediction.Model):
         # shape = (batch, Kc, n, 2)
         return self.reshape(vec)
 
-    def forward(self, model_inputs: List[tf.Tensor],
-                training=None,
-                *args, **kwargs):
-
-        return U.forward(self, model_inputs, training, *args, **kwargs)
-
 
 class VIrisAlpha(M.prediction.Structure):
 
@@ -142,12 +133,9 @@ class VIrisAlpha(M.prediction.Structure):
     def p_len(self) -> int:
         return len(self.p_index)
 
-    def create_model(self, model_type=None,
+    def create_model(self, model_type=VIrisAlphaModel,
                      *args, **kwargs):
-
-        if model_type is None:
-            model_type = VIrisAlphaModel
-
+                     
         model = model_type(self.args,
                            pred_number=self.p_len,
                            training_structure=self,

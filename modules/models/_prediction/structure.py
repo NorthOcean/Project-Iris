@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 09:25:58
+@LastEditTime: 2021-07-20 21:04:47
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -19,9 +19,9 @@ from tqdm import tqdm
 
 from .. import base
 from ..helpmethods import dir_check
-from .agent import TrainAgentManager as Agent
+from .agent import PredictionAgent as Agent
 from .args import PredictionArgs
-from .dataset._datasetManager import PredictionDatasetManager
+from .dataset._datasetManager import PredictionDatasetInfo
 from .dataset._trainManager import DatasetsManager
 from .utils import IO, Loss, Process
 from .vis import TrajVisualization
@@ -34,8 +34,8 @@ UPSAMPLING = 'UPSAMPLING'
 
 class Model(base.Model):
     """
-    Prediction Model
-    ----------------
+    Model
+    -----
     An expanded class for `base.Model`.
 
     Usage
@@ -57,7 +57,7 @@ class Model(base.Model):
             y = self.fc(inputs)
             return self.fc1(y)
     ```
-    
+
     Public Methods
     --------------
     ```python
@@ -65,12 +65,14 @@ class Model(base.Model):
     (method) forward: (self: Model, model_inputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
 
     # Pre/Post-processes
-    (method) pre_process: (self: Model, tensors: List[Tensor], training=False, use_new_para_dict=True, *args, **kwargs) -> List[Tensor]
-    (method) post_process: (self: Model, outputs: List[Tensor], training=False, *args, **kwargs) -> List[Tensor]
+    (method) pre_process: (self: Model, tensors: List[Tensor], training=None, use_new_para_dict=True, *args, **kwargs) -> List[Tensor]
+    (method) post_process: (self: Model, outputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
     ```
     """
 
-    def __init__(self, Args, training_structure, *args, **kwargs):
+    def __init__(self, Args: PredictionArgs,
+                 training_structure, *args, **kwargs):
+
         super().__init__(Args, training_structure, *args, **kwargs)
 
         self._preprocess_list = []
@@ -78,7 +80,7 @@ class Model(base.Model):
                                  ROTATE: 0,
                                  SCALE: 1,
                                  UPSAMPLING: 4}
-                                 
+
         self._preprocess_variables = {}
 
     def set_preprocess(self, *args):
@@ -117,7 +119,7 @@ class Model(base.Model):
                 self._preprocess_para[UPSAMPLING] = kwargs[item]
 
     def pre_process(self, tensors: List[tf.Tensor],
-                    training=False,
+                    training=None,
                     use_new_para_dict=True,
                     *args, **kwargs) -> List[tf.Tensor]:
 
@@ -136,7 +138,7 @@ class Model(base.Model):
         return Process.update((trajs,), tensors)
 
     def post_process(self, outputs: List[tf.Tensor],
-                     training=False,
+                     training=None,
                      *args, **kwargs) -> List[tf.Tensor]:
 
         trajs = outputs[0]
@@ -153,10 +155,9 @@ class Model(base.Model):
 
 class Structure(base.Structure):
     """
-    Introduction
-    ------------
-    Basic training structure for training and test ***Prediction*** 
-    models based on `tensorflow v2`.
+    Structure
+    ---------
+    Basic training structure for training and test ***Prediction*** models.
 
     Usage
     -----
@@ -338,22 +339,17 @@ class Structure(base.Structure):
         Run test of trajectory prediction on ETH-UCY or SDD dataset.
         """
         if self.args.test:
+            info = PredictionDatasetInfo()
             if self.args.test_mode == 'all':
-                with open('./test_log.txt', 'a') as f:
-                    f.write('-'*40 + '\n')
-                    f.write(
-                        '- K = {}, sigma = {} -\n'.format(self.args.K, self.args.sigma))
-                for dataset in PredictionDatasetManager().sdd_test_sets if self.args.dataset == 'sdd' else PredictionDatasetManager().ethucy_testsets:
+                for dataset in info.sdd_test_sets if self.args.dataset == 'sdd' else info.ethucy_testsets:
                     agents = DatasetsManager.load_dataset_files(
                         self.args, dataset)
                     self.test(agents=agents, dataset_name=dataset)
-                with open('./test_log.txt', 'a') as f:
-                    f.write('-'*40 + '\n')
 
             elif self.args.test_mode == 'mix':
                 agents = []
                 dataset = ''
-                for dataset_c in PredictionDatasetManager().sdd_test_sets if self.args.dataset == 'sdd' else PredictionDatasetManager().ethucy_testsets:
+                for dataset_c in info.sdd_test_sets if self.args.dataset == 'sdd' else info.ethucy_testsets:
                     agents_c = DatasetsManager.load_dataset_files(
                         self.args, dataset_c)
                     agents += agents_c
@@ -465,12 +461,12 @@ class Structure(base.Structure):
                           mode='m')
 
     def print_dataset_info(self):
-        self.log_parameters(title='dataset options',
-                            rotate_times=self.args.rotate,
-                            add_noise=self.args.add_noise)
+        self.print_parameters(title='dataset options',
+                              rotate_times=self.args.rotate,
+                              add_noise=self.args.add_noise)
 
     def print_training_info(self):
-        self.log_parameters(
+        self.print_parameters(
             title='training options',
             model_name=self.args.model_name,
             test_set=self.args.test_set,
@@ -480,8 +476,7 @@ class Structure(base.Structure):
             lr=self.args.lr,
             train_number=self.train_number)
 
-    def write_test_results(self,
-                           model_outputs: List[tf.Tensor],
+    def write_test_results(self, model_outputs: List[tf.Tensor],
                            agents: Dict[str, List[agent_type]],
                            *args, **kwargs):
 
@@ -497,14 +492,13 @@ class Structure(base.Structure):
             save_format = os.path.join(dir_check(os.path.join(
                 save_base_path, 'VisualTrajs')), '{}_{}.{}')
 
-            self.logger.info('Start saving images at {}'.format(
+            self.log('Start saving images at {}'.format(
                 os.path.join(save_base_path, 'VisualTrajs')))
 
             for index, agent in self.log_timebar(agents, 'Saving...'):
                 # write traj
                 output = model_outputs[0][index].numpy()
                 agents[index].pred = output
-                # agents[index].calculate_loss()
 
                 # draw as one image
                 tv.draw(agents=[agent],
@@ -522,5 +516,5 @@ class Structure(base.Structure):
                 #     draw_distribution=self.args.draw_distribution,
                 # )
 
-            self.logger.info('Prediction result images are saved at {}'.format(
+            self.log('Prediction result images are saved at {}'.format(
                 os.path.join(save_base_path, 'VisualTrajs')))

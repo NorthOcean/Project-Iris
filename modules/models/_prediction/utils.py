@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf
 
 from .. import base
-from .agent import TrainAgentManager as Agent
+from .agent import PredictionAgent as Agent
 
 
 class Loss():
@@ -76,7 +76,7 @@ class Loss():
     @tf.function
     def ADE(pred, GT) -> tf.Tensor:
         """
-        Calculate `ADE` or `minADE` by `tensorflow`.
+        Calculate `ADE` or `minADE`.
 
         :param pred: pred traj, shape = `[batch, pred, 2]`
         :param GT: ground truth future traj, shape = `[batch, pred, 2]`
@@ -88,46 +88,33 @@ class Loss():
         pred = tf.cast(pred, tf.float32)
         GT = tf.cast(GT, tf.float32)
 
-        if len(pred.shape) == 4:  # [batch, K, pred, 2]
-            all_ade = tf.reduce_mean(tf.linalg.norm(
-                pred - tf.expand_dims(GT, axis=1), ord=2, axis=-1), axis=-1)
-            best_ade = tf.reduce_min(all_ade, axis=1)
-            return tf.reduce_mean(best_ade)
+        if len(pred.shape) == 3:  # [batch, K, pred, 2]
+            pred = pred[:, tf.newaxis, :, :]
 
-        elif len(pred.shape) == 3:  # [batch, pred, 2]
-            return tf.reduce_mean(tf.linalg.norm(pred - GT, ord=2, axis=2))
+        all_ade = tf.reduce_mean(tf.linalg.norm(
+            pred - GT[:, tf.newaxis, :, :], ord=2, axis=-1), axis=-1)
+        best_ade = tf.reduce_min(all_ade, axis=1)
+        return tf.reduce_mean(best_ade)
 
-    @staticmethod
-    @tf.function
-    def FDE(pred, GT) -> tf.Tensor:
+
+    @classmethod
+    def FDE(cls, pred, GT) -> tf.Tensor:
         """
-        Calculate `FDE` or `minFDE` by `tensorflow`.
+        Calculate `FDE` or `minFDE`
 
         :param pred: pred traj, shape = `[batch, pred, 2]`
         :param GT: ground truth future traj, shape = `[batch, pred, 2]`
-        :return loss_ade:
+        :return fde:
             Return `FDE` when input_shape = [batch, pred_frames, 2];
-            Return `minFDE` when input_shape = [K, batch, pred_frames, 2].
+            Return `minFDE` when input_shape = [batch, K, pred_frames, 2].
         """
         pred = tf.cast(pred, tf.float32)
         GT = tf.cast(GT, tf.float32)
 
-        if len(pred.shape) == 4:  # [batch, K, pred, 2]
-            # all_ade = tf.reduce_mean(tf.linalg.norm(
-            #     pred - tf.expand_dims(GT, axis=1), ord=2, axis=-1), axis=-1)
-            # best_ade_index = tf.argmin(all_ade, axis=1)
-            # pred_best = tf.gather_nd(
-            #     pred,
-            #     tf.transpose(
-            #         tf.stack([[i for i in range(pred.shape[0])], best_ade_index])),
-            # )
-            # return tf.reduce_mean(tf.linalg.norm(pred_best[:, -1, :] - GT[:, -1, :], ord=2, axis=1))
-            all_fde = tf.linalg.norm(pred[:, :, -1, :] - GT[:, tf.newaxis, -1, :], ord=2, axis=-1)
-            min_fde = tf.reduce_min(all_fde, axis=-1)
-            return tf.reduce_mean(min_fde)
-
-        elif len(pred.shape) == 3:  # [batch, pred, 2]
-            return tf.reduce_mean(tf.linalg.norm(pred[:, -1, :] - GT[:, -1, :], ord=2, axis=1))
+        t = pred.shape[-2]
+        f = tf.gather(pred, [t-1], axis=-2)
+        f_gt = tf.gather(GT, [t-1], axis=-2)
+        return cls.ADE(f, f_gt)
 
     @staticmethod
     @tf.function
@@ -442,10 +429,9 @@ class IO(base.BaseObject):
             call = cls._get_dest_traj
         elif type_name == 'GT':
             call = cls._get_gt_traj
-        return call(input_agents)
+        return call(cls, input_agents)
 
-    @classmethod
-    def _get_obs_traj(cls, input_agents: List[Agent]) -> tf.Tensor:
+    def _get_obs_traj(self, input_agents: List[Agent]) -> tf.Tensor:
         """
         Get observed trajectories from agents.
 
@@ -453,12 +439,11 @@ class IO(base.BaseObject):
         :return inputs: a Tensor of observed trajectories
         """
         inputs = []
-        for agent_index_current, agent in cls.log_timebar(input_agents, 'Prepare trajectories...'):
+        for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare trajectories...'):
             inputs.append(agent.traj)
         return tf.cast(inputs, tf.float32)
 
-    @classmethod
-    def _get_gt_traj(cls, input_agents: List[Agent], destination=False) -> tf.Tensor:
+    def _get_gt_traj(self, input_agents: List[Agent], destination=False) -> tf.Tensor:
         """
         Get groundtruth trajectories from agents.
 
@@ -466,7 +451,7 @@ class IO(base.BaseObject):
         :return inputs: a Tensor of gt trajectories
         """
         inputs = []
-        for agent_index_current, agent in cls.log_timebar(input_agents, 'Prepare groundtruth...'):
+        for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare groundtruth...'):
             if destination:
                 inputs.append(np.expand_dims(agent.groundtruth[-1], 0))
             else:
@@ -474,12 +459,10 @@ class IO(base.BaseObject):
 
         return tf.cast(inputs, tf.float32)
 
-    @classmethod
-    def _get_dest_traj(cls, input_agents: List[Agent]) -> tf.Tensor:
-        return cls._get_gt_traj(input_agents, destination=True)
+    def _get_dest_traj(self, input_agents: List[Agent]) -> tf.Tensor:
+        return self._get_gt_traj(input_agents, destination=True)
 
-    @classmethod
-    def _get_context_map(cls, input_agents: List[Agent]) -> tf.Tensor:
+    def _get_context_map(self, input_agents: List[Agent]) -> tf.Tensor:
         """
         Get context map from agents.
 
@@ -487,12 +470,11 @@ class IO(base.BaseObject):
         :return inputs: a Tensor of maps
         """
         inputs = []
-        for agent_index_current, agent in cls.log_timebar(input_agents, 'Prepare maps...'):
+        for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare maps...'):
             inputs.append(agent.fusionMap)
         return tf.cast(inputs, tf.float32)
 
-    @classmethod
-    def _get_context_map_paras(cls, input_agents: List[Agent]) -> tf.Tensor:
+    def _get_context_map_paras(self, input_agents: List[Agent]) -> tf.Tensor:
         """
         Get parameters of context map from agents.
 
@@ -500,7 +482,7 @@ class IO(base.BaseObject):
         :return inputs: a Tensor of map paras
         """
         inputs = []
-        for agent_index_current, agent in cls.log_timebar(input_agents, 'Prepare maps...'):
+        for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare maps...'):
             inputs.append(agent.real2grid)
         return tf.cast(inputs, tf.float32)
 

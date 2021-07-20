@@ -148,9 +148,9 @@ class VIris(VIrisAlpha):
 
     def print_test_result_info(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']
-        self.log_parameters(title='test results', **
+        self.print_parameters(title='test results', **
                             dict({'dataset': dataset}, **loss_dict))
-        self.logger.info('Results from {}, {}, {}, {}, {}'.format(
+        self.log('Results from {}, {}, {}, {}, {}'.format(
             self.args.loada,
             self.args.loadb,
             self.args.p_index,

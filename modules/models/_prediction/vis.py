@@ -13,8 +13,8 @@ import numpy as np
 import tensorflow as tf
 
 from .. import base
-from .agent import TrainAgentManager
-from .dataset._trainManager import PredictionDatasetManager
+from .agent import PredictionAgent
+from .dataset._trainManager import PredictionDatasetInfo
 
 SMALL_POINTS = True
 OBS_IMAGE = './vis_pngs/obs_small.png' if SMALL_POINTS else './vis_pngs/obs.png'
@@ -28,7 +28,7 @@ class TrajVisualization(base.Visualization):
         super().__init__()
 
         if dataset:
-            self.DM = PredictionDatasetManager()(dataset)
+            self.DM = PredictionDatasetInfo()(dataset)
             self.set_video(video_capture=cv2.VideoCapture(self.DM.video_path),
                            video_paras=self.DM.paras,
                            video_weights=self.DM.weights)
@@ -56,7 +56,7 @@ class TrajVisualization(base.Visualization):
                       np.array([0, 252, 255])),
         ])
 
-    def draw(self, agents: List[TrainAgentManager],
+    def draw(self, agents: List[PredictionAgent],
              frame_name,
              save_path='null',
              show_img=False,
@@ -64,7 +64,7 @@ class TrajVisualization(base.Visualization):
         """
         Draw trajecotries on images.
 
-        :param agents: a list of agent managers (`TrainAgentManager`)
+        :param agents: a list of agent managers (`PredictionAgent`)
         :param frame_name: name of the frame to draw on
         :param save_path: save path
         :param show_img: controls if show results in opencv window
@@ -102,7 +102,7 @@ class TrajVisualization(base.Visualization):
         else:
             cv2.imwrite(save_path, f)
 
-    def draw_video(self, agent: TrainAgentManager, save_path, interp=True, indexx=0, draw_distribution=False):
+    def draw_video(self, agent: PredictionAgent, save_path, interp=True, indexx=0, draw_distribution=False):
         _, f = self.video_capture.read()
         video_shape = (f.shape[1], f.shape[0])
 

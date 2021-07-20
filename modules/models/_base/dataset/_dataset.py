@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-10 09:31:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-06 10:54:33
+@LastEditTime: 2021-07-20 15:33:23
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -17,7 +17,7 @@ class Dataset():
     """
     Dataset
     -------
-    Base structure for controlling each *prediction* dataset.
+    Base structure for controlling each video dataset.
 
     Properties
     -----------------
@@ -31,22 +31,22 @@ class Dataset():
     >>> self.scale          # video scales
     ```
     """
-    def __init__(self,
-        dataset:str,
-        dataset_dir:str,
-        order:List[int],
-        paras:List[int],
-        video_path:str,
-        weights:list,
-        scale:float,
-    ):
-        self._dataset        =   dataset
-        self._dataset_dir    =   dataset_dir
-        self._order          =   order
-        self._paras          =   paras
-        self._video_path     =   video_path
-        self._weights        =   weights
-        self._scale          =   scale
+
+    def __init__(self, dataset: str,
+                 dataset_dir: str,
+                 order: List[int],
+                 paras: List[int],
+                 video_path: str,
+                 weights: list,
+                 scale: float):
+
+        self._dataset = dataset
+        self._dataset_dir = dataset_dir
+        self._order = order
+        self._paras = paras
+        self._video_path = video_path
+        self._weights = weights
+        self._scale = scale
 
     @property
     def dataset(self):
@@ -72,15 +72,15 @@ class Dataset():
         [sample_step, frame_rate]
         """
         return self._paras
-    
+
     @property
     def video_path(self):
         return self._video_path
-    
+
     @property
     def weights(self):
         return self._weights
-    
+
     @property
     def scale(self):
         return self._scale

@@ -8,17 +8,18 @@ Description: file content
 
 import copy
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
-from tqdm import tqdm
 
 from .. import base
 from ..helpmethods import dir_check, predict_linear_for_person
 from .args import PredictionArgs
 from .traj import EntireTrajectory
+
+MASK = cv2.imread('./mask_circle.png')[:, :, 0]/50
+MASKS = {}
 
 
 def prepare_rotate_matrix(min_angel=1, base_path='./.cache', save_name='./rotate_matrix.npy'):
@@ -48,17 +49,17 @@ def prepare_rotate_matrix(min_angel=1, base_path='./.cache', save_name='./rotate
 ROTATE_MATRIX = prepare_rotate_matrix()
 
 
-class BaseAgentManager(base.Agent):
+class BasePredictionAgent(base.Agent):
     """
-    Base Agent Manager
-    ------------------
+    BasePredictionManager
+    ---------------------
     Agent manager for trajectory prediction, activity analysis (TODO).
     One agent manager contains these items for one specific agent:
     - historical trajectory: `traj`;
     - context map: `socialMap` and `trajMap`;
-    - TODO: activity label;
-    - TODO: agent category;
-    - TODO: agent preference items
+    - future works: activity label;
+    - future works: agent category;
+    - future works: agent preference items
 
     Properties
     ----------
@@ -78,10 +79,10 @@ class BaseAgentManager(base.Agent):
     --------------
     ```python
     # copy this manager to a new address
-    >>> self.copy() -> BaseAgentManager
+    >>> self.copy() -> BasePredictionAgent
 
     # rotate context maps for data strengthen
-    >>> BaseAgentManager.rotate(mapp:np.ndarray, rotate_angle:float) -> np.ndarray
+    >>> BasePredictionAgent.rotate(mapp:np.ndarray, rotate_angle:float) -> np.ndarray
     ```
     """
 
@@ -110,36 +111,46 @@ class BaseAgentManager(base.Agent):
     def copy(self):
         return copy.deepcopy(self)
 
-    # 1. Historical Trajectory
     @property
     def traj(self) -> np.ndarray:
+        """
+        historical trajectory, shape = (obs, 2)
+        """
         return self._traj
 
     @traj.setter
     def traj(self, value):
         self._traj = np.array(value).astype(np.float32)
 
-    # 2. Prediction Trajectory
     @property
     def pred(self) -> np.ndarray:
+        """
+        predicted trajectory, shape = (pred, 2)
+        """
         return self._traj_pred
 
     @pred.setter
     def pred(self, value):
         self._traj_pred = np.array(value).astype(np.float32)
 
-    # Frame List
     @property
     def frame_list(self) -> list:
+        """
+        a list of frame index during observation and prediction time.
+        shape = (obs + pred, 2)
+        """
         return self._frame_list + self._frame_list_future
 
     @frame_list.setter
     def frame_list(self, value):
         self._frame_list = value if isinstance(value, list) else value.tolist()
 
-    # Future Frame List
     @property
     def frame_list_future(self) -> list:
+        """
+        a list of frame index during prediction time.
+        shape = (pred, 2)
+        """
         return self._frame_list_future
 
     @frame_list_future.setter
@@ -149,27 +160,35 @@ class BaseAgentManager(base.Agent):
         elif isinstance(value, np.ndarray):
             self._frame_list_future = value.tolist()
 
-    # 3. Linear Prediction
     @property
     def pred_linear(self) -> np.ndarray:
+        """
+        linear prediction.
+        shape = (pred, 2)
+        """
         return self._traj_pred_linear
 
     @pred_linear.setter
     def pred_linear(self, value):
         self._traj_pred_linear = np.array(value).astype(np.float32)
 
-    # 4. Future Ground Truth
     @property
     def groundtruth(self) -> np.ndarray:
+        """
+        ground truth future trajectory.
+        shape = (pred, 2)
+        """
         return self._traj_future
 
     @groundtruth.setter
     def groundtruth(self, value):
         self._traj_future = np.array(value).astype(np.float32)
 
-    # 5. Trajectory Map
     @property
     def trajMap(self) -> np.ndarray:
+        """
+        trajectory map, shape = (100, 100)
+        """
         return self._traj_map
 
     @trajMap.setter
@@ -190,6 +209,9 @@ class BaseAgentManager(base.Agent):
     # 6. Social Map
     @property
     def socialMap(self) -> np.ndarray:
+        """
+        social map, shape = (100, 100)
+        """
         return self._social_map
 
     @socialMap.setter
@@ -210,21 +232,15 @@ class BaseAgentManager(base.Agent):
     # 7. Fusion Map
     @property
     def fusionMap(self):
+        """
+        fusion map that combines trajectory map and social map
+        """
         if (not type(self._traj_map) == type(None)) and (not type(self._social_map) == type(None)):
             return 0.5 * self._traj_map + 0.5 * self._social_map
         elif (not type(self._traj_map) == type(None)):
             return self._traj_map
         else:
             raise
-
-    # 8. Loss
-    @property
-    def loss(self):
-        return self._loss_dict
-
-    @loss.setter
-    def loss(self, dic: dict):
-        self._loss_dict = dic
 
     @staticmethod
     def rotate_map(mapp: np.ndarray, rotate_angle):
@@ -267,7 +283,7 @@ class MapManager(base.BaseObject):
     # build guidanceMap
     >>> MapManager.build_guidance_map(
             self:MapManager,
-            agents:List[BaseAgentManager],
+            agents:List[BasePredictionAgent],
             source=None,
             regulation=True
         ) -> np.ndarray
@@ -275,21 +291,22 @@ class MapManager(base.BaseObject):
     # build socialMap (Attention: return `self`)
     >>> MapManager.build_social_map(
             self:MapManager,
-            target_agent:BaseAgentManager,
+            target_agent:BasePredictionAgent,
             traj_neighbors=[],
             source=None,
             regulation=True
         ) -> MapManager    
     ```
     """
+
     def __init__(self, args: PredictionArgs,
-                 agents: List[BaseAgentManager],
+                 agents: List[BasePredictionAgent],
                  init_manager=None):
         """
         init map manager
 
         :param args: args to init this manager
-        :param agents: a list of `BaseAgentManager` in init the map
+        :param agents: a list of `BasePredictionAgent` object to init the map
         :init_manager: a map manager to init this (available)
         """
 
@@ -308,8 +325,8 @@ class MapManager(base.BaseObject):
     def real2grid_paras(self) -> np.ndarray:
         return np.stack([self.W, self.b])   # (2, 2)
 
-    def _init_guidance_map(self, agents: List[BaseAgentManager]):
-        if issubclass(type(agents[0]), BaseAgentManager):
+    def _init_guidance_map(self, agents: List[BasePredictionAgent]):
+        if issubclass(type(agents[0]), BasePredictionAgent):
             traj = get_trajectories(agents)
         else:
             traj = agents
@@ -336,85 +353,118 @@ class MapManager(base.BaseObject):
         b = np.array([x_min - self.args.window_size_expand_meter,
                       y_min - self.args.window_size_expand_meter])
         self.map_coe = [x_max, x_min, y_max, y_min]
-        return guidance_map, W, b
+        return guidance_map.astype(np.float32), W, b
 
-    def build_guidance_map(self, agents: List[BaseAgentManager], source=None, regulation=True) -> np.ndarray:
-        self.logger.info('Building Guidance Map...')
+    def build_guidance_map(self, agents: Union[List[BasePredictionAgent], np.ndarray],
+                           source: np.ndarray = None,
+                           regulation=True) -> np.ndarray:
+        """
+        Build guidance map
+
+        :param agents: a list of agents or trajectories to calculate the map
+        :param source: source map, default are zeros
+        :param regulation: controls if scale the map into [0, 1]
+        """
+
+        self.log('Building Guidance Map...')
 
         if type(source) == type(None):
             source = self.void_map
 
         source = source.copy()
-        if issubclass(type(agents[0]), BaseAgentManager):
+        if issubclass(type(agents[0]), BasePredictionAgent):
             trajs = get_trajectories(agents)
         else:
             trajs = agents
 
-        source = self._add_to_map(
-            source,
-            trajs,
-            self.real2grid,
-            amplitude=1,
-            radius=7,
-            add_mask=(cv2.imread('./mask_circle.png')[:, :, 0])/50,
-            decay=False,
-            max_limit=False,
-        )
+        source = self._add_to_map(source,
+                                  self.real2grid(trajs),
+                                  amplitude=1,
+                                  radius=7,
+                                  add_mask=MASK,
+                                  decay=False,
+                                  max_limit=False)
+
         source = np.minimum(source, 30)
         if regulation:
             source = 1 - source / np.max(source)
 
-        self.logger.info('Done.')
+        self.log('Done.')
         self.guidance_map = source
         return source
 
-    def build_social_map(self, target_agent: BaseAgentManager, traj_neighbors=[], source=None, regulation=True):
+    def build_social_map(self, target_agent: BasePredictionAgent,
+                         traj_neighbors: np.ndarray = [],
+                         source: np.ndarray = None,
+                         regulation=True,
+                         max_neighbor=15):
+        """
+        Build social map
+
+        :param target_agent: target `BasePredictionAgent` object to calculate the map
+        :param traj_neighbor: neighbors' predictions
+        :param source: source map, default are zeros
+        :param regulation: controls if scale the map into [0, 1]
+        """
+
         if type(source) == type(None):
             source = self.void_map
 
+        if not type(traj_neighbors) == np.ndarray:
+            traj_neighbors = np.array(traj_neighbors)
+
         source = source.copy()
-        add_mask = (cv2.imread('./mask_circle.png')[:, :, 0])
-        pred_frames = target_agent.total_frame - target_agent.obs_length
+        pred_frames = self.args.pred_frames
 
         trajs = []
         amps = []
         rads = []
 
         # Destination
-        trajs.append(target_agent.pred_linear.tolist())
-        amps.append([-2 for _ in range(pred_frames)])
+        trajs.append(target_agent.pred_linear)
+        amps.append(-2)
         rads.append(self.args.interest_size)
 
         # Interplay
         amp_neighbors = []
-        rads_neighbors = [
-            self.args.avoid_size for _ in range(len(traj_neighbors))]
+        rads_neighbors = self.args.avoid_size * np.ones(len(traj_neighbors))
 
         vec_target = target_agent.pred_linear[-1] - target_agent.pred_linear[0]
         len_target = calculate_length(vec_target)
-        for pred in traj_neighbors:
-            vec_neighbor = pred[-1] - pred[0]
+
+        vec_neighbor = traj_neighbors[:, -1] - traj_neighbors[:, 0]
+
+        if len_target >= 0.05:
             cosine = activation(
-                calculate_cosine(vec_target, vec_neighbor),
+                calculate_cosine(vec_target[np.newaxis, :], vec_neighbor),
                 a=1.0,
-                b=0.2,
-            ) if len_target >= 0.05 else 1.0
-
+                b=0.2)
             velocity = (calculate_length(vec_neighbor) /
-                        calculate_length(vec_target)) if len_target >= 0.05 else 2.0
-            amp_neighbors.append(
-                [-cosine*velocity for _ in range(pred_frames)])
+                        calculate_length(vec_target[np.newaxis, :]))
 
-        amps += amp_neighbors
-        trajs += traj_neighbors
-        rads += rads_neighbors
+        else:
+            cosine = np.ones(len(traj_neighbors))
+            velocity = 2
+
+        amp_neighbors = - cosine * velocity
+
+        amps += amp_neighbors.tolist()
+        trajs += traj_neighbors.tolist()
+        rads += rads_neighbors.tolist()
+
+        if len(trajs) > max_neighbor + 1:
+            trajs = np.array(trajs)
+            dis = calculate_length(trajs[:1, 0, :] - trajs[:, 0, :])
+            index = np.argsort(dis)
+            trajs = trajs[index[:max_neighbor+1]]
 
         source = self._add_to_map(target_map=source,
-                                  trajs=trajs,
-                                  map_function=self.real2grid,
+                                  grid_trajs=self.real2grid(trajs),
                                   amplitude=amps,
                                   radius=rads,
-                                  add_mask=add_mask)
+                                  add_mask=MASK,
+                                  max_limit=False,
+                                  decay=True)
 
         if regulation:
             if (np.max(source) - np.min(source)) <= 0.01:
@@ -426,22 +476,26 @@ class MapManager(base.BaseObject):
         self.full_map = source
         return self
 
-    def _add_to_map(self, target_map, trajs: np.array, map_function, amplitude=1, radius=0, add_mask=None, interp=False, max_limit=False, decay=True):
+    def _add_to_map(self, target_map: np.ndarray,
+                    grid_trajs: np.ndarray,
+                    amplitude: np.ndarray = 1,
+                    radius: np.ndarray = 0,
+                    add_mask=None,
+                    max_limit=False,
+                    decay=True):
         """
         `amplitude`: Value of each add point. Accept both `float` and `np.array` types.
         `radius`: Raduis of each add point. Accept both `float` and `np.array` types.
         """
-        if not type(trajs) == np.array:
-            trajs = np.array(trajs)
 
-        if len(trajs.shape) == 2:
-            trajs = np.reshape(trajs, [1, trajs.shape[0], trajs.shape[1]])
+        if len(grid_trajs.shape) == 2:
+            grid_trajs = grid_trajs[np.newaxis, :, :]
 
-        n_traj = trajs.shape[0]
+        n_traj = grid_trajs.shape[0]
         amplitude = np.array(amplitude)
         if not len(amplitude.shape):
             amplitude = amplitude * \
-                np.ones([n_traj, trajs.shape[-2]], dtype=np.int32)
+                np.ones([n_traj, grid_trajs.shape[-2]], dtype=np.int32)
             radius = radius * np.ones(n_traj, dtype=np.int32)
 
         target_map = target_map.copy()
@@ -449,43 +503,50 @@ class MapManager(base.BaseObject):
         if type(add_mask) == type(None):
             add_mask = np.ones([1, 1], dtype=np.int32)
 
-        if interp:
-            trajs_grid = [interp_2d(map_function(traj), step=1)
-                          for traj in trajs]
-        else:
-            trajs_grid = [map_function(traj) for traj in trajs]
+        for traj, a, r in zip(grid_trajs, amplitude, radius):
+            r = int(r)
+            if not r in MASKS.keys():
+                MASKS[r] = cv2.resize(add_mask, (r*2+1, r*2+1))
 
-        for traj, a, r in zip(trajs_grid, amplitude, radius):
-            add_mask = cv2.resize(add_mask, (r*2+1, r*2+1))
-            target_map = self._add_one_traj(
-                target_map, traj, a, r, add_mask, max_limit=max_limit, amplitude_decay=decay)
+            add_mask = MASKS[r]
+            target_map = self._add_one_traj(target_map,
+                                            traj, a, r,
+                                            add_mask,
+                                            max_limit=max_limit,
+                                            amplitude_decay=decay)
 
         return target_map
 
-    def real2grid(self, traj: np.array):
+    def real2grid(self, traj: np.ndarray) -> np.ndarray:
+        if not type(traj) == np.ndarray:
+            traj = np.array(traj)
+
         return ((traj - self.b) * self.W).astype(np.int32)
 
-    def _add_one_traj(
-        self, source_map, traj, amplitude, radius, add_mask,
-        max_limit=True, amplitude_decay=False,
-        amplitude_decay_p=np.array([[0.0, 0.7, 1.0], [1.0, 1.0, 0.5]])
-    ):
-        """
-        `amplitude` is a ndarray, shape = [len(traj)]
-        """
+    def _add_one_traj(self, source_map: np.ndarray,
+                      traj: np.ndarray,
+                      amplitude: float,
+                      radius: int,
+                      add_mask: np.ndarray,
+                      max_limit=True,
+                      amplitude_decay=False,
+                      amplitude_decay_p=np.array([[0.0, 0.7, 1.0], [1.0, 1.0, 0.5]])):
+
         if amplitude_decay:
-            amplitude = amplitude * np.interp(
-                np.arange(0, len(traj))/len(traj),
-                amplitude_decay_p[0],
-                amplitude_decay_p[1],
-            )
+            amplitude = amplitude * np.interp(np.linspace(0, 1, len(traj)),
+                                              amplitude_decay_p[0],
+                                              amplitude_decay_p[1])
 
         new_map = np.zeros_like(source_map)
         for pos, a in zip(traj, amplitude):
-            if pos[0]-radius >= 0 and pos[1]-radius >= 0 and pos[0]+radius+1 < new_map.shape[0] and pos[1]+radius+1 < new_map.shape[1]:
-                new_map[pos[0]-radius:pos[0]+radius+1, pos[1]-radius:pos[1]+radius+1] = a * \
-                    add_mask + new_map[pos[0]-radius:pos[0] +
-                                       radius+1, pos[1]-radius:pos[1]+radius+1]
+            if (pos[0]-radius >= 0 and 
+                pos[1]-radius >= 0 and 
+                pos[0]+radius+1 < new_map.shape[0] and 
+                pos[1]+radius+1 < new_map.shape[1]):
+
+                new_map[pos[0]-radius:pos[0]+radius+1, pos[1]-radius:pos[1]+radius+1] = \
+                    a * add_mask + \
+                    new_map[pos[0]-radius:pos[0]+radius+1, pos[1]-radius:pos[1]+radius+1]
 
         if max_limit:
             new_map = np.sign(new_map)
@@ -493,10 +554,10 @@ class MapManager(base.BaseObject):
         return new_map + source_map
 
 
-class TrainAgentManager(BaseAgentManager):
+class PredictionAgent(BasePredictionAgent):
     """
-    Train Agent Manager
-    -------------------
+    PredictionAgent
+    ---------------
     Agent manager used to train prediction models.
 
     Additional Public Methods
@@ -513,7 +574,7 @@ class TrainAgentManager(BaseAgentManager):
     ```
     """
 
-    _save_items = BaseAgentManager._save_items + [
+    _save_items = BasePredictionAgent._save_items + [
         'linear_predict',
         'neighbor_number',
         'neighbor_traj', 'neighbor_traj_linear_pred',
@@ -536,6 +597,7 @@ class TrainAgentManager(BaseAgentManager):
                   frame_step=1,
                   add_noise=False,
                   linear_predict=True):
+
         self.linear_predict = linear_predict
 
         # Trajectory info
@@ -624,88 +686,46 @@ class TrainAgentManager(BaseAgentManager):
         return self.neighbor_traj_linear_pred
 
 
+def calculate_cosine(vec1: np.ndarray,
+                     vec2: np.ndarray):
 
-def interp_2d(traj: np.array, step=1):
-    """
-    shape(traj) should be [m, 2].
-    """
-    x = traj
-    if type(step) == int:
-        step = step * np.ones(2).astype(np.int32)
+    length1 = np.linalg.norm(vec1, axis=-1)
+    length2 = np.linalg.norm(vec2, axis=-1)
 
-    x_p = []
-    index = 0
-    while True:
-        if len(x_p):
-            x_last = x_p[-1]
-            if np.linalg.norm(x[index] - x_last, ord=1) >= np.min(step):
-                coe = np.sign(x[index] - x_last)
-                coe_mask = (abs(x[index] - x_last) ==
-                            np.max(abs(x[index] - x_last)))
-                x_p.append(x_last + coe * coe_mask * step)
-                continue
-
-        if len(x_p) and np.linalg.norm(x[index] - x_last, ord=1) > 0:
-            x_p.append(x[index])
-        elif len(x_p) == 0:
-            x_p.append(x[index])
-
-        index += 1
-        if index >= len(x):
-            break
-
-    return np.array(x_p)
-
-
-def calculate_cosine(vec1, vec2):
-    """
-    两个输入均为表示方向的向量, shape=[2]
-    """
-    length1 = np.linalg.norm(vec1)
-    length2 = np.linalg.norm(vec2)
-
-    if length2 == 0:
-        return -1.0
-    else:
-        return np.sum(vec1 * vec2) / (length1 * length2)
+    return (np.sum(vec1 * vec2, axis=-1) + 0.0001) / ((length1 * length2) + 0.0001)
 
 
 def calculate_length(vec1):
-    """
-    表示方向的向量, shape=[2]
-    """
-    length1 = np.linalg.norm(vec1)
-    return length1
+    return np.linalg.norm(vec1, axis=-1)
 
 
-def activation(x: np.array, a=1, b=1):
-    return (x <= 0) * a * x + (x > 0) * b * x
+def activation(x: np.ndarray, a=1, b=1):
+    return np.less_equal(x, 0) * a * x + np.greater(x, 0) * b * x
 
 
-def get_trajectories(agents: List[BaseAgentManager],
+def get_trajectories(agents: List[BasePredictionAgent],
                      return_movement=False,
                      return_destination=False,
                      destination_steps=3) -> list:
     """
     Get trajectories from input structures.
 
-    :param agents: trajectory manager, support both `BaseAgentManager` and `EntireTrajectory`
+    :param agents: trajectory manager, support both `BasePredictionAgent` and `EntireTrajectory`
     :param return_movement: controls if return move flag
     :return trajs: a list of all trajectories from inputs
     """
     all_trajs = []
     movement = []
     for agent in agents:
-        if issubclass(type(agent), BaseAgentManager):
+        if issubclass(type(agent), BasePredictionAgent):
             trajs = agent.traj
         elif issubclass(type(agent), EntireTrajectory):
             trajs = agent.traj[agent.start_frame:agent.end_frame]
-            
+
             if return_destination:
                 trajs = trajs[-destination_steps:]
 
         if return_movement:
-            # FIXME start_frame > end_frame on SDD
             flag = True if (
                 (trajs.shape[0] == 0) or
                 (calculate_length(trajs[-1]-trajs[0]) >= return_movement)

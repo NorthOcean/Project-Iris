@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-05-07 09:12:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 10:27:43
+@LastEditTime: 2021-07-20 11:06:18
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -91,7 +91,7 @@ class MSNBeta_DModel(M.prediction.Model):
 
     # @tf.function
     def forward(self, model_inputs: List[tf.Tensor],
-                training=False,
+                training=None,
                 *args, **kwargs):
         """
         Run a forward implementation.

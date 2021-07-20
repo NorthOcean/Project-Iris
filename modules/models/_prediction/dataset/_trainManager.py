@@ -6,6 +6,7 @@ LastEditTime: 2021-04-15 11:15:54
 Description: file content
 '''
 
+from modules.models._base import agent
 import os
 import random
 from typing import Dict, List, Tuple
@@ -15,28 +16,49 @@ from tqdm import tqdm
 
 from ... import base
 from ...helpmethods import dir_check
-from ..agent import MapManager, TrainAgentManager
+from ..agent import MapManager, PredictionAgent, calculate_length
 from ..args import PredictionArgs
 from ..traj import EntireTrajectory
-from ._datasetManager import PredictionDatasetManager
+from ._datasetManager import PredictionDatasetInfo
 
 
 class DatasetManager(base.DatasetManager):
+    """
+    DatasetManager
+    --------------
+    Manage all training data from one prediction dataset.
+
+    Properties
+    ----------
+    ```python
+    >>> self.args   # args
+    >>> self.dataset_name # name
+    >>> self.dataset_info # dataset info
+    ```
+
+    Public Methods
+    --------------
+    ```python
+    # Sample train data (a list of `PredictionAgent` objects) from dataset
+    (method) sample_train_data: (self: DatasetManager) -> List[PredictionAgent]
+
+    # Load dataset files
+    (method) load_data: (self: DatasetManager) -> DatasetManager
+    """
 
     arg_type = PredictionArgs
-    agent_type = TrainAgentManager
+    agent_type = PredictionAgent
 
     def __init__(self, args: PredictionArgs, dataset_name: str, custom_list=[]):
         """
         init parameters:
-        :param args: train args, type = `NameSpace`.
-            See detail args in `./modules/models/_managers/_argManager.py`.
+        :param args: train args, type = `NameSpace` or a subclass of `PredictionArgs`.
         :param dataset_name: name for this dataset
         :param custom_list: (optional) 
         """
         super().__init__(args, dataset_name)
 
-        self._dataset_info = PredictionDatasetManager()(dataset_name)
+        self._dataset_info = PredictionDatasetInfo()(dataset_name)
         self._custom_list = custom_list
 
     @property
@@ -52,7 +74,7 @@ class DatasetManager(base.DatasetManager):
         self.all_entire_trajectories = self._prepare_agent_data()
         return self
 
-    def sample_train_data(self) -> List[TrainAgentManager]:
+    def sample_train_data(self) -> List[PredictionAgent]:
         """
         Read Dataset, load data, and make tain data
         """
@@ -143,7 +165,7 @@ class DatasetManager(base.DatasetManager):
         frame_list = list(set(data.T[0].astype(np.int32)))
         frame_list.sort()
 
-        self.logger.info('Load dataset {} done.'.format(csv_file_path))
+        self.log('Load dataset {} done.'.format(csv_file_path))
         return person_data, frame_list
 
     def _prepare_agent_data(self) -> List[EntireTrajectory]:
@@ -162,32 +184,38 @@ class DatasetManager(base.DatasetManager):
 
         return all_entire_trajectories
 
-    def _get_trajectory(self, agent_index, start_frame, obs_frame, end_frame, frame_step=1, add_noise=False):
+    def _get_trajectory(self, agent_index, start_frame, obs_frame, end_frame, frame_step=1, max_neighbor=15, add_noise=False):
         """
         Sample single part of one specific agent's trajectory from `EntireTrajectory`.
 
-        :return agent: agent manager, type = `TrainAgentManager`
+        :return agent: agent manager, type = `PredictionAgent`
         """
         trajecotry_current = self.all_entire_trajectories[agent_index]
         frame_list = trajecotry_current.frame_list
-        neighbor_list = trajecotry_current.video_neighbor_list[obs_frame - frame_step].tolist(
-        )
-        neighbor_list = set(neighbor_list) - set([agent_index])
+
+        neighbor_list = self.video_neighbor_list[obs_frame - frame_step]
+
+        if len(neighbor_list) > max_neighbor + 1:
+            neighbor_pos = self.video_matrix[obs_frame - frame_step, neighbor_list, :]
+            target_pos = self.video_matrix[obs_frame - frame_step, agent_index:agent_index+1, :]
+            dis = calculate_length(neighbor_pos - target_pos)
+            neighbor_list = neighbor_list[np.argsort(dis)[1:max_neighbor+1]]
+
         neighbor_agents = [self.all_entire_trajectories[nei]
                            for nei in neighbor_list]
 
-        return TrainAgentManager().init_data(trajecotry_current,
-                                             neighbor_agents,
-                                             frame_list,
-                                             start_frame,
-                                             obs_frame,
-                                             end_frame,
-                                             frame_step=frame_step,
-                                             add_noise=add_noise)
+        return PredictionAgent().init_data(trajecotry_current,
+                                           neighbor_agents,
+                                           frame_list,
+                                           start_frame,
+                                           obs_frame,
+                                           end_frame,
+                                           frame_step=frame_step,
+                                           add_noise=add_noise)
 
-    def _sample_train_data(self) -> List[TrainAgentManager]:
+    def _sample_train_data(self) -> List[PredictionAgent]:
         """
-        Sample all train data (type = `TrainAgentManager`) from all `EntireTrajectory`.
+        Sample all train data (type = `PredictionAgent`) from all `EntireTrajectory`.
         """
         sample_rate, frame_rate = self.dataset_info.paras
         frame_step = int(0.4 / (sample_rate / frame_rate))
@@ -201,32 +229,31 @@ class DatasetManager(base.DatasetManager):
             start_frame = trajecotry_current.start_frame
             end_frame = trajecotry_current.end_frame
 
-            for frame_point in range(start_frame, end_frame, self.args.step * frame_step):
+            for p in range(start_frame, end_frame, self.args.step * frame_step):
                 # Normal mode
                 if self.args.pred_frames > 0:
-                    if frame_point + (self.args.obs_frames + self.args.pred_frames) * frame_step > end_frame:
+                    if p + (self.args.obs_frames + self.args.pred_frames) * frame_step > end_frame:
                         break
 
-                    obs_frame_current = frame_point + self.args.obs_frames * frame_step
-                    end_frame_current = frame_point + \
-                        (self.args.obs_frames+self.args.pred_frames) * frame_step
+                    obs = p + self.args.obs_frames * frame_step
+                    end = p + (self.args.obs_frames+self.args.pred_frames) * frame_step
 
                 # Infinity mode, only works for destination models
                 elif self.args.pred_frames == -1:
-                    if frame_point + (self.args.obs_frames + 1) * frame_step > end_frame:
+                    if p + (self.args.obs_frames + 1) * frame_step > end_frame:
                         break
 
-                    obs_frame_current = frame_point + self.args.obs_frames * frame_step
-                    end_frame_current = end_frame
+                    obs = p + self.args.obs_frames * frame_step
+                    end = end_frame
 
                 else:
                     raise ValueError(
                         '`pred_frames` should be a positive integer or -1.')
 
                 train_agents.append(self._get_trajectory(agent_id,
-                                                         start_frame=frame_point,
-                                                         obs_frame=obs_frame_current,
-                                                         end_frame=end_frame_current,
+                                                         start_frame=p,
+                                                         obs_frame=obs,
+                                                         end_frame=end,
                                                          frame_step=frame_step,
                                                          add_noise=False))
 
@@ -248,33 +275,25 @@ class DatasetManager(base.DatasetManager):
 
 class DatasetsManager(base.DatasetsManager):
     """
-    Train Data Manager
-    ------------------
-    Manage all training data.
+    DatasetsManager
+    ---------------
+    Manage all prediction training data.
 
     Public Methods
     --------------
     ```python
     # Prepare train agents from `DatasetManager`s
-    >>> self.prepare_train_files(
-            dataset_managers:List[DatasetManager],
-            mode='test'
-        ) -> List[TrainAgentManager]
+    (method) prepare_train_files: (self: DatasetsManager, dataset_managers: List[DatasetManager], mode='test') -> List[PredictionAgent]
 
-    # Save agents' data
-    >>> DatasetsManager.zip_and_save(
-            save_dir, 
-            agents:List[TrainAgentManager]
-        )
-
-    # Load agents' data
-    >>> DatasetsManager.load_and_unzip(save_dir) -> List[TrainAgentManager]
+    # Save and load agents' data
+    (method) zip_and_save: (save_dir, agents: List[PredictionAgent]) -> None
+    (method) load_and_unzip: (cls: Type[DatasetsManager], save_dir) -> List[PredictionAgent]
     ```
     """
 
     arg_type = PredictionArgs
-    datasetInfo_type = PredictionDatasetManager
-    agent_type = TrainAgentManager
+    datasetInfo_type = PredictionDatasetInfo
+    agent_type = PredictionAgent
     datasetManager_type = DatasetManager
 
     def __init__(self, args: PredictionArgs, prepare_type='all'):
@@ -300,13 +319,13 @@ class DatasetsManager(base.DatasetsManager):
 
         elif prepare_type == 'test':
             for index, dataset in enumerate(test_list):
-                self.logger.info('Preparing {}/{}...'.format(index+1, len(test_list)))
+                self.log('Preparing {}/{}...'.format(index+1, len(test_list)))
                 self.prepare_train_files([DatasetManager(self.args, dataset)])
 
         elif '_' in prepare_type:
             set_list = prepare_type.split('_')
             for index, dataset in enumerate(set_list):
-                self.logger.info('Preparing {}/{}...'.format(index+1, len(set_list)))
+                self.log('Preparing {}/{}...'.format(index+1, len(set_list)))
                 self.prepare_train_files([DatasetManager(self.args, dataset)])
         else:
             pass
@@ -319,29 +338,31 @@ class DatasetsManager(base.DatasetsManager):
     def dataset_info(self) -> datasetInfo_type:
         return self._dataset_info
 
-    def prepare_train_files(self,
-                            dataset_managers: List[datasetManager_type],
-                            mode='test') -> List[agent_type]:
+    def prepare_train_files(self, dataset_managers: List[DatasetManager],
+                            mode='test') -> List[PredictionAgent]:
         """
         Make or load train files to get train agents.
-        (a list of agent managers, type = `TrainAgentManager`)
+        (a list of agent managers, type = `PredictionAgent`)
 
         :param dataset_managers: a list of dataset managers (`DatasetManager`)
-        :return all_agents: a list of train agents (`TrainAgentManager`)
+        :return all_agents: a list of train agents (`PredictionAgent`)
         """
         all_agents = []
         count = 1
         dir_check('./dataset_npz/')
 
         for dm in dataset_managers:
-            self.log('({}/{})  Prepare test data in `{}`...'.format(count,
-                                                                    len(dataset_managers),
-                                                                    dm.dataset_name))
+            print('({}/{})  Prepare test data in `{}`...'.format(
+                count, len(dataset_managers), dm.dataset_name))
 
-            data_path = './dataset_npz/{}/agent'.format(dm.dataset_name) if (self.args.obs_frames == 8 and self.args.pred_frames == 12) \
-                else './dataset_npz/{}/agent_{}to{}'.format(dm.dataset_name, self.args.obs_frames, self.args.pred_frames)
-            
-            endstring = '' if self.args.step == 4 else '{}'.format(self.args.step)
+            if (self.args.obs_frames, self.args.pred_frames) == (8, 12):
+                data_path = './dataset_npz/{}/agent'.format(dm.dataset_name)
+            else:
+                data_path = './dataset_npz/{}/agent_{}to{}'.format(dm.dataset_name,
+                                                                   self.args.obs_frames,
+                                                                   self.args.pred_frames)
+
+            endstring = '' if self.args.step == 4 else self.args.step
             data_path += '{}.npz'.format(endstring)
 
             if not os.path.exists(data_path):
@@ -366,22 +387,21 @@ class DatasetsManager(base.DatasetsManager):
             count += 1
         return all_agents
 
-    @staticmethod
-    def zip_and_save(save_dir, agents: List[TrainAgentManager]):
+    def zip_and_save(self, save_dir, agents: List[PredictionAgent]):
         save_dict = {}
         for index, agent in enumerate(agents):
             save_dict[str(index)] = agent.zip_data()
         np.savez(save_dir, **save_dict)
 
-    @classmethod
-    def load_and_unzip(cls, save_dir) -> List[TrainAgentManager]:
+    def load_and_unzip(self, save_dir) -> List[PredictionAgent]:
         save_dict = np.load(save_dir, allow_pickle=True)
 
-        if save_dict['0'].tolist()['__version__'] < TrainAgentManager.__version__:
-            cls.log(('[Warning] Saved agent managers\' version is {}, ' +
-                     'which is lower than current {}. Please delete ' +
-                     'them and re-run this program, or there could ' +
-                     'happen something wrong.').format(save_dict['0'].tolist()['__version__'],
-                                                       TrainAgentManager.__version__))
+        if save_dict['0'].tolist()['__version__'] < PredictionAgent.__version__:
+            self.log(('Saved agent managers\' version is {}, ' +
+                      'which is lower than current {}. Please delete ' +
+                      'them and re-run this program, or there could ' +
+                      'happen something wrong.').format(save_dict['0'].tolist()['__version__'],
+                                                        PredictionAgent.__version__),
+                     level='error')
 
-        return [TrainAgentManager().load_data(save_dict[key].tolist()) for key in save_dict.keys()]
+        return [PredictionAgent().load_data(save_dict[key].tolist()) for key in save_dict.keys()]

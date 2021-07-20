@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 11:15:52
+@LastEditTime: 2021-07-20 15:32:09
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -20,7 +20,12 @@ from .base import BaseArgs
 TIME = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
 
 
-class BaseArgsManager(BaseArgs):
+class BaseTrainArgs(BaseArgs):
+    """
+    BaseTrainArgs
+    -------------
+    The arg class that contains basic args for training universal models.
+    """
     def __init__(self, args: Union[Namespace, List[str]],
                  default_args: Union[Namespace, dict] = None):
 

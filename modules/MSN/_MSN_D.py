@@ -144,7 +144,7 @@ class MSN_D(MSNAlpha):
         )
 
     def run_train_or_test(self):
-        self.logger.info('Start test model from `{}` and `{}`'.format(
+        self.log('Start test model from `{}` and `{}`'.format(
             self.args.loada, self.args.loadb))
         self.run_test()
 
@@ -153,10 +153,10 @@ class MSN_D(MSNAlpha):
 
     def print_test_result_info(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']
-        self.log_parameters(title='test results', **
+        self.print_parameters(title='test results', **
                             dict({'dataset': dataset}, **loss_dict))
 
-        self.logger.info('Results: {}, {}, {}, {}, K={}, sigma={}'.format(
+        self.log('Results: {}, {}, {}, {}, K={}, sigma={}'.format(
             self.args.loada,
             self.args.loadb,
             dataset,

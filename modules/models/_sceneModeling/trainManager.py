@@ -25,7 +25,7 @@ class DatasetManager(base.DatasetManager):
     def __init__(self, args, dataset_name):
         super().__init__(args, dataset_name)
 
-        pdm = prediction.PredictionDatasetManager()
+        pdm = prediction.PredictionDatasetInfo()
         self.coe = [1.0, 1.0] if dataset_name in pdm.dataset_list['ethucy'] \
             else [2.0, 2.0]
         self._dataset_info = pdm(self.dataset_name)
@@ -157,7 +157,7 @@ class DatasetManager(base.DatasetManager):
 
     def init_agents(self, agents: List[Agent]) -> List[Agent]:
         dataset_status = [agent.dataset_status for agent in agents]
-        
+
         if False in dataset_status:
             self.load_data()
             traj_dataset_manager = prediction.DatasetManager(
@@ -189,7 +189,7 @@ class DatasetsManager(prediction.DatasetsManager):
         count = 1
 
         for dm in dataset_managers:
-            self.log('({}/{})  Prepare training images in dataset `{}`...'.format(
+            print('({}/{})  Prepare training images in dataset `{}`...'.format(
                 count,
                 len(dataset_managers),
                 dm.dataset_name))
@@ -199,13 +199,13 @@ class DatasetsManager(prediction.DatasetsManager):
             if mode == 'train':
                 # TODO dataset process
                 if balance := True:
-                    self.logger.info('Start balancing train images...\n')
+                    self.log('Start balancing train images...\n')
                     for agent in agents:
                         agent.balance()
 
             all_agents += agents
             count += 1
-            
+
         return all_agents
 
 
@@ -215,7 +215,7 @@ def _remove_all_scene_datasets(base_path='./dataset_npz/'):
     This function will remove all save scene datasets
     """
     dir_list = os.listdir(base_path)
-    all_dataset_list = prediction.PredictionDatasetManager().datasets
+    all_dataset_list = prediction.PredictionDatasetInfo().datasets
     for item in dir_list:
         if item in all_dataset_list and os.path.exists(base_path + '{}/images'.format(item)):
             shutil.rmtree(base_path + '{}/images'.format(item))

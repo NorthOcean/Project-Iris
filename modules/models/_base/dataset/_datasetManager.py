@@ -11,7 +11,7 @@ from typing import List, Tuple
 from ...helpmethods import dir_check
 from ..baseObject import BaseObject
 from ..agent import Agent
-from ..args.args import BaseArgsManager as Args
+from ..args.args import BaseTrainArgs as Args
 from ._dataset import Dataset
 from ._datasetInfo import DatasetInfo
 
@@ -34,10 +34,10 @@ class DatasetManager(BaseObject):
     --------------
     ```python
     # Sample train data from dataset
-    >>> self.sample_train_data() -> List[TrainAgentManager]
+    (method) sample_train_data: (self: DatasetManager) -> List[agent_type]
 
     # Load dataset files
-    >>> self.load_data()
+    (method) load_data: (self: DatasetManager) -> Any
     ```
     """
 

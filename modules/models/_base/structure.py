@@ -6,10 +6,8 @@ LastEditTime: 2021-04-19 19:43:42
 Description: file content
 '''
 
-import copy
 import os
 import re
-import time
 from argparse import Namespace
 from typing import Dict, List, Tuple, Union
 
@@ -20,9 +18,8 @@ from tensorflow import keras
 from ..helpmethods import dir_check
 from .agent import Agent
 from .args import argParse as ArgParse
-from .args.args import BaseArgsManager as ArgType
+from .args.args import BaseTrainArgs as ArgType
 from .baseObject import BaseObject
-from .dataset._datasetManager import DatasetsManager
 
 
 class Model(keras.Model):
@@ -59,7 +56,7 @@ class Model(keras.Model):
 
     # Pre/Post-processes
     (method) pre_process: (self: Model, model_inputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
-    (method) post_process: (self: Model, outputs: List[Tensor], training=False, *args, **kwargs) -> List[Tensor]
+    (method) post_process: (self: Model, outputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
     ```
     """
 
@@ -77,7 +74,7 @@ class Model(keras.Model):
         self.training_structure = training_structure
 
     def call(self, inputs, training=None, mask=None, *args, **kwargs):
-        raise NotImplementedError('Model is not set!')
+        raise NotImplementedError
 
     # @tf.function
     def forward(self, model_inputs: List[tf.Tensor],
@@ -111,7 +108,7 @@ class Model(keras.Model):
         return model_inputs
 
     def post_process(self, outputs: List[tf.Tensor],
-                     training=False,
+                     training=None,
                      *args, **kwargs) -> List[tf.Tensor]:
         """
         Post-processing of model's output when model's inferencing.
@@ -445,14 +442,14 @@ class Structure(BaseObject):
         raise NotImplementedError('DATASET is not defined!')
 
     def print_dataset_info(self):
-        self.log_parameters(title='dataset options')
+        self.print_parameters(title='dataset options')
 
     def print_training_info(self):
-        self.log_parameters(title='training options')
+        self.print_parameters(title='training options')
 
     def print_test_result_info(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']
-        self.log_parameters(title='test results',
+        self.print_parameters(title='test results',
                             dataset=dataset,
                             **loss_dict)
         with open('./test_log.txt', 'a') as f:
@@ -473,13 +470,13 @@ class Structure(BaseObject):
                 # restore weights from files
                 self.model = self.load_from_checkpoint(self.args.restore)
 
-            self.logger.info(
+            self.log(
                 'Start training with args={}'.format(self.args.__dict__))
             self.train()
 
         # prepare test
         else:
-            self.logger.info(
+            self.log(
                 'Start test model from `{}`'.format(self.args.load))
             self.model = self.load_from_checkpoint(self.args.load)
             self.run_test()
@@ -587,13 +584,13 @@ class Structure(BaseObject):
                 '{}.{}'.format(self.args.model_name, self.args.save_format))
 
             self.save_model(model_save_path)
-            self.logger.info(('Trained model is saved at `{}`.\n' +
+            self.log(('Trained model is saved at `{}`.\n' +
                               'To re-test this model, please use ' +
                               '`python main.py --load {}`.').format(model_save_path,
                                                                     self.args.log_dir))
 
     def print_training_done_info(self, **kwargs):
-        self.logger.info(('Training done.' +
+        self.log(('Training done.' +
                           'Tensorboard training log file is saved at `{}`' +
                           'To open this log file, please use `tensorboard ' +
                           '--logdir {}`').format(self.args.log_dir, self.args.log_dir))
@@ -631,7 +628,7 @@ class Structure(BaseObject):
                     loss_dict_all[key] = []
                 loss_dict_all[key].append(loss_dict[key])
 
-            # self.logger.info(loss_dict)
+            # self.log(loss_dict)
 
         for key in loss_dict_all:
             loss_dict_all[key] = tf.reduce_mean(
@@ -665,7 +662,7 @@ class Structure(BaseObject):
             if issubclass(type(model_inputs), tf.Tensor):
                 model_inputs = (model_inputs,)
 
-            model_outputs = self.model_forward(model_inputs, training=False)
+            model_outputs = self.model_forward(model_inputs, training=None)
 
             if not len(model_outputs_all):
                 [model_outputs_all.append([])

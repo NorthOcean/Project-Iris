@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-24 09:14:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 10:52:18
+@LastEditTime: 2021-07-20 11:00:12
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -31,7 +31,7 @@ class _MSNAlphaModelPlus(MSNAlphaModel):
         super().__init__(Args, training_structure=training_structure, *args, **kwargs)
 
     def post_process(self, outputs: Tuple[tf.Tensor],
-                     training=False,
+                     training=None,
                      **kwargs) -> Tuple[tf.Tensor]:
 
         # shape = [(batch, K, 2)]
@@ -115,7 +115,7 @@ class _MSNAlphaModelPlus(MSNAlphaModel):
 
 class MSN_G(MSNAlpha):
     """
-    Structure for MSN_D prediction
+    Structure for MSN_G prediction
     -----------------------------
     Please train `MSNAlphaModel`, `MSBBeta_DModel`, `MSNBeta_GModel`, 
     and pass their paths with args `--loada`, `--loadb` ,and `--loadc`.
@@ -168,7 +168,7 @@ class MSN_G(MSNAlpha):
         self.beta.model = self.beta.load_from_checkpoint(self.args.loadb)
 
     def run_train_or_test(self):
-        self.logger.info(
+        self.log(
             'Start test model from `{}` and `{}`'.format(
                 self.args.loada, self.args.loadb))
 
@@ -179,10 +179,10 @@ class MSN_G(MSNAlpha):
 
     def print_test_result_info(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']
-        self.log_parameters(title='test results', **
+        self.print_parameters(title='test results', **
                             dict({'dataset': dataset}, **loss_dict))
 
-        self.logger.info('Results from {}, {}, {}, {}, {}, K={}, sigma={}'.format(
+        self.log('Results from {}, {}, {}, {}, {}, K={}, sigma={}'.format(
             self.args.loada,
             self.args.loadb,
             self.args.loadc,

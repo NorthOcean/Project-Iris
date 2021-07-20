@@ -152,7 +152,7 @@ class Agent(base.Agent):
         else:
             log_format = 'Dataset `{}/{}` do not exist, start making...'
 
-        self.logger.info(log_format.format(self.dataset_name,
+        self.log(log_format.format(self.dataset_name,
                                    self.local_name))
 
         return check
@@ -207,7 +207,7 @@ class Agent(base.Agent):
                 percent) + self.log_bar(percent)
 
         self._hist = [values/length, ranges]
-        self.log_parameters(
+        self.print_parameters(
             'Score distribution of `{}/{}`'.format(
                 self.dataset_name,
                 self.local_name), **prob_dict)

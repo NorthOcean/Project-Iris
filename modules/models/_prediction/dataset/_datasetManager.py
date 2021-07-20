@@ -13,18 +13,20 @@ import numpy as np
 from ... import base
 
 
-class PredictionDatasetManager(base.DatasetInfo):
+class PredictionDatasetInfo(base.DatasetInfo):
     """
-    Prediction Dataset Manager
-    --------------------------
-    Manager for all prediction datasets of ETH-UCY and SDD.
+    PredictionDatasetInfo
+    ---------------------
+    Manager for all prediction datasets in ETH-UCY and SDD.
 
     Usage
     -----
+    You can new a `PredictionDatasetInfo` object, 
+    and then call it to access dataset info.
+    For example,
     ```python
-    # Return a specific dataset's structure
-    >>> myManager = PredictionDatasetManager()
-    >>> dataset = myManager('example_dataset_name')
+    >>> myManager = PredictionDatasetInfo()
+    >>> dataset = myManager('eth')
     ```
 
     Properties

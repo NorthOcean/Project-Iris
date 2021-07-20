@@ -156,7 +156,7 @@ class MSNBeta_GModel(M.prediction.Model):
 
     # @tf.function
     def forward(self, model_inputs: Tuple[tf.Tensor],
-                training=False,
+                training=None,
                 *args, **kwargs):
 
         return MSNBeta_DModel.forward(self, model_inputs,

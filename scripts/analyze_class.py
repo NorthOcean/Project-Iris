@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2021-04-16 16:02:45
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-19 19:32:27
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2021-04-16 16:02:45
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-07-20 11:11:29
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 import inspect
 import sys

@@ -8,10 +8,10 @@
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from .agent import MapManager, TrainAgentManager
+from .agent import MapManager, PredictionAgent
 from .args import PredictionArgs
 from .dataset._trainManager import (DatasetManager, DatasetsManager,
-                                    EntireTrajectory, PredictionDatasetManager)
+                                    EntireTrajectory, PredictionDatasetInfo)
 from .structure import Model, Structure
 from .utils import Loss, Process
 from .vis import TrajVisualization

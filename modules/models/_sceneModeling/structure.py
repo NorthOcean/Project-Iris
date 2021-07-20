@@ -66,7 +66,7 @@ class Model(base.Model):
                 self.pre_process_list.append('RANDOM_QUALITY')
 
     def pre_process(self, model_inputs: List[tf.Tensor],
-                    training=False,
+                    training=None,
                     **kwargs) -> List[tf.Tensor]:
         """
         Pre-processing before inputting to the model
@@ -110,7 +110,7 @@ class Structure(base.Structure):
                 with open('./test_log.txt', 'a') as f:
                     f.write('-'*40 + '\n')
 
-                for dataset in prediction.PredictionDatasetManager().sdd_test_sets if self.args.dataset == 'sdd' else prediction.PredictionDatasetManager().ethucy_testsets:
+                for dataset in prediction.PredictionDatasetInfo().sdd_test_sets if self.args.dataset == 'sdd' else prediction.PredictionDatasetInfo().ethucy_testsets:
                     agents = self.datasetsManager_type.load_dataset_files(
                         self.args, dataset)
                     self.test(agents=agents, dataset_name=dataset)
@@ -193,12 +193,12 @@ class Structure(base.Structure):
         return 1.0-loss, loss_dict
 
     def print_dataset_info(self):
-        self.log_parameters(title='dataset options',
+        self.print_parameters(title='dataset options',
                             rotate=self.args.rotate,
                             add_noise=self.args.add_noise)
 
     def print_training_info(self):
-        self.log_parameters(title='training options',
+        self.print_parameters(title='training options',
                             model_name=self.args.model_name,
                             test_set=self.args.test_set,
                             batch_number=int(
@@ -221,7 +221,7 @@ class Structure(base.Structure):
             save_base_path = dir_check(
                 os.path.join(save_base_path, 'VisualScenes'))
 
-            self.logger.info('Start saving images at {}'.format(save_base_path))
+            self.log('Start saving images at {}'.format(save_base_path))
 
             img_count = 0
             for index, agent in self.log_timebar(agents, 'Saving images...'):
