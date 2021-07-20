@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-21 15:05:18
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:10:22
+@LastEditTime: 2021-07-20 10:35:50
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -17,10 +17,14 @@ import tensorflow as tf
 from tensorflow import keras as keras
 
 from ._args import MSNArgs
-from ._beta_D import linear_prediction
+from ._beta_D import MSNBeta_DModel
 
 
 class Encoder(keras.Model):
+    """
+    Encoder in the CVAE structure in generative Interaction Transformer
+    """
+
     def __init__(self, Args: MSNArgs, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.args = Args
@@ -79,9 +83,11 @@ class Encoder(keras.Model):
         concat_feature = self.concat([positions_embedding, context_feature])
 
         t_inputs = concat_feature
-        t_outputs = linear_prediction(positions[:, -2:, :],
-                                      self.args.pred_frames,
-                                      return_zeros=False)
+        t_outputs = tf.linspace(start=positions[:, -2, :],
+                                stop=positions[:, -1, :],
+                                num=self.args.pred_frames + 1,
+                                axis=-2)[:, 1:, :]
+
         me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
         features, _ = self.transformer(t_inputs, t_outputs, True,
                                        me, mc, md)
@@ -90,12 +96,13 @@ class Encoder(keras.Model):
 
 class Generator(keras.Model):
     """
-    Generator in IrisBeta model.
+    Generator (Decoder) in the CVAE structure.
 
     :param inputs: a list of tensors, which contains
         `inputs[0]`: features from encoder, shape = (batch, pred, 128)
         `inputs[1]`: noise vector z, shape = (batch, pred, 128)
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -114,7 +121,14 @@ class Generator(keras.Model):
 
 
 class MSNBeta_GModel(M.prediction.Model):
-    def __init__(self, Args, training_structure=None, *args, **kwargs):
+    """
+    Second stage generative Interaction Transformer model
+    """
+
+    def __init__(self, Args: MSNArgs,
+                 training_structure=None,
+                 *args, **kwargs):
+
         super().__init__(Args, training_structure, *args, **kwargs)
 
         self.set_preprocess('move')
@@ -124,12 +138,9 @@ class MSNBeta_GModel(M.prediction.Model):
         self.G = Generator()
 
     def call(self, inputs: List[tf.Tensor],
-             outputs: tf.Tensor = None,
              training=None, mask=None):
-        
-        obs = inputs[0]
-        features = self.E(inputs)
 
+        features = self.E(inputs)
         K = self.args.K_train if training else self.args.K
         sigma = 1.0 if training else self.args.sigma
 
@@ -147,41 +158,17 @@ class MSNBeta_GModel(M.prediction.Model):
     def forward(self, model_inputs: Tuple[tf.Tensor],
                 training=False,
                 *args, **kwargs):
-        """
-        Run a forward implementation.
 
-        :param model_inputs: input tensor (or a list of tensors)
-        :param mode: choose forward type, can be `'test'` or `'train'`
-        :return output: model's output. type=`List[tf.Tensor]`
-        """
-        model_inputs_processed = self.pre_process(model_inputs, training)
-
-        d = model_inputs[-1]
-        des = d if len(d.shape) == 3 else d[:, tf.newaxis, :]
-        destination_processed = self.pre_process([des],
-                                                 training,
-                                                 use_new_para_dict=False)
-
-        model_inputs_processed = (model_inputs_processed[0],
-                                  model_inputs_processed[1],
-                                  model_inputs_processed[2],
-                                  destination_processed[0])
-
-        if training:
-            gt_processed = self.pre_process([kwargs['gt']],
-                                            use_new_para_dict=False)
-
-        output = self.call(model_inputs_processed,
-                           gt_processed[0] if training else None,
-                           training=training)   # use `self.call()` to debug
-
-        if not (type(output) == list or type(output) == tuple):
-            output = [output]
-
-        return self.post_process(output, training, model_inputs=model_inputs)
+        return MSNBeta_DModel.forward(self, model_inputs,
+                                      training,
+                                      *args, **kwargs)
 
 
 class MSNBeta_G(M.prediction.Structure):
+    """
+    Structure for the second stage generative Interaction Transformer
+    """
+
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
@@ -201,7 +188,7 @@ class MSNBeta_G(M.prediction.Structure):
         opt = keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def load_forward_dataset(self, model_inputs: Tuple[tf.Tensor], **kwargs):
+    def load_forward_dataset(self, model_inputs: List[tf.Tensor], **kwargs):
         trajs = model_inputs[0]
         maps = model_inputs[1]
         paras = model_inputs[2]
@@ -210,9 +197,8 @@ class MSNBeta_G(M.prediction.Structure):
 
     def p_loss(self, model_outputs: Tuple[tf.Tensor], labels=None):
         features = tf.reshape(model_outputs[1], [-1, 128])
-        
+
         mu_real = tf.reduce_mean(features, axis=0)  # (128)
-        std_real = tf.math.reduce_std(features, axis=0) # (128)
+        std_real = tf.math.reduce_std(features, axis=0)  # (128)
 
         return tf.reduce_mean(tf.abs(mu_real - 0)) + tf.reduce_mean(tf.abs(std_real - 1))
-

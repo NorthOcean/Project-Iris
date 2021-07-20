@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 09:14:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:20:59
+@LastEditTime: 2021-07-20 09:27:38
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -64,33 +64,6 @@ def predict_linear_for_person(position, time_pred, different_weights=0.95) -> np
     return np.stack([x_p, y_p]).T
 
 
-def calculate_ADE_FDE_numpy(pred, GT) -> Tuple[np.ndarray, np.ndarray]:
-    if len(pred.shape) == 3:    # [K, pred, 2]
-        ade = []
-        fde = []
-        for p in pred:
-            all_loss = np.linalg.norm(p - GT, ord=2, axis=1)
-            ade.append(np.mean(all_loss))
-            fde.append(all_loss[-1])
-
-        min_index = np.argmin(np.array(ade))
-        ade = ade[min_index]
-        fde = fde[min_index]
-
-        # # ADE of the mean traj
-        # mean_traj = np.mean(pred, axis=0)
-        # mean_traj_loss = np.linalg.norm(mean_traj - GT, ord=2, axis=1)
-        # ade = np.mean(mean_traj_loss)
-        # fde = mean_traj_loss[-1]
-
-    else:
-        all_loss = np.linalg.norm(pred - GT, ord=2, axis=1)
-        ade = np.mean(all_loss)
-        fde = all_loss[-1]
-
-    return ade, fde
-
-
 def GraphConv_layer(output_units, activation=None):
     return keras.layers.Dense(output_units, activation=activation)
 
@@ -102,3 +75,40 @@ def GraphConv_func(features, A, output_units=64, activation=None, layer=None):
     else:
         res = layer(dot)
     return res
+
+
+class BatchIndex():
+    def __init__(self, batch_size, length):
+        super().__init__()
+
+        self.bs = batch_size
+        self.l = length
+
+        self.start = 0
+        self.end = 0
+        
+        self.index = []
+        while (i := self.get_new()) is not None:
+            self.index.append(i)
+
+    def reset(self):
+        self.start = 0
+        self.end = 0
+
+    def get_new(self):
+        """
+        Get batch index
+
+        :return index: (start, end, length)
+        """
+        if self.start >= self.l:
+            return None
+
+        start = self.start
+        self.end = self.start + self.bs
+        if self.end > self.l:
+            self.end = self.l
+
+        self.start += self.bs
+
+        return [start, self.end, self.end - self.start]

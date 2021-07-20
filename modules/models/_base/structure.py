@@ -327,7 +327,7 @@ class Structure(BaseObject):
         """
         raise NotImplementedError('MODEL is not defined!')
 
-    def model_forward(self, model_inputs: Tuple[tf.Tensor], training=None, *args, **kwargs) -> Tuple[tf.Tensor]:
+    def model_forward(self, model_inputs: List[tf.Tensor], training=None, *args, **kwargs) -> Tuple[tf.Tensor]:
         """
         Entire forward process of this model.
 
@@ -426,20 +426,7 @@ class Structure(BaseObject):
         :return dataset_train: train dataset, type = `tf.data.Dataset`
         :return dataset_val: val dataset, type = `tf.data.Dataset`
         """
-        dm = DatasetsManager(self.args, prepare_type='all')
-        agents_train = dm.train_info[0]
-        agents_test = dm.train_info[1]
-        train_number = dm.train_info[2]
-        sample_time = dm.train_info[3]
-
-        train_data = self.get_inputs_from_agents(agents_train)
-        test_data = self.get_inputs_from_agents(agents_test)
-
-        dataset_train = tf.data.Dataset.from_tensor_slices(train_data)
-        dataset_train = dataset_train.shuffle(len(dataset_train),
-                                              reshuffle_each_iteration=True)
-        dataset_test = tf.data.Dataset.from_tensor_slices(test_data)
-        return dataset_train, dataset_test
+        raise NotImplementedError('DATASET is not defined!')
 
     def load_test_dataset(self, *args, **kwargs) -> tf.data.Dataset:
         """
@@ -447,10 +434,7 @@ class Structure(BaseObject):
 
         :return dataset_train: test dataset, type = `tf.data.Dataset`
         """
-        agents = kwargs['agents']
-        test_tensor = self.get_inputs_from_agents(agents)
-        dataset_test = tf.data.Dataset.from_tensor_slices(test_tensor)
-        return dataset_test
+        raise NotImplementedError('DATASET is not defined!')
 
     def load_forward_dataset(self, *args, **kwargs) -> tf.data.Dataset:
         """
@@ -458,9 +442,7 @@ class Structure(BaseObject):
 
         :return dataset_train: test dataset, type = `tf.data.Dataset`
         """
-        dataset = None
         raise NotImplementedError('DATASET is not defined!')
-        return dataset
 
     def print_dataset_info(self):
         self.log_parameters(title='dataset options')

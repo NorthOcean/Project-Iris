@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-24 09:14:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:50:01
+@LastEditTime: 2021-07-20 10:52:18
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,19 +10,22 @@
 
 from typing import Dict, List, Tuple
 
-import modules.models as M
 import numpy as np
 import tensorflow as tf
+from modules.models.helpmethods import BatchIndex
 from tensorflow import keras as keras
+from tqdm import tqdm
 
 from ._alpha import MSNAlpha, MSNAlphaModel
-from ._beta_G import MSNBeta_G
-from ._beta_D import MSNBeta_D
-
 from ._args import MSNArgs
+from ._beta_D import MSNBeta_D
+from ._beta_G import MSNBeta_G
 
 
 class _MSNAlphaModelPlus(MSNAlphaModel):
+    """
+    A specific `MSNAlpha` model that guides `MSNBeta_G` as the second stage model.
+    """
 
     def __init__(self, Args, training_structure=None, *args, **kwargs):
         super().__init__(Args, training_structure=training_structure, *args, **kwargs)
@@ -39,18 +42,18 @@ class _MSNAlphaModelPlus(MSNAlphaModel):
 
         # shape = [(batch, obs, 2), (batch, 100, 100), None]
         model_inputs = kwargs['model_inputs']
-        batch = outputs[0].shape[0]
-        Kc = outputs[0].shape[1]
+        batch, Kc = outputs[0].shape[:2]
+        pred = self.args.pred_frames
         K = self.args.K
         des = tf.reshape(outputs[0], [-1, 1, 2])
 
         # prepare new inputs into beta model
         # new batch_size (total) is batch*Kc
         beta_results = []
-        batchindex = BatchIndex(batch_size=self.args.max_batch_size//Kc,
-                                length=batch)
+        batch_size = self.args.max_batch_size // Kc
+        batch_index = BatchIndex(batch_size, batch)
 
-        while (index := batchindex.get_new()) is not None:
+        for index in tqdm(batch_index.index):
             [k0, k1, k] = index
             beta_inputs = [tf.repeat(inp[k0:k1], Kc, axis=0)
                            for inp in model_inputs]
@@ -66,30 +69,22 @@ class _MSNAlphaModelPlus(MSNAlphaModel):
 
         if self.args.linear or self.args.loadc.startswith('l'):
             # prepare new inputs into linear model
-            obs_pos = model_inputs[0][:, -1, :][:,
-                                                tf.newaxis, :]   # (batch, 1, 2)
 
-            # (batch, Kc*K, 2)
-            des_pos = tf.reshape(beta_des, [-1, Kc*K, 2])
-
-            final_results = []
-            p = self.args.pred_frames
-            for step in range(1, p+1):
-                pred = (des_pos - obs_pos) * step/p + obs_pos   # (batch, K, 2)
-                final_results.append(pred)
+            start = model_inputs[0][:, -1, :][:, tf.newaxis, :]
+            stop = tf.reshape(beta_des, [-1, Kc*K, 2])
+            pred = tf.linspace(start, stop, pred+1, axis=-2)[:, :, 1:, :]
 
             # shape = (batch, K*K_c, pred, 2)
-            final_results = tf.transpose(final_results, [1, 2, 0, 3])
+            final_results = pred
 
         else:
             # prepare new inputs into gamma model
             # new batch_size is batch*Kc*K
+            batch_size = self.args.max_batch_size // (K * Kc)
+            batch_index = BatchIndex(batch_size, batch)
 
             final_results = []
-            batchindex = BatchIndex(batch_size=self.args.max_batch_size//(K*Kc),
-                                    length=batch)
-
-            while (index := batchindex.get_new()) is not None:
+            for index in tqdm(batch_index.index):
                 [k0, k1, k] = index
                 gamma_inputs = [tf.repeat(inp[k0:k1], K*Kc, axis=0)
                                 for inp in model_inputs]
@@ -109,6 +104,7 @@ class _MSNAlphaModelPlus(MSNAlphaModel):
                 tf.concat(final_results, axis=0),
                 [-1, K*Kc, self.args.pred_frames, 2])
 
+        # check failure cases
         if self.args.check:
             final_results = angle_check(pred=final_results,
                                         obs=model_inputs[0],
@@ -118,6 +114,12 @@ class _MSNAlphaModelPlus(MSNAlphaModel):
 
 
 class MSN_G(MSNAlpha):
+    """
+    Structure for MSN_D prediction
+    -----------------------------
+    Please train `MSNAlphaModel`, `MSBBeta_DModel`, `MSNBeta_GModel`, 
+    and pass their paths with args `--loada`, `--loadb` ,and `--loadc`.
+    """
 
     alpha_model = _MSNAlphaModelPlus
     beta_model = MSNBeta_G
@@ -151,7 +153,8 @@ class MSN_G(MSNAlpha):
         if self.args.loadc.startswith('l'):
             self.linear_predict = True
         else:
-            self.gamma.args = MSNArgs(self.gamma.load_args(Args, self.args.loadc))
+            self.gamma.args = MSNArgs(
+                self.gamma.load_args(Args, self.args.loadc))
             self.gamma.model = self.gamma.load_from_checkpoint(self.args.loadc)
 
         # load other weights
@@ -187,34 +190,6 @@ class MSN_G(MSNAlpha):
             loss_dict,
             self.args.K,
             self.args.sigma))
-
-
-class BatchIndex():
-    def __init__(self, batch_size, length):
-        super().__init__()
-
-        self.bs = batch_size
-        self.l = length
-
-        self.start = 0
-        self.end = 0
-
-    def init(self):
-        self.start = 0
-        self.end = 0
-
-    def get_new(self):
-        if self.start >= self.l:
-            return None
-
-        start = self.start
-        self.end = self.start + self.bs
-        if self.end > self.l:
-            self.end = self.l
-
-        self.start += self.bs
-
-        return [start, self.end, self.end - self.start]
 
 
 def angle_check(pred: tf.Tensor, obs: tf.Tensor, max_angle=135):

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-22 16:45:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:41:35
+@LastEditTime: 2021-07-20 10:05:54
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,101 +10,93 @@
 
 from typing import Dict, List, Tuple
 
-import modules.models as M
 import numpy as np
 import tensorflow as tf
+from modules.models.helpmethods import BatchIndex
 from tensorflow import keras as keras
+from tqdm import tqdm
 
-from ._args import MSNArgs
 from ._alpha import MSNAlpha, MSNAlphaModel
+from ._args import MSNArgs
 from ._beta_D import MSNBeta_D, MSNBeta_DModel
 
 
 class _MSNAlphaModelPlus(MSNAlphaModel):
     """
-    A specific `MSNAlpha` model that guides `MSNBeta_D` to post process outputs.
+    A specific `MSNAlpha` model that guides `MSNBeta_D` as the second stage model.
     """
 
-    def __init__(self, Args, 
-                 training_structure=None, 
+    def __init__(self, Args: MSNArgs,
+                 training_structure,
+                 linear_prediction=False,
                  *args, **kwargs):
-        
-        super().__init__(Args, training_structure=training_structure, 
+        """
+        :param Args: args used in this model
+        :param training_structure: the parent structure of this model
+        :param linear_prediction: controls if use the linear prediction as the second stage model
+        """
+
+        super().__init__(Args, training_structure,
                          *args, **kwargs)
 
-    def post_process(self, outputs: Tuple[tf.Tensor],
-                     training=False,
-                     **kwargs) -> Tuple[tf.Tensor]:
-        
-        # shape = [(batch, K, 2)]
-        outputs = super().post_process(outputs, training=training, **kwargs)
+        self.linear = linear_prediction
+
+    def post_process(self, outputs: List[tf.Tensor],
+                     training=None,
+                     *args, **kwargs) -> List[tf.Tensor]:
+
+        # shape = [(batch, Kc, 2)]
+        outputs = super().post_process(outputs, training, *args, **kwargs)
 
         if training:
             return outputs
 
-        else:
-            # shape = [(batch, obs, 2), (batch, 100, 100), None]
-            model_inputs = kwargs['model_inputs']
-            Kc = outputs[0].shape[1]
+        # obtain shape parameters
+        batch, Kc = outputs[0].shape[:2]
+        pred = self.args.pred_frames
 
+        # shape = (batch, Kc, 2)
+        proposals = outputs[0]
+        current_inputs = kwargs['model_inputs']
+
+        if self.linear:
+            # Linear interpolation
+
+            # (batch, 1, 2)
+            start = current_inputs[0][:, -1, :][:, tf.newaxis, :]  
+            stop = proposals   # (batch, Kc, 2)
+            pred = tf.linspace(start, stop, pred+1, axis=-2)[:, :, 1:, :]
+
+            return (pred,)  # (batch, Kc, pred, 2)
+
+        else:
             # prepare new inputs into beta model
-            # new batch_size is batch*K
-            beta_inputs = [tf.repeat(inp, Kc, axis=0) for inp in model_inputs]
-            beta_inputs.append(tf.reshape(outputs[0], [-1, 1, 2]))
+            # new batch_size (total) is batch*Kc
+            batch_size = self.args.max_batch_size // Kc
+            batch_index = BatchIndex(batch_size, batch)
 
-            # run beta model here
-            # output shape = (batch*K, K', pred, 2)
-            beta_results = self.training_structure.beta(
-                beta_inputs,
-                return_numpy=False,
-            )[0]
+            # Flatten inputs
+            proposals = tf.reshape(proposals, [batch*Kc, 1, 2])
 
-            # re-organize outputs
-            final_results = tf.reshape(beta_results, 
-                                       [-1, Kc, self.args.pred_frames, 2])
+            beta_results = []
+            for index in tqdm(batch_index.index):
+                [start, end, length] = index
 
-            return M.prediction.Process.update((final_results,), outputs)
+                # prepare new batch inputs
+                beta_inputs = [tf.repeat(inp[start:end], Kc, axis=0)
+                               for inp in current_inputs]
+                beta_inputs.append(proposals[start*Kc: end*Kc])
+
+                # beta outputs shape = (batch*Kc, pred, 2)
+                beta_results.append(self.training_structure.beta(
+                    beta_inputs,
+                    return_numpy=False)[0])
+
+            beta_results = tf.concat(beta_results, axis=0)
+            beta_results = tf.reshape(beta_results, [batch, Kc, pred, 2])
+            return (beta_results,)  # (batch, Kc, pred, 2)
 
 
-class _MSNAlphaModel(MSNAlphaModel):
-    """
-    A specific `MSNAlpha` model that guides linear prediction to post process outputs.
-    """
-    def __init__(self, Args, 
-                 training_structure=None, 
-                 *args, **kwargs):
-                 
-        super().__init__(Args, training_structure=training_structure, 
-                         *args, **kwargs)
-
-    def post_process(self, outputs: Tuple[tf.Tensor],
-                     training=False,
-                     **kwargs) -> Tuple[tf.Tensor]:
-        
-        # shape = [(batch, K, 2)]
-        outputs = super().post_process(outputs, training=training, **kwargs)
-
-        if training:
-            return outputs
-
-        else:
-            # shape = [(batch, obs, 2), (batch, 100, 100), None]
-            model_inputs = kwargs['model_inputs']
-
-            obs_pos = model_inputs[0][:, -1, :][:, tf.newaxis, :] # (batch, 1, 2)
-            des_pos = outputs[0]    # (batch, K, 2)
-
-            final_results = []
-            p = self.args.pred_frames
-            for step in range(1, p+1):
-                pred = (des_pos - obs_pos) * step/p + obs_pos   # (batch, K, 2)
-                final_results.append(pred)
-
-            # shape = (batch, K, pred, 2)
-            final_results = tf.transpose(final_results, [1, 2, 0, 3])
-            return M.prediction.Process.update((final_results,), outputs)
-            
-            
 class MSN_D(MSNAlpha):
     """
     Structure for MSN_D prediction
@@ -113,10 +105,7 @@ class MSN_D(MSNAlpha):
     model paths with args `--loada` and `--loadb` to use them together.
     """
 
-    def __init__(self, Args: List[str],
-                 beta_model=MSNBeta_D,
-                 *args, **kwargs):
-
+    def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = MSNArgs(Args)
@@ -128,39 +117,39 @@ class MSN_D(MSNAlpha):
         # set metrics
         self.set_metrics('ade', 'fde')
         self.set_metrics_weights(1.0, 0.0)
-        
+
         # assign alpha model and beta model containers
         self.alpha = self
-        self.beta = beta_model(Args)
+        self.beta = MSNBeta_D(Args)
         self.linear_predict = False
 
         # load weights
         if 'null' in [self.args.loada, self.args.loadb]:
             raise ('`MSNAlpha` or `MSNBeta_D` not found!' +
                    ' Please specific their paths via `--loada` or `--loadb`.')
-        
+
+        self.alpha.args = MSNArgs(self.alpha.load_args(Args, self.args.loada),
+                                  default_args=self.args._args)
+
         if self.args.loadb.startswith('l'):
             self.linear_predict = True
+        
         else:
             self.beta.args = MSNArgs(self.beta.load_args(Args, self.args.loadb))
             self.beta.model = self.beta.load_from_checkpoint(self.args.loadb)
 
-        self.alpha.args = MSNArgs(
-            args=self.alpha.load_args(Args, self.args.loada),
-            default_args=self.args._args
+        self.alpha.model = self.alpha.load_from_checkpoint(
+            self.args.loada,
+            linear_prediction=self.linear_predict
         )
-        self.alpha.model = self.alpha.load_from_checkpoint(self.args.loada)
-    
+
     def run_train_or_test(self):
-        self.logger.info('Start test model from `{}` and `{}`'.format(self.args.loada, self.args.loadb))
+        self.logger.info('Start test model from `{}` and `{}`'.format(
+            self.args.loada, self.args.loadb))
         self.run_test()
 
-    def create_model(self, model_type=None):
-        model_type = \
-            _MSNAlphaModel if self.linear_predict \
-            else _MSNAlphaModelPlus
-
-        return super().create_model(model_type)
+    def create_model(self, model_type=None, *args, **kwargs):
+        return super().create_model(_MSNAlphaModelPlus, *args, **kwargs)
 
     def print_test_result_info(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']

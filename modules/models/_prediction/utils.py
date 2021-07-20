@@ -412,9 +412,14 @@ class Process():
 
 
     @staticmethod
-    def update(new: Tuple[tf.Tensor], old: Tuple[tf.Tensor]) -> Tuple[tf.Tensor]:
+    def update(new: Union[tuple, list], 
+               old: Union[tuple, list]) -> tuple:
+               
         if type(old) == list:
             old = tuple(old)
+        if type(new) == list:
+            new = tuple(new)
+
         if len(new) < len(old):
             return new + old[len(new):]
         else:

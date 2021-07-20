@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 15:29:21
+@LastEditTime: 2021-07-20 09:25:58
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -381,6 +381,39 @@ class Structure(base.Structure):
 
         model_inputs.append(gt)
         return tuple(model_inputs)
+
+    def load_dataset(self, *args, **kwargs) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+        """
+        Load training and val dataset.
+
+        :return dataset_train: train dataset, type = `tf.data.Dataset`
+        :return dataset_val: val dataset, type = `tf.data.Dataset`
+        """
+        dm = self.datasetsManager_type(self.args, prepare_type='all')
+        agents_train = dm.train_info[0]
+        agents_test = dm.train_info[1]
+        train_number = dm.train_info[2]
+        sample_time = dm.train_info[3]
+
+        train_data = self.get_inputs_from_agents(agents_train)
+        test_data = self.get_inputs_from_agents(agents_test)
+
+        dataset_train = tf.data.Dataset.from_tensor_slices(train_data)
+        dataset_train = dataset_train.shuffle(len(dataset_train),
+                                              reshuffle_each_iteration=True)
+        dataset_test = tf.data.Dataset.from_tensor_slices(test_data)
+        return dataset_train, dataset_test
+
+    def load_test_dataset(self, *args, **kwargs) -> tf.data.Dataset:
+        """
+        Load test dataset.
+
+        :return dataset_train: test dataset, type = `tf.data.Dataset`
+        """
+        agents = kwargs['agents']
+        test_tensor = self.get_inputs_from_agents(agents)
+        dataset_test = tf.data.Dataset.from_tensor_slices(test_tensor)
+        return dataset_test
 
     def load_forward_dataset(self, model_inputs: List[agent_type],
                              *args, **kwargs) -> tf.data.Dataset:

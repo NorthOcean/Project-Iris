@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-15 16:25:40
+@LastEditTime: 2021-07-20 10:01:36
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -12,19 +12,20 @@ from argparse import Namespace
 from typing import List, Tuple
 
 import tensorflow as tf
-from tqdm.std import tqdm
+from modules.models.helpmethods import BatchIndex
+from tqdm import tqdm
 
 from ._args import VArgs
+from ._utils import Utils as U
 from ._VirisAlpha import VIrisAlpha, VIrisAlphaModel
 from ._VirisBeta import VIrisBeta, VIrisBetaModel
-from ._utils import Utils as U
 
 
 class _VIrisAlphaModelPlus(VIrisAlphaModel):
     def __init__(self, Args: VArgs,
                  pred_number: int,
                  linear_prediction=False,
-                 training_structure: VIrisAlpha = None,
+                 training_structure=None,
                  *args, **kwargs):
 
         super().__init__(Args, pred_number,
@@ -33,9 +34,9 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
 
         self.linear = linear_prediction
 
-    def post_process(self, outputs: Tuple[tf.Tensor],
+    def post_process(self, outputs: List[tf.Tensor],
                      training=None,
-                     **kwargs) -> Tuple[tf.Tensor]:
+                     *args, **kwargs) -> List[tf.Tensor]:
 
         # shape = ((batch, Kc, n, 2))
         outputs = super().post_process(outputs, training, **kwargs)
@@ -43,11 +44,11 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
         if training:
             return outputs
 
+        # obtain shape parameters
         batch, Kc = outputs[0].shape[:2]
         n = self.n_pred
         pos = self.training_structure.p_index
         pred = self.args.pred_frames
-        K = self.args.K
 
         # shape = (batch, Kc, n, 2)
         proposals = outputs[0]
@@ -68,11 +69,14 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
             batch_size = self.args.max_batch_size // Kc
             batch_index = BatchIndex(batch_size, batch)
 
+            # Flatten inputs
             proposals = tf.reshape(proposals, [batch*Kc, n, 2])
 
             beta_results = []
             for index in tqdm(batch_index.index):
                 [start, end, length] = index
+
+                # prepare new batch inputs
                 beta_inputs = [tf.repeat(inp[start:end], Kc, axis=0)
                                for inp in current_inputs]
                 beta_inputs.append(proposals[start*Kc: end*Kc])
@@ -117,10 +121,8 @@ class VIris(VIrisAlpha):
             raise ('`IrisAlpha` or `IrisBeta` not found!' +
                    ' Please specific their paths via `--loada` or `--loadb`.')
 
-        self.alpha.args = VArgs(
-            args=self.alpha.load_args(Args, self.args.loada),
-            default_args=self.args._args
-        )
+        self.alpha.args = VArgs(self.alpha.load_args(Args, self.args.loada),
+                                default_args=self.args._args)
 
         if self.args.loadb.startswith('l'):
             self.linear_predict = True
@@ -155,39 +157,3 @@ class VIris(VIrisAlpha):
             dataset,
             loss_dict))
 
-
-class BatchIndex():
-    def __init__(self, batch_size, length):
-        super().__init__()
-
-        self.bs = batch_size
-        self.l = length
-
-        self.start = 0
-        self.end = 0
-        
-        self.index = []
-        while (i := self.get_new()) is not None:
-            self.index.append(i)
-
-    def init(self):
-        self.start = 0
-        self.end = 0
-
-    def get_new(self):
-        """
-        Get batch index
-
-        :return index: (start, end, length)
-        """
-        if self.start >= self.l:
-            return None
-
-        start = self.start
-        self.end = self.start + self.bs
-        if self.end > self.l:
-            self.end = self.l
-
-        self.start += self.bs
-
-        return [start, self.end, self.end - self.start]

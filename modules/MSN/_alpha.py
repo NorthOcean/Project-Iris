@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-21 15:01:50
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:22:32
+@LastEditTime: 2021-07-20 10:16:52
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -20,6 +20,9 @@ from ._args import MSNArgs
 
 
 class MSNAlphaModel(M.prediction.Model):
+    """
+    First stage model, i.e., the Destination Transformer
+    """
     def __init__(self, Args: MSNArgs,
                  training_structure=None,
                  *args, **kwargs):
@@ -98,32 +101,11 @@ class MSNAlphaModel(M.prediction.Model):
 
         return predictions
 
-    # @tf.function
-    def forward(self, model_inputs: Tuple[tf.Tensor], training=False, *args, **kwargs):
-        """
-        Run a forward implementation.
-
-        :param model_inputs: input tensor (or a list of tensors)
-        :param mode: choose forward type, can be `'test'` or `'train'`
-        :return output: model's output. type=`List[tf.Tensor]`
-        """
-        model_inputs_processed = self.pre_process(model_inputs, training)
-
-        if training:
-            gt_processed = self.pre_process([kwargs['gt']],
-                                            use_new_para_dict=False)
-
-        # use `self.call()` to debug
-        output = self.call(model_inputs_processed,
-                           training=training)   
-
-        if not (type(output) == list or type(output) == tuple):
-            output = [output]
-
-        return self.post_process(output, training, model_inputs=model_inputs)
-
 
 class MSNAlpha(M.prediction.Structure):
+    """
+    Structure for the first stage Destination Transformer.
+    """
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
@@ -138,8 +120,10 @@ class MSNAlpha(M.prediction.Structure):
         self.set_metrics(self.min_FDE)
         self.set_metrics_weights(1.0)
 
-    def create_model(self, model_type=MSNAlphaModel):
-        model = model_type(self.args, training_structure=self)
+    def create_model(self, model_type=MSNAlphaModel, *args, **kwargs):
+        model = model_type(self.args, 
+                           training_structure=self,
+                           *args, **kwargs)
         opt = keras.optimizers.Adam(self.args.lr)
         return model, opt
 

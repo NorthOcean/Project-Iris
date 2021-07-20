@@ -65,10 +65,9 @@ class Model(base.Model):
             elif 'qua' in item:
                 self.pre_process_list.append('RANDOM_QUALITY')
 
-    def pre_process(self,
-                    model_inputs: Tuple[tf.Tensor],
+    def pre_process(self, model_inputs: List[tf.Tensor],
                     training=False,
-                    **kwargs) -> Tuple[tf.Tensor]:
+                    **kwargs) -> List[tf.Tensor]:
         """
         Pre-processing before inputting to the model
         """

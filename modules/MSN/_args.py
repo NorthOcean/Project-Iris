@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-01 20:28:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:18:08
+@LastEditTime: 2021-07-20 10:53:22
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -23,21 +23,21 @@ class MSNArgs(M.prediction.PredictionArgs):
     @property
     def loada(self) -> str:
         """
-        Path for Satoshi Alpha model
+        Path for the first stage Destination Transformer
         """
         return self._get('loada', 'null', changeable=True)
 
     @property
     def loadb(self) -> str:
         """
-        Path for Satoshi Beta model
+        Path for the second stage Interaction Transformer
         """
         return self._get('loadb', 'null', changeable=True)
 
     @property
     def loadc(self) -> str:
         """
-        Path for Satoshi Gamma model
+        Path for the third stage model (Preserved)
         """
         return self._get('loadc', 'null', changeable=True)
 

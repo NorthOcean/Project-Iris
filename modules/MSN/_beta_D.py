@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-05-07 09:12:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 16:25:08
+@LastEditTime: 2021-07-20 10:27:43
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -20,7 +20,11 @@ from ._args import MSNArgs
 
 
 class MSNBeta_DModel(M.prediction.Model):
-    def __init__(self, Args: MSNArgs, 
+    """
+    Second stage deterministic model, i.e., the Interaction Transformer
+    """
+
+    def __init__(self, Args: MSNArgs,
                  training_structure=None,
                  *args, **kwargs):
 
@@ -74,9 +78,11 @@ class MSNBeta_DModel(M.prediction.Model):
         concat_feature = self.concat([positions_embedding, context_feature])
 
         t_inputs = concat_feature
-        t_outputs = linear_prediction(positions[:, -2:, :],
-                                      self.args.pred_frames,
-                                      return_zeros=False)
+        t_outputs = tf.linspace(start=positions[:, -2, :],
+                                stop=positions[:, -1, :],
+                                num=self.args.pred_frames + 1,
+                                axis=-2)[:, 1:, :]
+
         me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
         predictions, _ = self.transformer(t_inputs, t_outputs, True,
                                           me, mc, md)
@@ -84,7 +90,7 @@ class MSNBeta_DModel(M.prediction.Model):
         return predictions
 
     # @tf.function
-    def forward(self, model_inputs: Tuple[tf.Tensor],
+    def forward(self, model_inputs: List[tf.Tensor],
                 training=False,
                 *args, **kwargs):
         """
@@ -99,17 +105,13 @@ class MSNBeta_DModel(M.prediction.Model):
                                                  training,
                                                  use_new_para_dict=False)
 
-        model_inputs_processed = (model_inputs_processed[0],
-                                  model_inputs_processed[1],
-                                  model_inputs_processed[2],
-                                  destination_processed[0])
+        model_inputs_processed = [model_inputs_processed[0],    # traj
+                                  model_inputs_processed[1],    # map
+                                  model_inputs_processed[2],    # map para
+                                  destination_processed[0]]     # destination
 
-        if training:
-            gt_processed = self.pre_process([kwargs['gt']],
-                                            use_new_para_dict=False)
-
-        output = self.call(model_inputs_processed,
-                           training=training)   # use `self.call()` to debug
+        # use `self.call()` to debug
+        output = self(model_inputs_processed, training)
 
         if not (type(output) == list or type(output) == tuple):
             output = [output]
@@ -118,6 +120,10 @@ class MSNBeta_DModel(M.prediction.Model):
 
 
 class MSNBeta_D(M.prediction.Structure):
+    """
+    Structure for the second stage deterministic Interaction Transformer
+    """
+
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
@@ -137,32 +143,9 @@ class MSNBeta_D(M.prediction.Structure):
         opt = keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def load_forward_dataset(self, model_inputs: Tuple[tf.Tensor], **kwargs):
+    def load_forward_dataset(self, model_inputs: List[tf.Tensor], **kwargs):
         trajs = model_inputs[0]
         maps = model_inputs[1]
         paras = model_inputs[2]
         proposals = model_inputs[3]
         return tf.data.Dataset.from_tensor_slices((trajs, maps, paras, proposals))
-
-
-def linear_prediction(end_points: tf.Tensor, number, return_zeros=None):
-    """
-    Linear prediction from start points (not contain) to end points.
-
-    :param end_points: start points and end points, shape == (batch, 2, 2)
-    :param number: number of prediction points, DO NOT contain start point
-    """
-    if return_zeros:
-        return tf.pad(end_points[:, -1:, :], [0, 0], [number-1, 0], [0, 0])
-
-    start = end_points[:, :1, :]
-    end = end_points[:, -1:, :]
-
-    r = []
-    for n in range(1, number):
-        p = n / number
-        r_c = (end - start) * p + start  # shape = (batch, 1, 2)
-        r.append(r_c)
-
-    r.append(end)
-    return tf.concat(r, axis=1)

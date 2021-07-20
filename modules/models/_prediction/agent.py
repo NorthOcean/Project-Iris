@@ -510,9 +510,6 @@ class TrainAgentManager(BaseAgentManager):
 
     # get neighbors' linear predictions
     >>> self.get_pred_traj_neighbor_linear() -> List[np.ndarray]
-
-    # calculate loss (low efficiency)
-    >>> self.calculate_loss(loss_function) -> Tuple[np.ndarray]
     ```
     """
 
