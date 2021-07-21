@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-15 09:26:41
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 15:26:05
+@LastEditTime: 2021-07-21 11:16:39
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -37,29 +37,31 @@ class BaseObject():
     def __init__(self):
         super().__init__()
 
-        # create a logger
+        # create or restore a logger
         logger = logging.getLogger(name=type(self).__name__)
-        logger.setLevel(logging.INFO)
+        
+        if not logger.hasHandlers():
+            logger.setLevel(logging.INFO)
 
-        # add file handler
-        fhandler = logging.FileHandler(filename='./test.log', mode='a')
-        fhandler.setLevel(logging.INFO)
+            # add file handler
+            fhandler = logging.FileHandler(filename='./test.log', mode='a')
+            fhandler.setLevel(logging.INFO)
 
-        # add terminal handler
-        thandler = logging.StreamHandler()
-        thandler.setLevel(logging.INFO)
+            # add terminal handler
+            thandler = logging.StreamHandler()
+            thandler.setLevel(logging.INFO)
 
-        # add formatter
-        fformatter = logging.Formatter(
-            '[%(asctime)s][%(levelname)s] `%(name)s`: %(message)s')
-        fhandler.setFormatter(fformatter)
+            # add formatter
+            fformatter = logging.Formatter(
+                '[%(asctime)s][%(levelname)s] `%(name)s`: %(message)s')
+            fhandler.setFormatter(fformatter)
 
-        tformatter = logging.Formatter(
-            '[%(levelname)s] `%(name)s`: %(message)s')
-        thandler.setFormatter(tformatter)
+            tformatter = logging.Formatter(
+                '[%(levelname)s] `%(name)s`: %(message)s')
+            thandler.setFormatter(tformatter)
 
-        logger.addHandler(fhandler)
-        logger.addHandler(thandler)
+            logger.addHandler(fhandler)
+            logger.addHandler(thandler)
 
         self.logger = logger
 
