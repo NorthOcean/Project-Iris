@@ -2,11 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:17:59
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-12 21:09:41
+@LastEditTime: 2021-07-26 16:19:04
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
+
+from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -23,7 +25,7 @@ class FFTlayer(keras.layers.Layer):
 
         self.concat = keras.layers.Concatenate()
 
-    def call(self, inputs: tf.Tensor, **kwargs) -> tf.Tensor:
+    def call(self, inputs: tf.Tensor, **kwargs) -> Tuple[tf.Tensor, tf.Tensor]:
         """
         :param inputs: batch inputs, shape = (batch, N, M)
         :return fft: fft results (r and i), shape = ((batch, N, M), (batch, N, M))
@@ -31,8 +33,10 @@ class FFTlayer(keras.layers.Layer):
 
         ffts = []
         for index in range(0, inputs.shape[-1]):
-            ffts.append(tf.signal.fft(
-                tf.cast(inputs[:, :, index], tf.complex64))[:, :, tf.newaxis])
+            seq = tf.cast(tf.gather(inputs, index, axis=-1), tf.complex64)
+            seq_fft = tf.signal.fft(seq)
+            ffts.append(tf.expand_dims(seq_fft, -1))
+            
         ffts = self.concat(ffts)
         return (tf.math.real(ffts), tf.math.imag(ffts))
 
@@ -91,9 +95,6 @@ class ContextEncoding(keras.layers.Layer):
 class TrajEncoding(keras.layers.Layer):
     """
     Encode trajectories into the traj feature
-
-    parameters when call:
-    :param trajs: trajs, shape = (batch, N, 2)
     """
 
     def __init__(self, units: int = 64,
@@ -113,6 +114,9 @@ class TrajEncoding(keras.layers.Layer):
         self.fc1 = keras.layers.Dense(units, activation)
 
     def call(self, trajs: tf.Tensor, **kwargs) -> tf.Tensor:
+        """
+        :param trajs: trajs, shape = (batch, N, 2)
+        """
         if self.useFFT:
             t_r, t_i = self.fft(trajs)
             concat = self.concat([t_r, t_i])
@@ -124,11 +128,6 @@ class TrajEncoding(keras.layers.Layer):
 class LinearPrediction(keras.layers.Layer):
     """
     Linear prediction from start points (not contain) to end points.
-
-    parameters when call:
-    :param start: start points, shape = (batch, 1, 2)
-    :param end: end points, shape == (batch, 1, 2)
-    :param n: number of prediction points, DO NOT contain start point
     """
 
     def __init__(self, useFFT=None, include_obs=None, *args, **kwargs):
@@ -144,6 +143,11 @@ class LinearPrediction(keras.layers.Layer):
         self.concat1 = keras.layers.Concatenate(axis=-1)
 
     def call(self, start, end, n, obs=None, *args, **kwargs):
+        """
+        :param start: start points, shape = (batch, 1, 2)
+        :param end: end points, shape == (batch, 1, 2)
+        :param n: number of prediction points, DO NOT contain start point
+        """
         results = []
         for i in range(1, n):
             p = i / n
@@ -167,11 +171,6 @@ class LinearPrediction(keras.layers.Layer):
 class GraphConv(keras.layers.Layer):
     """
     Graph conv layer
-
-    parameters when call:
-    :param features: feature sequences, shape = (batch, N, M)
-    :param adjMatrix: adj matrix, shape = (batch, N, N)
-    :param outputs: shape = (batch, N, units)
     """
     def __init__(self, units: int,
                  activation=None,
@@ -184,6 +183,12 @@ class GraphConv(keras.layers.Layer):
     def call(self, features: tf.Tensor,
              adjMatrix: tf.Tensor,
              *args, **kwargs):
+
+        """
+        :param features: feature sequences, shape = (batch, N, M)
+        :param adjMatrix: adj matrix, shape = (batch, N, N)
+        :param outputs: shape = (batch, N, units)
+        """
         
         dot = tf.matmul(adjMatrix, features)
         return self.fc(dot)

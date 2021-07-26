@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 15:32:09
+@LastEditTime: 2021-07-22 16:27:00
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -66,6 +66,12 @@ class BaseTrainArgs(BaseArgs):
                                 log_dir_current)
         else:
             dir_check(self._args.log_dir)
+    
+    def __str__(self) -> str:
+        text = ''
+        for key, value in self._args.__dict__.items():
+            text += '{}: {}, '.format(key, value)
+        return text
 
     @property
     def force_set(self) -> str:

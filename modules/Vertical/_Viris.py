@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 10:01:36
+@LastEditTime: 2021-07-22 21:07:16
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -81,13 +81,13 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
                                for inp in current_inputs]
                 beta_inputs.append(proposals[start*Kc: end*Kc])
 
-                # beta outputs shape = (batch*Kc, pred, 2)
+                # beta outputs shape = (batch*Kc, ..., pred, 2)
                 beta_results.append(self.training_structure.beta(
                     beta_inputs,
                     return_numpy=False)[0])
 
             beta_results = tf.concat(beta_results, axis=0)
-            beta_results = tf.reshape(beta_results, [batch, Kc, pred, 2])
+            beta_results = tf.reshape(beta_results, [batch, -1, pred, 2])
             return (beta_results,)
 
 
@@ -97,6 +97,8 @@ class VIris(VIrisAlpha):
     ---------------------------------
 
     """
+    
+    beta_structure = VIrisBeta
 
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
@@ -113,7 +115,7 @@ class VIris(VIrisAlpha):
 
         # assign alpha model and beta model containers
         self.alpha = self
-        self.beta = VIrisBeta(Args)
+        self.beta = self.beta_structure(Args)
         self.linear_predict = False
 
         # load weights
@@ -128,7 +130,8 @@ class VIris(VIrisAlpha):
             self.linear_predict = True
         
         else:
-            self.beta.args = VArgs(self.beta.load_args(Args, self.args.loadb))
+            self.beta.args = VArgs(self.beta.load_args(Args, self.args.loadb),
+                                   default_args=self.args)
             self.beta.model = self.beta.load_from_checkpoint(
                 self.args.loadb,
                 asSecondStage=True,

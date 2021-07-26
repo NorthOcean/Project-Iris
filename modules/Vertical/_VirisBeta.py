@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:45:53
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 11:10:29
+@LastEditTime: 2021-07-21 21:29:41
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -23,6 +23,34 @@ from ._utils import Utils as U
 
 
 class VIrisBetaModel(M.prediction.Model):
+    """
+    VIrisBetaModel
+    --------------
+    Beta model for `Vertical` project.
+    - two stage model
+    - first stage: important points
+    - second stage: interpolation (<- this model)
+
+    Inputs
+    ------
+    :param inputs: a list of tensors, including:
+        - trajs, shape = (batch, obs, 2)
+        - maps, shape = (batch, a, a)
+
+    :param points: important points output from alpha model.
+        shape = (batch, n, 2)
+
+    :param point_index: time positions of important points.
+        shape = (n).
+        For example, `tf.Tensor([0, 6, 11])`
+
+    Outputs
+    -------
+    :return outputs: predicted trajectories,
+        shape = (batch, pred, 2)
+
+    """
+
     def __init__(self, Args: VArgs,
                  points: int,
                  asSecondStage=False,
@@ -128,7 +156,7 @@ class VIrisBetaModel(M.prediction.Model):
         if not self.asSecondStage:
             gt_processed = destination_processed[0]
 
-            index = np.random.choice(np.arange(self.args.pred_frames-1), 
+            index = np.random.choice(np.arange(self.args.pred_frames-1),
                                      self.n_pred-1)
             index = tf.concat([np.sort(index),
                                [self.args.pred_frames-1]], axis=0)
@@ -187,7 +215,7 @@ class VIrisBeta(M.prediction.Structure):
 
     def print_test_result_info(self, loss_dict, dataset_name, **kwargs):
         self.print_parameters(title='rest results',
-                            **dict({'dataset': dataset_name}, **loss_dict))
+                              **dict({'dataset': dataset_name}, **loss_dict))
 
         self.log('Results: {}, {}, {}.'.format(
             self.args.load,

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 20:58:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 11:10:42
+@LastEditTime: 2021-07-21 19:59:02
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -17,19 +17,32 @@ from tensorflow import keras
 from .. import applications as A
 from .. import models as M
 from ._args import VArgs
-from ._layers import (ContextEncoding, FFTlayer, GraphConv, IFFTlayer,
-                      TrajEncoding)
+from ._layers import ContextEncoding, GraphConv, TrajEncoding
 
 
 class VIrisAlphaModel(M.prediction.Model):
     """
-    Update version of FRP project.
-
+    VIrisAlphaModel
+    ---------------
+    Alpha model for `Vertical` project.
     - two stage model
-    - first stage: important points
+    - first stage: important points (<- this model)
     - second stage: interpolation
-    - output shape is `(batch, Kc, n, 2)`
+
+    Inputs
+    ------
+    :param inputs: a list of tensors, including:
+        - trajs, shape = (batch, obs, 2)
+        - maps, shape = (batch, a, a)
+
+    Outputs
+    -------
+    :return outputs: important points, shape = (batch, Kc, n, 2)
+        where:
+        - `Kc` is the number of style categories
+        - `n` is the number of important points
     """
+
     def __init__(self, Args: VArgs,
                  pred_number: int,
                  training_structure=None,

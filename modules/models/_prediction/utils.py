@@ -208,6 +208,9 @@ class Process():
         else:
             ref_point = para_dict['MOVE']
 
+        if len(trajs.shape) == 4:   # (batch, K, n, 2)
+            ref_point = ref_point[:, tf.newaxis, :, :]
+            
         traj_moved = trajs - ref_point
 
         return traj_moved, para_dict
@@ -471,7 +474,7 @@ class IO(base.BaseObject):
         """
         inputs = []
         for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare maps...'):
-            inputs.append(agent.fusionMap)
+            inputs.append(agent.Map)
         return tf.cast(inputs, tf.float32)
 
     def _get_context_map_paras(self, input_agents: List[Agent]) -> tf.Tensor:
@@ -502,3 +505,20 @@ def difference(trajs: tf.Tensor, direction='back', ordd=1) -> List[tf.Tensor]:
             outputs[-1][:, 1:, :] - outputs[-1][:, :-1, :]
         outputs.append(outputs_current)
     return outputs
+
+
+def calculate_cosine(vec1: np.ndarray,
+                     vec2: np.ndarray):
+
+    length1 = np.linalg.norm(vec1, axis=-1)
+    length2 = np.linalg.norm(vec2, axis=-1)
+
+    return (np.sum(vec1 * vec2, axis=-1) + 0.0001) / ((length1 * length2) + 0.0001)
+
+
+def calculate_length(vec1):
+    return np.linalg.norm(vec1, axis=-1)
+
+
+def activation(x: np.ndarray, a=1, b=1):
+    return np.less_equal(x, 0) * a * x + np.greater(x, 0) * b * x

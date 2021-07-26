@@ -6,19 +6,19 @@ LastEditTime: 2021-04-15 11:15:54
 Description: file content
 '''
 
-from modules.models._base import agent
 import os
 import random
 from typing import Dict, List, Tuple
 
 import numpy as np
-from tqdm import tqdm
 
 from ... import base
 from ...helpmethods import dir_check
-from ..agent import MapManager, PredictionAgent, calculate_length
+from ..agent import PredictionAgent
 from ..args import PredictionArgs
+from ..maps import MapManager
 from ..traj import EntireTrajectory
+from ..utils import calculate_length
 from ._datasetManager import PredictionDatasetInfo
 
 
@@ -196,8 +196,10 @@ class DatasetManager(base.DatasetManager):
         neighbor_list = self.video_neighbor_list[obs_frame - frame_step]
 
         if len(neighbor_list) > max_neighbor + 1:
-            neighbor_pos = self.video_matrix[obs_frame - frame_step, neighbor_list, :]
-            target_pos = self.video_matrix[obs_frame - frame_step, agent_index:agent_index+1, :]
+            neighbor_pos = self.video_matrix[obs_frame -
+                                             frame_step, neighbor_list, :]
+            target_pos = self.video_matrix[obs_frame -
+                                           frame_step, agent_index:agent_index+1, :]
             dis = calculate_length(neighbor_pos - target_pos)
             neighbor_list = neighbor_list[np.argsort(dis)[1:max_neighbor+1]]
 
@@ -236,7 +238,8 @@ class DatasetManager(base.DatasetManager):
                         break
 
                     obs = p + self.args.obs_frames * frame_step
-                    end = p + (self.args.obs_frames+self.args.pred_frames) * frame_step
+                    end = p + (self.args.obs_frames +
+                               self.args.pred_frames) * frame_step
 
                 # Infinity mode, only works for destination models
                 elif self.args.pred_frames == -1:
@@ -256,21 +259,33 @@ class DatasetManager(base.DatasetManager):
                                                          end_frame=end,
                                                          frame_step=frame_step,
                                                          add_noise=False))
-
-        # Write Maps
-        map_manager = MapManager(self.args, train_agents)
-        map_manager.build_guidance_map(agents=train_agents)
-        np.save('./dataset_npz/{}/gm.npy'.format(self.dataset_name),
-                np.array([map_manager], dtype=object))
-
-        for index, agent in self.log_timebar(train_agents,
-                                             'Building Social Map...'):
-            train_agents[index].trajMap = map_manager
-            train_agents[index].socialMap = map_manager.build_social_map(
-                target_agent=train_agents[index],
-                traj_neighbors=train_agents[index].get_pred_traj_neighbor_linear())
-
         return train_agents
+
+    def make_maps(self, train_agents: List[PredictionAgent],
+                  save_path: str):
+
+        map_manager = MapManager(self.args, train_agents)
+        traj_map = map_manager.build_guidance_map(agents=train_agents)
+
+        social_maps = []
+        centers = []
+        for agent in self.log_timebar(train_agents,
+                                      'Build maps...',
+                                      return_enumerate=False):
+
+            centers.append(agent.traj[-1:, :])
+            social_maps.append(map_manager.build_social_map(
+                target_agent=agent,
+                traj_neighbors=agent.get_pred_traj_neighbor_linear()))
+
+        social_maps = np.array(social_maps)  # (batch, a, b)
+        maps = 0.5 * traj_map[np.newaxis, :, :] + 0.5 * social_maps
+        centers = np.concatenate(centers, axis=0)
+
+        cuts = map_manager.cut_map(maps, map_manager.real2grid(centers))
+        paras = map_manager.real2grid_paras
+
+        np.savez(save_path, maps=cuts, paras=paras)
 
 
 class DatasetsManager(base.DatasetsManager):
@@ -370,18 +385,21 @@ class DatasetsManager(base.DatasetsManager):
                 self.zip_and_save(data_path, agents)
             else:
                 agents = self.load_and_unzip(data_path)
+            self.log('Successfully load train agents from `{}`'.format(data_path))
+
+            if self.args.use_maps:
+                map_path = data_path.split('.npz')[0] + '_maps.npz'
+                if not os.path.exists(map_path):
+                    self.log('Maps do not exist, start making...')
+                    dm.make_maps(agents, map_path)
+
+                agents = self.load_maps(map_path, agents)
+                self.log('Successfully load maps from `{}`.'.format(map_path))
 
             if mode == 'train':
                 if (train_percent := self.train_percent[dm.dataset_name]) < 1.0:
                     agents = random.sample(
                         agents, int(train_percent * len(agents)))
-                if (self.args.rotate > 0) and (length := len(agents)):
-                    rotate_step = 360//(self.args.rotate + 1)
-                    for time in tqdm(range(1, self.args.rotate + 1), desc='Making rotation data', file=self.log_function if 'write' in dir(self.log_function) else None):
-                        rotate_angle = rotate_step * time
-                        new_agents = [agent.copy().rotate(rotate_angle)
-                                      for agent in agents[:length]]
-                        agents += new_agents
 
             all_agents += agents
             count += 1
@@ -405,3 +423,15 @@ class DatasetsManager(base.DatasetsManager):
                      level='error')
 
         return [PredictionAgent().load_data(save_dict[key].tolist()) for key in save_dict.keys()]
+
+    def load_maps(self, map_path: str,
+                  agents: List[PredictionAgent]) -> List[PredictionAgent]:
+
+        dic = np.load(map_path, allow_pickle=True)
+        maps = dic['maps']
+        paras = dic['paras']
+
+        for agent, mapp in zip(agents, maps):
+            PredictionAgent.set_map(agent, mapp, paras)
+
+        return agents

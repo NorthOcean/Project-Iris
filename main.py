@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-19 14:38:56
+@LastEditTime: 2021-07-22 20:43:16
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -71,9 +71,15 @@ def train_or_test(args: argparse.Namespace):
 
     elif model == 'vb':
         structure = M.Vertical.VIrisBeta
+    
+    elif model == 'vc':
+        structure = M.Vertical.VIrisBetaG
 
     elif model == 'viris':
         structure = M.Vertical.VIris
+    
+    elif model == 'virisg':
+        structure = M.Vertical.VIrisG
 
     structure(sys.argv).run_train_or_test()
     

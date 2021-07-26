@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 15:57:43
+@LastEditTime: 2021-07-22 10:59:50
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -253,3 +253,11 @@ class PredictionArgs(base.Args):
         Prepare argument. Do Not Change it.
         """
         return self._get('prepare_type', 'test', changeable=True)
+
+    @property
+    def use_maps(self) -> int:
+        """
+        Controls if uses the trajectory maps in models.
+        Do not change it when test or training.
+        """
+        return self._get('use_maps', 1, changeable=False)

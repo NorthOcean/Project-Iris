@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 21:04:47
+@LastEditTime: 2021-07-22 15:28:27
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -84,6 +84,15 @@ class Model(base.Model):
         self._preprocess_variables = {}
 
     def set_preprocess(self, *args):
+        """
+        Set pre-process methods used before training.
+
+        args: pre-process methods.
+            - Move observation step to (0, 0):
+                args in `['MOVE', 'move']`
+
+            - TODO
+        """
         self._preprocess_list = []
         for item in args:
             if not issubclass(type(item), str):
