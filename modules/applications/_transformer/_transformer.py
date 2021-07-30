@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-30 14:58:21
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 11:13:36
+@LastEditTime: 2021-07-30 14:54:34
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -303,8 +303,8 @@ class Transformer(tf.keras.Model):
         """
         Transformer forward implementation
 
-        :param inputs: inputs tensor to the transformer encoder
-        :param targets: inputs tensor to the transformer decoder
+        :param inputs: inputs tensor to the transformer encoder, shape = `(batch, M, N)`
+        :param targets: inputs tensor to the transformer decoder, shape = `(batch, A, B)`
         :param training: controls if training or test
 
         :return outputs: transformer outputs tensor

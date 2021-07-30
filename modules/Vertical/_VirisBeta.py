@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:45:53
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 11:18:41
+@LastEditTime: 2021-07-30 16:55:08
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -18,38 +18,16 @@ from tqdm import tqdm
 from .. import applications as A
 from .. import models as M
 from ._args import VArgs
-from ._layers import (ContextEncoding, FFTlayer, IFFTlayer, LinearPrediction,
-                      TrajEncoding)
+from ._layers import ContextEncoding, FFTlayer, IFFTlayer, TrajEncoding
 from ._utils import Utils as U
 
 
 class VIrisBetaModel(M.prediction.Model):
     """
-    VIrisBetaModel
-    --------------
-    Beta model for `Vertical` project.
-    - two stage model
-    - first stage: important points
-    - second stage: interpolation (<- this model)
+    Second stage `Vertical` model.
 
-    Inputs
-    ------
-    :param inputs: a list of tensors, including:
-        - trajs, shape = (batch, obs, 2)
-        - maps, shape = (batch, a, a)
-
-    :param points: important points output from alpha model.
-        shape = (batch, n, 2)
-
-    :param point_index: time positions of important points.
-        shape = (n).
-        For example, `tf.Tensor([0, 6, 11])`
-
-    Outputs
-    -------
-    :return outputs: predicted trajectories,
-        shape = (batch, pred, 2)
-
+    It can be applyed on both first stage generative `Vertical-G`
+    and first stage deterministic `Vertical-D`
     """
 
     def __init__(self, Args: VArgs,
@@ -58,6 +36,15 @@ class VIrisBetaModel(M.prediction.Model):
                  p_index: str = None,
                  training_structure=None,
                  *args, **kwargs):
+        """
+        Init a second stage `Vertical` model
+
+        :param Args: args used in this model
+        :param points: number of predicted steps accept
+        :param asSecondStage: controls if use the model as the second stage `Vertical`
+        :param p_index: (Only works when `asSecondStage is not None`) 
+            time step of predicted points
+        """
 
         super().__init__(Args, training_structure,
                          *args, **kwargs)
@@ -102,11 +89,19 @@ class VIrisBetaModel(M.prediction.Model):
     def call(self, inputs: List[tf.Tensor],
              points: tf.Tensor,
              points_index: tf.Tensor,
-             training=None, mask=None):
+             training=None, mask=None) -> tf.Tensor:
         """
-        :param inputs: a list of trajs, maps
+        Run the second stage `Vertical` model
+        
+        :param inputs: a list of tensors, which includes `trajs` and `maps`
+            - trajs, shape = `(batch, obs, 2)`
+            - maps, shape = `(batch, a, a)`
+            
         :param points: pred points, shape = `(batch, n, 2)`
-        :param points_index: pred index, shape = `(n)`
+        :param points_index: pred time steps, shape = `(n)`
+        :param training: controls run as the training mode or the test mode
+
+        :return predictions: predictions, shape = `(batch, pred, 2)`
         """
 
         # unpack inputs
@@ -144,12 +139,14 @@ class VIrisBetaModel(M.prediction.Model):
                          points_index: tf.Tensor,
                          training=None, mask=None):
         """
-        Call as the second stage model
+        Call as the second stage model.
+        Do not call this method if the model is not trained.
         
         :param inputs: a list of trajs, maps
         :param points: pred points, shape = `(batch, K, n, 2)`
         :param points_index: pred index, shape = `(n)`
         """
+        
         # unpack inputs
         K = points.shape[1]
         trajs, maps = inputs[:2]
@@ -204,11 +201,6 @@ class VIrisBetaModel(M.prediction.Model):
                                                  training,
                                                  use_new_para_dict=False)
 
-        model_inputs_processed = (model_inputs_processed[0],
-                                  model_inputs_processed[1],
-                                  model_inputs_processed[2],
-                                  destination_processed[0])
-
         # only when training the single model
         if not self.asSecondStage:
             gt_processed = destination_processed[0]
@@ -240,10 +232,16 @@ class VIrisBetaModel(M.prediction.Model):
 
 
 class VIrisBeta(M.prediction.Structure):
+    """
+    Training structure for the second stage `Vertical`
+    """
+    
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = VArgs(Args)
+
+        self.important_args += ['points']
 
         self.set_model_inputs('trajs', 'maps', 'paras', 'gt')
         self.set_model_groundtruths('gt')
@@ -266,9 +264,8 @@ class VIrisBeta(M.prediction.Structure):
     def load_forward_dataset(self, model_inputs: Tuple[tf.Tensor], **kwargs):
         trajs = model_inputs[0]
         maps = model_inputs[1]
-        paras = model_inputs[2]
-        proposals = model_inputs[3]
-        return tf.data.Dataset.from_tensor_slices((trajs, maps, paras, proposals))
+        proposals = model_inputs[-1]
+        return tf.data.Dataset.from_tensor_slices((trajs, maps, proposals))
 
     def print_test_result_info(self, loss_dict, dataset_name, **kwargs):
         self.print_parameters(title='rest results',

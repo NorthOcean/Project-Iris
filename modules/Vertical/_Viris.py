@@ -2,19 +2,16 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-28 20:19:58
+@LastEditTime: 2021-07-30 16:50:37
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from argparse import Namespace
 from typing import List, Tuple
 
 import tensorflow as tf
-from modules.models.helpmethods import BatchIndex
 from modules.MSN._MSN_G import angle_check
-from tqdm import tqdm
 
 from ._args import VArgs
 from ._utils import Utils as U
@@ -47,9 +44,7 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
 
         # obtain shape parameters
         batch, Kc = outputs[0].shape[:2]
-        n = self.n_pred
         pos = self.training_structure.p_index
-        pred = self.args.pred_frames
 
         # shape = (batch, Kc, n, 2)
         proposals = outputs[0]
@@ -65,6 +60,7 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
             final_results = U.LinearInterpolation(x=pos, y=proposals)
 
         else:
+            # call the second stage model
             beta_inputs = [inp for inp in current_inputs]
             beta_inputs.append(proposals)
             final_results = self.training_structure.beta(
@@ -81,9 +77,7 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
 
 class VIris(VIrisAlpha):
     """
-    Structure for Vertical prediction
-    ---------------------------------
-
+    Structure for the deterministic `Vertical`
     """
     
     alpha_model = _VIrisAlphaModelPlus
@@ -91,12 +85,6 @@ class VIris(VIrisAlpha):
 
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
-
-        self.args = VArgs(Args)
-
-        # set inputs and groundtruths
-        self.set_model_inputs('trajs', 'maps', 'map_paras')
-        self.set_model_groundtruths('gt')
 
         # set metrics
         self.set_metrics('ade', 'fde')

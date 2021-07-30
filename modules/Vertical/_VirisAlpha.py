@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 20:58:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 11:17:30
+@LastEditTime: 2021-07-30 16:47:15
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -22,25 +22,7 @@ from ._layers import ContextEncoding, GraphConv, TrajEncoding
 
 class VIrisAlphaModel(M.prediction.Model):
     """
-    VIrisAlphaModel
-    ---------------
-    Alpha model for `Vertical` project.
-    - two stage model
-    - first stage: important points (<- this model)
-    - second stage: interpolation
-
-    Inputs
-    ------
-    :param inputs: a list of tensors, including:
-        - trajs, shape = (batch, obs, 2)
-        - maps, shape = (batch, a, a)
-
-    Outputs
-    -------
-    :return outputs: important points, shape = (batch, Kc, n, 2)
-        where:
-        - `Kc` is the number of style categories
-        - `n` is the number of important points
+    Deterministic first stage `Vertical-D` model
     """
 
     def __init__(self, Args: VArgs,
@@ -90,7 +72,18 @@ class VIrisAlphaModel(M.prediction.Model):
         self.reshape = keras.layers.Reshape([Args.K_train, self.n_pred, 2])
 
     def call(self, inputs: List[tf.Tensor],
-             training=None, mask=None):
+             training=None, mask=None) -> tf.Tensor:
+        """
+        Run the first stage deterministic  `Vertical-D` model
+
+        :param inputs: a list of tensors, which includes `trajs` and `maps`
+            - trajs, shape = `(batch, obs, 2)`
+            - maps, shape = `(batch, a, a)`
+            
+        :param training: controls run as the training mode or the test mode
+
+        :return predictions: predicted trajectories, shape = `(batch, Kc, N, 2)`
+        """
 
         # unpack inputs
         trajs, maps = inputs[:2]
@@ -104,7 +97,7 @@ class VIrisAlphaModel(M.prediction.Model):
 
         # transformer
         # output shape = (batch, obs, 128)
-        t_features, _ = self.transformer.call(t_inputs, 
+        t_features, _ = self.transformer.call(t_inputs,
                                               t_outputs,
                                               training=training)
 
@@ -121,33 +114,43 @@ class VIrisAlphaModel(M.prediction.Model):
 
 
 class VIrisAlpha(M.prediction.Structure):
+    """
+    Training structure for the deterministic first stage `Vertical-D`
+    """
 
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = VArgs(Args)
+        self.important_args += ['Kc', 'K_train', 'p_index']
 
-        self.set_model_inputs('traj', 'maps', 'paras')
+        self.set_model_inputs('traj', 'maps')
         self.set_model_groundtruths('gt')
 
-        self.set_loss(self.loss_unnamed)
+        self.set_loss(self.l2_loss)
         self.set_loss_weights(1.0)
-
+        
         self.set_metrics(self.min_FDE)
         self.set_metrics_weights(1.0)
 
     @property
     def p_index(self) -> tf.Tensor:
+        """
+        Time step of predicted key points.
+        """
         p_index = [int(i) for i in self.args.p_index.split('_')]
         return tf.cast(p_index, tf.int32)
-    
+
     @property
     def p_len(self) -> int:
+        """
+        Length of predicted key points.
+        """
         return len(self.p_index)
 
     def create_model(self, model_type=VIrisAlphaModel,
                      *args, **kwargs):
-                     
+
         model = model_type(self.args,
                            pred_number=self.p_len,
                            training_structure=self,
@@ -156,13 +159,24 @@ class VIrisAlpha(M.prediction.Structure):
         opt = keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def loss_unnamed(self, outputs: List[tf.Tensor],
-                     labels: tf.Tensor) -> tf.Tensor:
-        
+    def l2_loss(self, outputs: List[tf.Tensor],
+                labels: tf.Tensor,
+                *args, **kwargs) -> tf.Tensor:
+        """
+        L2 distance between predictions and labels on predicted key points
+        """
         labels_pickled = tf.gather(labels, self.p_index, axis=1)
         return M.prediction.Loss.ADE(outputs[0], labels_pickled)
 
-    def min_FDE(self, outputs, labels) -> tf.Tensor:
+    def min_FDE(self, outputs: List[tf.Tensor],
+                labels: tf.Tensor,
+                *args, **kwargs) -> tf.Tensor:
+        """
+        minimum FDE among all predictions
+        """
+        # shape = (batch, Kc*K)
         distance = tf.linalg.norm(
-            outputs[0][:, :, -1, :] - tf.expand_dims(labels[:, -1, :], 1), axis=-1)   # shape = [batch, K]
+            outputs[0][:, :, -1, :] -
+            tf.expand_dims(labels[:, -1, :], 1), axis=-1)
+
         return tf.reduce_mean(tf.reduce_min(distance, axis=-1))

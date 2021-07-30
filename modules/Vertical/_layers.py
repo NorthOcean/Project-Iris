@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:17:59
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-28 16:22:06
+@LastEditTime: 2021-07-30 15:50:03
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -36,7 +36,7 @@ class FFTlayer(keras.layers.Layer):
             seq = tf.cast(tf.gather(inputs, index, axis=-1), tf.complex64)
             seq_fft = tf.signal.fft(seq)
             ffts.append(tf.expand_dims(seq_fft, -1))
-            
+
         ffts = self.concat(ffts)
         return (tf.math.real(ffts), tf.math.imag(ffts))
 
@@ -84,6 +84,13 @@ class ContextEncoding(keras.layers.Layer):
                  units: int = 64,
                  activation=None,
                  *args, **kwargs):
+        """
+        Init a context encoding module
+
+        :param output_channels: output channels 
+        :param units: output feature dimension
+        :param activation: activations used in the output layer
+        """
 
         super().__init__(*args, **kwargs)
 
@@ -114,6 +121,13 @@ class TrajEncoding(keras.layers.Layer):
                  activation=None,
                  useFFT=None,
                  *args, **kwargs):
+        """
+        Init a trajectory encoding module
+
+        :param units: feature dimension
+        :param activation: activations used in the output layer
+        :param useFFT: controls if encode trajectories in `freq domain`
+        """
 
         super().__init__(*args, **kwargs)
 
@@ -129,7 +143,7 @@ class TrajEncoding(keras.layers.Layer):
     def call(self, trajs: tf.Tensor, **kwargs) -> tf.Tensor:
         """
         Encode trajectories into the high-dimension features
-        
+
         :param trajs: trajs, shape = `(batch, N, 2)`
         :return features: features, shape = `(batch, N, units)`
         """
@@ -147,6 +161,12 @@ class LinearPrediction(keras.layers.Layer):
     """
 
     def __init__(self, useFFT=None, include_obs=None, *args, **kwargs):
+        """
+        Init a linear prediction layer
+
+        :param useFFT: controls if applys `DFT` on outputs
+        :param include_obs: controls if includes observations in outputs
+        """
         super().__init__(*args, **kwargs)
 
         self.useFFT = useFFT
@@ -158,11 +178,15 @@ class LinearPrediction(keras.layers.Layer):
         self.concat = keras.layers.Concatenate(axis=-2)
         self.concat1 = keras.layers.Concatenate(axis=-1)
 
-    def call(self, start, end, n, obs=None, *args, **kwargs):
+    def call(self, start, end, n, obs=None, *args, **kwargs) -> tf.Tensor:
         """
+        Run the linear prediction operation
+        
         :param start: start points, shape = (batch, 1, 2)
         :param end: end points, shape == (batch, 1, 2)
-        :param n: number of prediction points, DO NOT contain start point
+        :param n: number of prediction points, DOES NOT contain the start point
+
+        :return pred: linear predictions, DOES NOT contain the start point
         """
         results = []
         for i in range(1, n):
@@ -188,25 +212,30 @@ class GraphConv(keras.layers.Layer):
     """
     Graph conv layer
     """
+
     def __init__(self, units: int,
                  activation=None,
                  *args, **kwargs):
+        """
+        Init a graph convolution layer
 
+        :param units: feature dimension
+        :param activation: activations used in the output layer
+        """
         super().__init__(*args, **kwargs)
-        
+
         self.fc = keras.layers.Dense(units, activation)
-        
+
     def call(self, features: tf.Tensor,
              adjMatrix: tf.Tensor,
              *args, **kwargs) -> tf.Tensor:
-
         """
+        Run the graph convolution operation
+
         :param features: feature sequences, shape = (batch, N, M)
         :param adjMatrix: adj matrix, shape = (batch, N, N)
         :return outputs: shape = (batch, N, units)
         """
-        
+
         dot = tf.matmul(adjMatrix, features)
         return self.fc(dot)
-        
-        

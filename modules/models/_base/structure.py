@@ -67,7 +67,7 @@ class Model(keras.Model):
         init the model class
 
         :param Args: args used in the model
-        :param training_structure: structure for training the model. type = `Structure`
+        :param training_structure: structure for training the model, type is a subclass of `Structure`
         """
         super().__init__(*args, **kwargs)
         self.args = Args
@@ -218,6 +218,8 @@ class Structure(BaseObject):
 
     def __init__(self, Args: List[str], *args, **kwargs):
         """
+        Init the training structure
+        
         :param Args: args used when training. (got from `sys.argv`)
         """
         super().__init__()

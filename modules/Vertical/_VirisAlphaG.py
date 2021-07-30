@@ -2,23 +2,28 @@
 @Author: Conghao Wong
 @Date: 2021-07-27 19:06:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 11:18:04
+@LastEditTime: 2021-07-30 16:40:19
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
-from .. import applications as A
-from .. import models as M
-from ._args import VArgs
-from ._layers import ContextEncoding, GraphConv, TrajEncoding
+from typing import List, Tuple
 
 import tensorflow as tf
 from tensorflow import keras
 
+from .. import applications as A
+from .. import models as M
+from ._args import VArgs
+from ._layers import ContextEncoding, GraphConv, TrajEncoding
+from ._VirisAlpha import VIrisAlpha
+
 
 class VEncoder(keras.Model):
+    """
+    Encoder used in the first stage generative `Vertical-G`
+    """
 
     def __init__(self, Args: VArgs, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -67,7 +72,7 @@ class VEncoder(keras.Model):
 
         # transformer
         # output shape = (batch, obs, 128)
-        t_features, _ = self.transformer.call(t_inputs, 
+        t_features, _ = self.transformer.call(t_inputs,
                                               t_outputs,
                                               training=training)
 
@@ -79,6 +84,9 @@ class VEncoder(keras.Model):
 
 
 class VDecoder(keras.Model):
+    """
+    Decoder used in the first stage generative `Vertical-G`
+    """
 
     def __init__(self, Args: VArgs,
                  pred_number: int,
@@ -113,11 +121,20 @@ class VDecoder(keras.Model):
 
 
 class VIrisAlphaGModel(M.prediction.Model):
+    """
+    Generative first stage `Vertical-G` model
+    """
 
     def __init__(self, Args: VArgs,
                  pred_number: int,
                  training_structure=None,
                  *args, **kwargs):
+        """
+        Init a first stage `Vertical-G` model
+
+        :param Args:
+        :param pred_number: number of timesteps to predict
+        """
 
         super().__init__(Args, training_structure, *args, **kwargs)
 
@@ -135,7 +152,19 @@ class VIrisAlphaGModel(M.prediction.Model):
         self.decoder = VDecoder(Args, pred_number)
 
     def call(self, inputs: List[tf.Tensor],
-             training=None, mask=None):
+             training=None, mask=None) -> Tuple[tf.Tensor, tf.Tensor]:
+        """
+        Run the first stage generative `Vertical-G` model
+
+        :param inputs: a list of tensors, which includes `trajs` and `maps`
+            - trajs, shape = `(batch, obs, 2)`
+            - maps, shape = `(batch, a, a)`
+            
+        :param training: controls run as the training mode or the test mode
+
+        :return predictions: predicted trajectories, shape = `(batch, Kc*K, N, 2)`
+        :return features: features in the latent space, shape = `(batch, Kc, 128)`
+        """
 
         # unpack inputs
         trajs, maps = inputs[:2]
@@ -157,69 +186,33 @@ class VIrisAlphaGModel(M.prediction.Model):
         return (predictions, features)
 
 
-class VIrisAlphaG(M.prediction.Structure):
+class VIrisAlphaG(VIrisAlpha):
+    """
+    Training structure for the generative first stage `Vertical-G`
+    """
 
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
-        self.args = VArgs(Args)
-        
-        self.important_args += ['Kc', 'K_train', 'p_index', 'K']
-
-        self.set_model_inputs('traj', 'maps')
-        self.set_model_groundtruths('gt')
+        self.important_args += ['K']
 
         self.set_loss(self.l2_loss, self.p_loss)
         self.set_loss_weights(1.0, 1.0)
 
-        self.set_metrics(self.min_FDE)
-        self.set_metrics_weights(1.0)
-
-    @property
-    def p_index(self) -> tf.Tensor:
-        p_index = [int(i) for i in self.args.p_index.split('_')]
-        return tf.cast(p_index, tf.int32)
-
-    @property
-    def p_len(self) -> int:
-        return len(self.p_index)
-
     def create_model(self, *args, **kwargs):
-
-        model = VIrisAlphaGModel(self.args,
-                                 pred_number=self.p_len,
-                                 training_structure=self,
-                                 *args, **kwargs)
-
-        opt = keras.optimizers.Adam(self.args.lr)
-        return model, opt
-
-    def l2_loss(self, outputs: List[tf.Tensor],
-                labels: tf.Tensor,
-                *args, **kwargs) -> tf.Tensor:
-
-        labels_pickled = tf.gather(labels, self.p_index, axis=1)
-        return M.prediction.Loss.ADE(outputs[0], labels_pickled)
+        return VIrisAlpha.create_model(self, VIrisAlphaGModel)
 
     def p_loss(self, outputs: List[tf.Tensor],
                labels: tf.Tensor = None,
                *args, **kwargs) -> tf.Tensor:
-        
+        """
+        a simple loss function to make features in line with 
+        the normalized Gaussian distribution
+        """
         features = tf.reshape(outputs[1], [-1, 128])
 
         mu_real = tf.reduce_mean(features, axis=0)  # (128)
         std_real = tf.math.reduce_std(features, axis=0)  # (128)
 
-        return (tf.reduce_mean(tf.abs(mu_real - 0)) + 
+        return (tf.reduce_mean(tf.abs(mu_real - 0)) +
                 tf.reduce_mean(tf.abs(std_real - 1)))
-
-    def min_FDE(self, outputs: List[tf.Tensor],
-                labels: tf.Tensor,
-                *args, **kwargs) -> tf.Tensor:
-
-        # shape = (batch, Kc*K)
-        distance = tf.linalg.norm(
-            outputs[0][:, :, -1, :] -
-            tf.expand_dims(labels[:, -1, :], 1), axis=-1)
-
-        return tf.reduce_mean(tf.reduce_min(distance, axis=-1))

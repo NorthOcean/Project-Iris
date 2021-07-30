@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-22 20:33:09
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-27 21:08:55
+@LastEditTime: 2021-07-30 16:50:54
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -18,6 +18,10 @@ from ._VirisAlphaG import VIrisAlphaGModel
 
 
 class _VIrisAlphaModelGPuls(VIrisAlphaGModel):
+    """
+    A special version of the generative first stage `Vertical` model
+    that guides the second stage `Vertical` model to process outputs.
+    """
 
     def __init__(self, Args: VArgs,
                  pred_number: int,
@@ -41,7 +45,10 @@ class _VIrisAlphaModelGPuls(VIrisAlphaGModel):
 
 
 class VIrisG(VIris):
-
+    """
+    Structure for the generative `Vertical`
+    """
+    
     alpha_model = _VIrisAlphaModelGPuls
 
     def __init__(self, Args: List[str], *args, **kwargs):
