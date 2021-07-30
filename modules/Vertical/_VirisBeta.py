@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:45:53
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-21 21:29:41
+@LastEditTime: 2021-07-28 19:51:56
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -13,6 +13,7 @@ from typing import List, Tuple
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+from tqdm import tqdm
 
 from .. import applications as A
 from .. import models as M
@@ -120,7 +121,7 @@ class VIrisBetaModel(M.prediction.Model):
         # transformer target shape = (batch, obs+pred, 4)
         points_index = tf.concat([[-1], points_index], axis=0)
         points = tf.concat([trajs[:, -1:, :], points], axis=1)
-        
+
         # add the last obs point to finish linear interpolation
         linear_pred = U.LinearInterpolation(points_index, points)
         traj = tf.concat([trajs, linear_pred], axis=-2)
@@ -137,6 +138,64 @@ class VIrisBetaModel(M.prediction.Model):
                          imag=p_fft[:, :, 2:])
 
         return p[:, self.args.obs_frames:, :]
+
+    def call_secondStage(self, inputs: List[tf.Tensor],
+                         points: tf.Tensor,
+                         points_index: tf.Tensor,
+                         training=None, mask=None):
+        """
+        Call as the second stage model
+        
+        :param inputs: a list of trajs, maps
+        :param points: pred points, shape = `(batch, K, n, 2)`
+        :param points_index: pred index, shape = `(n)`
+        """
+        # unpack inputs
+        K = points.shape[1]
+        trajs, maps = inputs[:2]
+
+        traj_feature = self.te(trajs)
+        context_feature = self.ce(maps)
+
+        # transformer inputs shape = (batch, obs, 128)
+        t_inputs = self.concat([traj_feature, context_feature])
+        t_inputs_index = tf.range([t_inputs.shape[0]])
+        t_inputs_index = tf.repeat(t_inputs_index, K, axis=0)
+
+        # transformer target shape = (batch, obs+pred, 4)
+        
+        points_index = tf.concat([[-1], points_index], axis=0)
+        trajs = tf.repeat(trajs[:, tf.newaxis], K, axis=1)
+        points = tf.concat([trajs[:, :, -1:, :], points], axis=-2)
+
+        # add the last obs point to finish linear interpolation
+        linear_pred = U.LinearInterpolation(points_index, points)
+        traj = tf.concat([trajs, linear_pred], axis=-2)
+        lfft_r, lfft_i = self.fft(traj)
+        t_outputs = self.concat([lfft_r, lfft_i])
+        t_outputs = tf.reshape(t_outputs, [-1]+[s for s in t_outputs.shape[-2:]])
+
+        # prepare new inputs into transformer
+        # new batch_size (total) is batch*K
+        ds = tf.data.Dataset.from_tensor_slices((t_inputs_index, t_outputs))
+        ds = ds.batch(self.args.batch_size)
+        
+        predictions = []
+        for t_ii, t_o in tqdm(ds):
+            t_i = tf.gather(t_inputs, t_ii, axis=0)
+            me, mc, md = A.create_transformer_masks(t_i, t_o)
+            p_fft, _ = self.transformer(t_i, t_o, True,
+                                        me, mc, md)
+
+            # decode
+            p = self.decoder(real=p_fft[:, :, :2],
+                             imag=p_fft[:, :, 2:])
+            
+            predictions.append(p[:, self.args.obs_frames:, :])
+        
+        p = tf.concat(predictions, axis=0)
+        p = tf.reshape(p, [-1, K, self.args.pred_frames, 2])
+        return p
 
     def forward(self, model_inputs: List[tf.Tensor],
                 training=None,
@@ -171,10 +230,10 @@ class VIrisBetaModel(M.prediction.Model):
 
         # use as the second stage model
         else:
-            outputs = self.call(model_inputs_processed,
-                                points=destination_processed[0],
-                                points_index=self.points_index,
-                                training=None)
+            outputs = self.call_secondStage(model_inputs_processed,
+                                            points=destination_processed[0],
+                                            points_index=self.points_index,
+                                            training=None)
 
         if not type(outputs) in [list, tuple]:
             outputs = [outputs]

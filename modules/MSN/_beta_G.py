@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-21 15:05:18
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 10:35:50
+@LastEditTime: 2021-07-27 20:16:42
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -201,4 +201,5 @@ class MSNBeta_G(M.prediction.Structure):
         mu_real = tf.reduce_mean(features, axis=0)  # (128)
         std_real = tf.math.reduce_std(features, axis=0)  # (128)
 
-        return tf.reduce_mean(tf.abs(mu_real - 0)) + tf.reduce_mean(tf.abs(std_real - 1))
+        return (tf.reduce_mean(tf.abs(mu_real - 0)) + 
+                tf.reduce_mean(tf.abs(std_real - 1)))

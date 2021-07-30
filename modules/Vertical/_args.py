@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 10:50:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 11:19:01
+@LastEditTime: 2021-07-27 20:30:03
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -34,11 +34,11 @@ class VArgs(M.prediction.PredictionArgs):
         return self._get('p_index', '11', changeable=False)
 
     @property
-    def K_train(self) -> int:
+    def Kc(self) -> int:
         """
         Number of hidden categories used in alpha model.
         """
-        return self._get('K_train', 10, changeable=False)
+        return self._get('Kc', 10, changeable=False)
         
     @property
     def loada(self) -> str:

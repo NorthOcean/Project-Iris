@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:17:59
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-26 16:19:04
+@LastEditTime: 2021-07-28 16:22:06
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -60,10 +60,17 @@ class IFFTlayer(keras.layers.Layer):
 
         ffts = []
         for index in range(0, real.shape[-1]):
-            r = real[:, :, index]
-            i = imag[:, :, index]
-            ffts.append(tf.math.real(tf.signal.ifft(
-                tf.complex(r, i)))[:, :, tf.newaxis])
+            r = tf.gather(real, index, axis=-1)
+            i = tf.gather(imag, index, axis=-1)
+            ffts.append(
+                tf.expand_dims(
+                    tf.math.real(
+                        tf.signal.ifft(
+                            tf.complex(r, i)
+                        )
+                    ), axis=-1
+                )
+            )
 
         return self.concat(ffts)
 
@@ -86,6 +93,12 @@ class ContextEncoding(keras.layers.Layer):
         self.reshape = keras.layers.Reshape((output_channels, units))
 
     def call(self, context_map: tf.Tensor, **kwargs) -> tf.Tensor:
+        """
+        Encode context maps into context features
+
+        :param context_map: maps, shape = `(batch, a, a)`
+        :return feature: features, shape = `(batch, output_channels, units)`
+        """
         pool = self.pool(context_map[:, :, :, tf.newaxis])
         flat = self.flatten(pool)
         fc = self.fc(flat)
@@ -115,7 +128,10 @@ class TrajEncoding(keras.layers.Layer):
 
     def call(self, trajs: tf.Tensor, **kwargs) -> tf.Tensor:
         """
-        :param trajs: trajs, shape = (batch, N, 2)
+        Encode trajectories into the high-dimension features
+        
+        :param trajs: trajs, shape = `(batch, N, 2)`
+        :return features: features, shape = `(batch, N, units)`
         """
         if self.useFFT:
             t_r, t_i = self.fft(trajs)
@@ -182,12 +198,12 @@ class GraphConv(keras.layers.Layer):
         
     def call(self, features: tf.Tensor,
              adjMatrix: tf.Tensor,
-             *args, **kwargs):
+             *args, **kwargs) -> tf.Tensor:
 
         """
         :param features: feature sequences, shape = (batch, N, M)
         :param adjMatrix: adj matrix, shape = (batch, N, N)
-        :param outputs: shape = (batch, N, units)
+        :return outputs: shape = (batch, N, units)
         """
         
         dot = tf.matmul(adjMatrix, features)

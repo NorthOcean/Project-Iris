@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-22 21:07:16
+@LastEditTime: 2021-07-28 20:19:58
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -13,6 +13,7 @@ from typing import List, Tuple
 
 import tensorflow as tf
 from modules.models.helpmethods import BatchIndex
+from modules.MSN._MSN_G import angle_check
 from tqdm import tqdm
 
 from ._args import VArgs
@@ -39,7 +40,7 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
                      *args, **kwargs) -> List[tf.Tensor]:
 
         # shape = ((batch, Kc, n, 2))
-        outputs = super().post_process(outputs, training, **kwargs)
+        outputs = VIrisAlphaModel.post_process(self, outputs, training, **kwargs)
 
         if training:
             return outputs
@@ -61,34 +62,21 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
             obs = current_inputs[0][:, tf.newaxis, -1:, :]
             proposals = tf.concat([tf.repeat(obs, Kc, 1), proposals], axis=-2)
 
-            return (U.LinearInterpolation(x=pos, y=proposals),)
+            final_results = U.LinearInterpolation(x=pos, y=proposals)
 
         else:
-            # prepare new inputs into beta model
-            # new batch_size (total) is batch*Kc
-            batch_size = self.args.max_batch_size // Kc
-            batch_index = BatchIndex(batch_size, batch)
+            beta_inputs = [inp for inp in current_inputs]
+            beta_inputs.append(proposals)
+            final_results = self.training_structure.beta(
+                beta_inputs, return_numpy=False)[0]
+        
+        # check failure cases
+        if self.args.check:
+            final_results = angle_check(pred=final_results,
+                                        obs=kwargs['model_inputs'][0],
+                                        max_angle=135)
 
-            # Flatten inputs
-            proposals = tf.reshape(proposals, [batch*Kc, n, 2])
-
-            beta_results = []
-            for index in tqdm(batch_index.index):
-                [start, end, length] = index
-
-                # prepare new batch inputs
-                beta_inputs = [tf.repeat(inp[start:end], Kc, axis=0)
-                               for inp in current_inputs]
-                beta_inputs.append(proposals[start*Kc: end*Kc])
-
-                # beta outputs shape = (batch*Kc, ..., pred, 2)
-                beta_results.append(self.training_structure.beta(
-                    beta_inputs,
-                    return_numpy=False)[0])
-
-            beta_results = tf.concat(beta_results, axis=0)
-            beta_results = tf.reshape(beta_results, [batch, -1, pred, 2])
-            return (beta_results,)
+        return (final_results,)
 
 
 class VIris(VIrisAlpha):
@@ -98,6 +86,7 @@ class VIris(VIrisAlpha):
 
     """
     
+    alpha_model = _VIrisAlphaModelPlus
     beta_structure = VIrisBeta
 
     def __init__(self, Args: List[str], *args, **kwargs):
@@ -146,7 +135,7 @@ class VIris(VIrisAlpha):
         self.run_test()
 
     def create_model(self, *args, **kwargs):
-        return super().create_model(model_type=_VIrisAlphaModelPlus,
+        return super().create_model(model_type=self.alpha_model,
                                     *args, **kwargs)
 
     def print_test_result_info(self, loss_dict, **kwargs):

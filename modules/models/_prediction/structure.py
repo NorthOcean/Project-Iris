@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-22 15:28:27
+@LastEditTime: 2021-07-28 10:06:20
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -266,6 +266,8 @@ class Structure(base.Structure):
 
         self.args = PredictionArgs(Args)
 
+        self.important_args = ['dataset', 'test_set', 'lr']
+
         self.model_inputs = ['TRAJ']
         self.model_groundtruths = ['GT']
 
@@ -362,7 +364,7 @@ class Structure(base.Structure):
                     agents_c = DatasetsManager.load_dataset_files(
                         self.args, dataset_c)
                     agents += agents_c
-                    dataset += '{}; '.format(dataset_c)
+                    dataset += '{};'.format(dataset_c)
 
                 self.test(agents=agents, dataset_name='mix: '+dataset)
 
@@ -448,7 +450,8 @@ class Structure(base.Structure):
                           outputs,
                           labels,
                           self.loss_weights,
-                          mode='loss')
+                          mode='loss',
+                          *args, **kwargs)
 
     def metrics(self, outputs: List[tf.Tensor],
                 labels: tf.Tensor,
@@ -475,15 +478,18 @@ class Structure(base.Structure):
                               add_noise=self.args.add_noise)
 
     def print_training_info(self):
+        bn = int(np.ceil(self.train_number / self.args.batch_size))
+        args_dict = dict(zip(
+            self.important_args, 
+            [getattr(self.args, n) for n in self.important_args]))
+
         self.print_parameters(
             title='training options',
             model_name=self.args.model_name,
-            test_set=self.args.test_set,
-            batch_number=int(
-                np.ceil(self.train_number / self.args.batch_size)),
+            batch_number=bn,
             batch_size=self.args.batch_size,
-            lr=self.args.lr,
-            train_number=self.train_number)
+            train_number=self.train_number,
+            **args_dict)
 
     def write_test_results(self, model_outputs: List[tf.Tensor],
                            agents: Dict[str, List[agent_type]],

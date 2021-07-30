@@ -38,7 +38,7 @@ class Loss():
               labels: tf.Tensor,
               loss_weights: List[float] = None,
               mode='loss',
-              **kwargs) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+              *args, **kwargs) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
 
         loss_dict = {}
         for loss in loss_list:
@@ -60,7 +60,8 @@ class Loss():
                         tf.stack(cls.diff(model_outputs[0], labels, order)))
 
             elif callable(loss):
-                loss_dict[loss.__name__ + '({})'.format(mode)] = loss(model_outputs, labels)
+                loss_dict[loss.__name__ + '({})'.format(mode)] = loss(model_outputs, labels,
+                                                                      *args, **kwargs)
 
         if loss_weights is None:
             loss_weights = tf.ones(len(loss_dict))
@@ -224,12 +225,16 @@ class Process():
         :param para_dict: a dict of used parameters, `ref_point:tf.Tensor`
         :return traj_moved: moved trajectories
         """
-        ref_point = para_dict['MOVE']  # shape = [(batch,) 1, 2]
-        if len(ref_point.shape) == len(trajs.shape):
-            traj_moved = trajs + ref_point
-        else:   # [(batch,) K, pred, 2]
-            traj_moved = trajs + tf.expand_dims(ref_point, -3)
-        return traj_moved
+        try:
+            ref_point = para_dict['MOVE']  # shape = [(batch,) 1, 2]
+            if len(ref_point.shape) == len(trajs.shape):
+                traj_moved = trajs + ref_point
+            else:   # [(batch,) K, pred, 2]
+                traj_moved = trajs + tf.expand_dims(ref_point, -3)
+            return traj_moved
+            
+        except:
+            return trajs
 
     @staticmethod
     def rotate(trajs: tf.Tensor, para_dict, ref: int = 0, use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
