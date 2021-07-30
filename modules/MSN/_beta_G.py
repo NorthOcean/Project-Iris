@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-21 15:05:18
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-27 20:16:42
+@LastEditTime: 2021-07-30 11:11:35
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -88,9 +88,9 @@ class Encoder(keras.Model):
                                 num=self.args.pred_frames + 1,
                                 axis=-2)[:, 1:, :]
 
-        me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
-        features, _ = self.transformer(t_inputs, t_outputs, True,
-                                       me, mc, md)
+        features, _ = self.transformer.call(t_inputs, 
+                                            t_outputs,
+                                            training=training)
         return features
 
 

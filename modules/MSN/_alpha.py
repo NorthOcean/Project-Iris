@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-21 15:01:50
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 10:16:52
+@LastEditTime: 2021-07-30 11:11:06
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -82,12 +82,11 @@ class MSNAlphaModel(M.prediction.Model):
         # transformer
         t_inputs = concat_feature
         t_outputs = positions
-        me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
 
         # shape == (batch, obs, 128)
-        t_features, _ = self.T1(t_inputs, t_outputs,
-                                training,
-                                me, mc, md)
+        t_features, _ = self.T1.call(t_inputs, 
+                                     t_outputs,
+                                     training=training)
 
         # transfer GCN
         adj_matrix_transfer_T = self.adj_dense2(

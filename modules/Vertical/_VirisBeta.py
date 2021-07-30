@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:45:53
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-28 19:51:56
+@LastEditTime: 2021-07-30 11:18:41
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -112,8 +112,8 @@ class VIrisBetaModel(M.prediction.Model):
         # unpack inputs
         trajs, maps = inputs[:2]
 
-        traj_feature = self.te(trajs)
-        context_feature = self.ce(maps)
+        traj_feature = self.te.call(trajs)
+        context_feature = self.ce.call(maps)
 
         # transformer inputs shape = (batch, obs, 128)
         t_inputs = self.concat([traj_feature, context_feature])
@@ -125,17 +125,17 @@ class VIrisBetaModel(M.prediction.Model):
         # add the last obs point to finish linear interpolation
         linear_pred = U.LinearInterpolation(points_index, points)
         traj = tf.concat([trajs, linear_pred], axis=-2)
-        lfft_r, lfft_i = self.fft(traj)
+        lfft_r, lfft_i = self.fft.call(traj)
         t_outputs = self.concat([lfft_r, lfft_i])
 
         # transformer output shape = (batch, obs+pred, 4)
-        me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
-        p_fft, _ = self.transformer(t_inputs, t_outputs, True,
-                                    me, mc, md)
+        p_fft, _ = self.transformer.call(t_inputs, 
+                                         t_outputs,
+                                         training=training)
 
         # decode
-        p = self.decoder(real=p_fft[:, :, :2],
-                         imag=p_fft[:, :, 2:])
+        p = self.decoder.call(real=p_fft[:, :, :2],
+                              imag=p_fft[:, :, 2:])
 
         return p[:, self.args.obs_frames:, :]
 
@@ -154,8 +154,8 @@ class VIrisBetaModel(M.prediction.Model):
         K = points.shape[1]
         trajs, maps = inputs[:2]
 
-        traj_feature = self.te(trajs)
-        context_feature = self.ce(maps)
+        traj_feature = self.te.call(trajs)
+        context_feature = self.ce.call(maps)
 
         # transformer inputs shape = (batch, obs, 128)
         t_inputs = self.concat([traj_feature, context_feature])
@@ -171,7 +171,7 @@ class VIrisBetaModel(M.prediction.Model):
         # add the last obs point to finish linear interpolation
         linear_pred = U.LinearInterpolation(points_index, points)
         traj = tf.concat([trajs, linear_pred], axis=-2)
-        lfft_r, lfft_i = self.fft(traj)
+        lfft_r, lfft_i = self.fft.call(traj)
         t_outputs = self.concat([lfft_r, lfft_i])
         t_outputs = tf.reshape(t_outputs, [-1]+[s for s in t_outputs.shape[-2:]])
 
@@ -183,13 +183,11 @@ class VIrisBetaModel(M.prediction.Model):
         predictions = []
         for t_ii, t_o in tqdm(ds):
             t_i = tf.gather(t_inputs, t_ii, axis=0)
-            me, mc, md = A.create_transformer_masks(t_i, t_o)
-            p_fft, _ = self.transformer(t_i, t_o, True,
-                                        me, mc, md)
+            p_fft, _ = self.transformer.call(t_i, t_o, training=training)
 
             # decode
-            p = self.decoder(real=p_fft[:, :, :2],
-                             imag=p_fft[:, :, 2:])
+            p = self.decoder.call(real=p_fft[:, :, :2],
+                                  imag=p_fft[:, :, 2:])
             
             predictions.append(p[:, self.args.obs_frames:, :])
         

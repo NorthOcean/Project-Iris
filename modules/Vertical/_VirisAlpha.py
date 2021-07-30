@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 20:58:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-21 19:59:02
+@LastEditTime: 2021-07-30 11:17:30
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -95,24 +95,23 @@ class VIrisAlphaModel(M.prediction.Model):
         # unpack inputs
         trajs, maps = inputs[:2]
 
-        traj_feature = self.te(trajs)
-        context_feature = self.ce(maps)
+        traj_feature = self.te.call(trajs)
+        context_feature = self.ce.call(maps)
 
         # transformer inputs shape = (batch, obs, 128)
         t_inputs = self.concat([traj_feature, context_feature])
         t_outputs = trajs
 
         # transformer
-        me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
         # output shape = (batch, obs, 128)
-        t_features, _ = self.transformer(t_inputs, t_outputs,
-                                         training,
-                                         me, mc, md)
+        t_features, _ = self.transformer.call(t_inputs, 
+                                              t_outputs,
+                                              training=training)
 
         adj = tf.transpose(self.adj_fc(t_inputs), [0, 2, 1])
         # (batch, Kc, 128)
-        m_features = self.gcn(features=t_features,
-                              adjMatrix=adj)
+        m_features = self.gcn.call(features=t_features,
+                                   adjMatrix=adj)
 
         # shape = (batch, Kc, 2*n)
         vec = self.fc2(self.fc1(m_features))

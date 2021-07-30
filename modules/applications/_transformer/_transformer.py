@@ -2,19 +2,20 @@
 @Author: Conghao Wong
 @Date: 2021-04-30 14:58:21
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-05-07 16:14:42
+@LastEditTime: 2021-07-30 11:13:36
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
-@Part of modules comes from https://tensorflow.google.cn/tutorials/text/transformer.
+@Part of modules come from https://tensorflow.google.cn/tutorials/text/transformer.
 """
 
+from typing import Tuple
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras as keras
 
-from ._utils import (MultiHeadAttention, point_wise_feed_forward_network,
-                     positional_encoding)
+from ._utils import (MultiHeadAttention, create_masks,
+                     point_wise_feed_forward_network, positional_encoding)
 
 
 class EncoderLayer(tf.keras.layers.Layer):
@@ -153,13 +154,13 @@ class Encoder(keras.layers.Layer):
 
         self.d_model = d_model
         self.num_layers = num_layers
-        
+
         # original transformer for translation
         # self.embedding = tf.keras.layers.Embedding(input_vocab_size, d_model)
 
         # transformer for trajectory prediction
         self.embedding = tf.keras.layers.Dense(d_model, activation=tf.nn.tanh)
-        
+
         self.pos_encoding = positional_encoding(maximum_position_encoding,
                                                 self.d_model)
 
@@ -286,7 +287,7 @@ class Transformer(tf.keras.Model):
         super().__init__()
 
         self.include_top = include_top
-        
+
         self.encoder = Encoder(num_layers, d_model, num_heads, dff,
                                input_vocab_size, pe_input, rate)
 
@@ -296,23 +297,37 @@ class Transformer(tf.keras.Model):
         if self.include_top:
             self.final_layer = tf.keras.layers.Dense(target_vocab_size)
 
-    def call(self, inp, tar,
-             training,
-             enc_padding_mask,
-             look_ahead_mask,
-             dec_padding_mask):
+    def call(self, inputs: tf.Tensor,
+             targets: tf.Tensor,
+             training=None) -> Tuple[tf.Tensor, tf.Tensor]:
+        """
+        Transformer forward implementation
+
+        :param inputs: inputs tensor to the transformer encoder
+        :param targets: inputs tensor to the transformer decoder
+        :param training: controls if training or test
+
+        :return outputs: transformer outputs tensor
+        :return attention_weights: attention weights
+        """
+
+        # create masks
+        enc_padding_mask, look_ahead_mask, dec_padding_mask = create_masks(
+            inputs, targets
+        )
 
         # (batch_size, inp_seq_len, d_model)
-        enc_output = self.encoder(inp, training, enc_padding_mask)
+        enc_output = self.encoder(inputs, training, enc_padding_mask)
 
         # dec_output.shape == (batch_size, tar_seq_len, d_model)
-        dec_output, attention_weights = self.decoder(tar,
+        dec_output, attention_weights = self.decoder(targets,
                                                      enc_output,
                                                      training,
                                                      look_ahead_mask,
                                                      dec_padding_mask)
 
         # (batch_size, tar_seq_len, target_vocab_size)
-        final_output = self.final_layer(dec_output) if self.include_top else dec_output
+        final_output = self.final_layer(
+            dec_output) if self.include_top else dec_output
 
         return final_output, attention_weights

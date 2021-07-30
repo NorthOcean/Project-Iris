@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-27 19:06:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-27 21:24:17
+@LastEditTime: 2021-07-30 11:18:04
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -66,11 +66,10 @@ class VEncoder(keras.Model):
         t_outputs = trajs
 
         # transformer
-        me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
         # output shape = (batch, obs, 128)
-        t_features, _ = self.transformer(t_inputs, t_outputs,
-                                         training,
-                                         me, mc, md)
+        t_features, _ = self.transformer.call(t_inputs, 
+                                              t_outputs,
+                                              training=training)
 
         # multi-style prediction
         adj = tf.transpose(self.adj_fc(t_inputs), [0, 2, 1])

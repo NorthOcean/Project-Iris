@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-05-07 09:12:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 11:06:18
+@LastEditTime: 2021-07-30 11:11:26
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -83,9 +83,9 @@ class MSNBeta_DModel(M.prediction.Model):
                                 num=self.args.pred_frames + 1,
                                 axis=-2)[:, 1:, :]
 
-        me, mc, md = A.create_transformer_masks(t_inputs, t_outputs)
-        predictions, _ = self.transformer(t_inputs, t_outputs, True,
-                                          me, mc, md)
+        predictions, _ = self.transformer.call(t_inputs, 
+                                              t_outputs,
+                                              training=training)
 
         return predictions
 
