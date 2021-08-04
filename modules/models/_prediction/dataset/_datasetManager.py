@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2020-11-10 09:31:24
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-24 00:40:59
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2020-11-10 09:31:24
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-08-04 14:52:59
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 from typing import Dict, List, Tuple
 

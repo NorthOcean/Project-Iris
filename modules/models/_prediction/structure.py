@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-03 09:06:28
+@LastEditTime: 2021-08-04 14:40:39
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -89,7 +89,7 @@ class Model(base.Model):
         Set pre-process methods used before training.
 
         args: pre-process methods.
-            - Move observation step to (0, 0):
+            - Move positions on the observation step to (0, 0):
                 args in `['MOVE', 'move']`
 
             - TODO

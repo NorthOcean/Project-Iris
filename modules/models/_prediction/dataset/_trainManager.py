@@ -1,15 +1,18 @@
-'''
-Author: Conghao Wong
-Date: 2021-01-08 09:52:34
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-15 11:15:54
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2021-01-08 09:52:34
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-08-04 16:49:07
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 import os
 import random
 from typing import Dict, List, Tuple
 
+import cv2
 import numpy as np
 
 from ... import base
@@ -261,15 +264,36 @@ class DatasetManager(base.DatasetManager):
                                                          add_noise=False))
         return train_agents
 
-    def make_maps(self, train_agents: List[PredictionAgent],
-                  save_path: str):
+    def make_maps(self, agents: List[PredictionAgent],
+                  base_path: str,
+                  save_map_file: str = None,
+                  save_social_file: str = 'socialMap.npy',
+                  save_para_file: str = 'para.txt',
+                  save_centers_file: str = 'centers.txt'):
+        """
+        Make maps for input agents, and save them in the numpy format.
 
-        map_manager = MapManager(self.args, train_agents)
-        traj_map = map_manager.build_guidance_map(agents=train_agents)
+        :param agents: a list of agents that ready to calculate maps
+        :param base_path: base folder to save the map and map parameters
+        :param load_map_file: file name for the saved trajectory map (`.jpg` or `.png`).
+        default is `None`. When this item is `None`, MapManager will build
+        trajectory maps according to trajectories of the input agents.
+        :param save_map_file: file name to save the built traj map
+        :param save_social_file: file name to save the social map (already cut)
+        :param save_para_file: file name to save the map parameters
+        :param save_centers_file: path to save the centers
+        """
+
+        map_manager = MapManager(self.args, agents)
+        
+        if save_map_file:
+            traj_map = map_manager.build_guidance_map(
+                agents=agents,
+                save=os.path.join(base_path, save_map_file))
 
         social_maps = []
         centers = []
-        for agent in self.log_timebar(train_agents,
+        for agent in self.log_timebar(agents,
                                       'Build maps...',
                                       return_enumerate=False):
 
@@ -279,13 +303,17 @@ class DatasetManager(base.DatasetManager):
                 traj_neighbors=agent.get_pred_traj_neighbor_linear()))
 
         social_maps = np.array(social_maps)  # (batch, a, b)
-        maps = 0.5 * traj_map[np.newaxis, :, :] + 0.5 * social_maps
-        centers = np.concatenate(centers, axis=0)
 
-        cuts = map_manager.cut_map(maps, map_manager.real2grid(centers))
+        centers = np.concatenate(centers, axis=0)
+        centers = map_manager.real2grid(centers)
+        cuts = map_manager.cut_map(social_maps, 
+                                   centers,
+                                   self.args.map_half_size)
         paras = map_manager.real2grid_paras
 
-        np.savez(save_path, maps=cuts, paras=paras)
+        np.savetxt(os.path.join(base_path, save_centers_file), centers)
+        np.savetxt(os.path.join(base_path, save_para_file), paras)
+        np.save(os.path.join(base_path, save_social_file), cuts)
 
 
 class DatasetsManager(base.DatasetsManager):
@@ -388,12 +416,29 @@ class DatasetsManager(base.DatasetsManager):
             self.log('Successfully load train agents from `{}`'.format(data_path))
 
             if self.args.use_maps:
-                map_path = data_path.split('.npz')[0] + '_maps.npz'
-                if not os.path.exists(map_path):
-                    self.log('Maps do not exist, start making...')
-                    dm.make_maps(agents, map_path)
+                map_path = dir_check(data_path.split('.np')[0] + '_maps')
+                
+                try:
+                    agents = self.load_maps(map_path, agents,
+                                            map_file='trajMap.png',
+                                            social_file='socialMap.npy',
+                                            para_file='para.txt',
+                                            centers_file='centers.txt')
+                except:
+                    self.log('Load maps failed, start re-making...')
+                    
+                    dm.make_maps(agents, map_path,
+                                 save_map_file='trajMap.png',
+                                 save_social_file='socialMap.npy',
+                                 save_para_file='para.txt',
+                                 save_centers_file='centers.txt')
 
-                agents = self.load_maps(map_path, agents)
+                    agents = self.load_maps(map_path, agents,
+                                            map_file='trajMap.png',
+                                            social_file='socialMap.npy',
+                                            para_file='para.txt',
+                                            centers_file='centers.txt')
+                                 
                 self.log('Successfully load maps from `{}`.'.format(map_path))
 
             if mode == 'train':
@@ -424,14 +469,41 @@ class DatasetsManager(base.DatasetsManager):
 
         return [PredictionAgent().load_data(save_dict[key].tolist()) for key in save_dict.keys()]
 
-    def load_maps(self, map_path: str,
-                  agents: List[PredictionAgent]) -> List[PredictionAgent]:
+    def load_maps(self, base_path: str,
+                  agents: List[PredictionAgent],
+                  map_file: str,
+                  social_file: str,
+                  para_file: str,
+                  centers_file: str) -> List[PredictionAgent]:
+        """
+        Load maps from the base folder
 
-        dic = np.load(map_path, allow_pickle=True)
-        maps = dic['maps']
-        paras = dic['paras']
+        :param base_path: base save folder
+        :param agents: agents to assign maps
+        :param map_file: file name for traj maps, support `.jpg` or `.png`
+        :param social_file: file name for social maps, support `.npy`
+        :param para_file: file name for map parameters, support `.txt`
+        :param centers_file: file name for centers, support `.txt`
 
-        for agent, mapp in zip(agents, maps):
-            PredictionAgent.set_map(agent, mapp, paras)
+        :return agents: agents with maps
+        """
+        traj_map = cv2.imread(os.path.join(base_path, map_file))
+        traj_map = (traj_map[:, :, 0]).astype(np.float32)/255.0
+
+        if traj_map is None:
+            raise FileNotFoundError
+
+        social_map = np.load(os.path.join(base_path, social_file), allow_pickle=True)
+        para = np.loadtxt(os.path.join(base_path, para_file))
+        centers = np.loadtxt(os.path.join(base_path, centers_file))
+
+        batch_size = len(social_map)
+        traj_map = np.repeat(traj_map[np.newaxis, :, :], batch_size, axis=0)
+        traj_map_cut = MapManager.cut_map(traj_map, 
+                                          centers, 
+                                          self.args.map_half_size)
+        
+        for agent, t_map, s_map in zip(agents, traj_map_cut, social_map):
+            PredictionAgent.set_map(agent, 0.5*t_map + 0.5*s_map, para)
 
         return agents

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-22 11:29:36
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-22 11:38:43
+@LastEditTime: 2021-08-04 16:36:07
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -52,14 +52,14 @@ class MapManager(base.BaseObject):
     """
 
     def __init__(self, args: PredictionArgs,
-                 agents: List[PredictionAgent],
+                 agents: List[PredictionAgent] = None,
                  init_manager=None):
         """
         init map manager
 
         :param args: args to init this manager
         :param agents: a list of `PredictionAgent` object to init the map
-        :init_manager: a map manager to init this (available)
+        :param init_manager: a map manager to init this (available)
         """
 
         super().__init__()
@@ -75,6 +75,11 @@ class MapManager(base.BaseObject):
 
     @property
     def real2grid_paras(self) -> np.ndarray:
+        """
+        a set of parameters that transfer real positions to the grid positions.
+        shape = (2, 2), where the first line is the `W`, and the second is the `b`.
+        Formally, `xg = xr * W[0] + b[0], yg = yr * W[1] + b[1]`.
+        """
         return np.stack([self.W, self.b])   # (2, 2)
 
     def _init_guidance_map(self, agents: List[PredictionAgent]):
@@ -109,16 +114,16 @@ class MapManager(base.BaseObject):
 
     def build_guidance_map(self, agents: Union[List[PredictionAgent], np.ndarray],
                            source: np.ndarray = None,
-                           regulation=True) -> np.ndarray:
+                           save: str = None) -> np.ndarray:
         """
         Build guidance map
 
         :param agents: a list of agents or trajectories to calculate the map
         :param source: source map, default are zeros
-        :param regulation: controls if scale the map into [0, 1]
+        :param save: path for saving the guidance map. Support `.jpg` or `.png` format.
         """
 
-        if type(source) == type(None):
+        if source is None:
             source = self.void_map
 
         source = source.copy()
@@ -136,8 +141,10 @@ class MapManager(base.BaseObject):
                                   max_limit=False)
 
         source = np.minimum(source, 30)
-        if regulation:
-            source = 1 - source / np.max(source)
+        source = 1 - source / np.max(source)
+
+        if save:
+            cv2.imwrite(save, 255 * source)
 
         return source
 
@@ -222,7 +229,10 @@ class MapManager(base.BaseObject):
 
         return source
 
-    def cut_map(self, maps: np.ndarray, centers: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def cut_map(maps: np.ndarray,
+                centers: np.ndarray,
+                half_size: int) -> np.ndarray:
         """
         Cut original maps into small local maps
 
@@ -230,7 +240,7 @@ class MapManager(base.BaseObject):
         :param centers: center positions (in grids), shape = (batch, 2)
         """
         batch, a, b = maps.shape[-3:]
-        half_size = self.args.map_half_size
+        centers = centers.astype(np.int32)
 
         centers = np.maximum(centers, half_size)
         centers = np.array([np.minimum(centers[:, 0], a - half_size),

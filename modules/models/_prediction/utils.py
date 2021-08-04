@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2021-01-08 15:08:07
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-19 19:25:24
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2021-01-08 15:08:07
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-08-04 14:50:15
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 import re
 from typing import Any, Dict, List, Tuple, Union
@@ -45,10 +47,12 @@ class Loss():
         for loss in loss_list:
             if type(loss) == str:
                 if re.match('[Aa][Dd][Ee]', loss):
-                    loss_dict['ADE({})'.format(mode)] = cls.ADE(model_outputs[0], labels)
+                    loss_dict['ADE({})'.format(mode)] = cls.ADE(
+                        model_outputs[0], labels)
 
                 elif re.match('[Ff][Dd][Ee]', loss):
-                    loss_dict['FDE({})'.format(mode)] = cls.FDE(model_outputs[0], labels)
+                    loss_dict['FDE({})'.format(mode)] = cls.FDE(
+                        model_outputs[0], labels)
 
                 elif re.match('[Dd][Ii][Ff]', loss):
                     order = 2 if not 'diff_order' in kwargs.keys() \
@@ -57,7 +61,7 @@ class Loss():
                         if not 'diff_weights' in kwargs.keys() \
                         else kwargs['diff_weights']
                     loss_dict['Diff'] = tf.reduce_sum(
-                        tf.stack(weights) * 
+                        tf.stack(weights) *
                         tf.stack(cls.diff(model_outputs[0], labels, order)))
 
             elif callable(loss):
@@ -97,7 +101,6 @@ class Loss():
             pred - GT[:, tf.newaxis, :, :], ord=2, axis=-1), axis=-1)
         best_ade = tf.reduce_min(all_ade, axis=1)
         return tf.reduce_mean(best_ade)
-
 
     @classmethod
     def FDE(cls, pred, GT) -> tf.Tensor:
@@ -190,19 +193,24 @@ class Loss():
 
 class Process():
     @staticmethod
-    def move(trajs: tf.Tensor, para_dict, ref: int = -1, use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+    def move(trajs: tf.Tensor,
+             para_dict: Dict[str, tf.Tensor],
+             ref: int = -1,
+             use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
         """
-        Move trajectories to (0, 0) according to the reference point.
-        Default reference point is the last obsetvation.
+        Move a specific point to (0, 0) according to the reference time step.
+        Default reference time step is the last obsetvation step.
 
         :param trajs: observations, shape = `[(batch,) obs, 2]`
         :param ref: reference point, default is `-1`
+
         :return traj_moved: moved trajectories
         :return para_dict: a dict of used parameters
         """
         if use_new_para_dict:
-            ref_point = trajs[:, ref, :] if len(
-                trajs.shape) == 3 else trajs[ref, :]
+            ref_point = trajs[:, ref, :] if len(trajs.shape) == 3\
+                else trajs[ref, :]
+            
             # shape is [batch, 1, 2] or [1, 2]
             ref_point = tf.expand_dims(ref_point, -2)
             para_dict['MOVE'] = ref_point
@@ -212,18 +220,20 @@ class Process():
 
         if len(trajs.shape) == 4:   # (batch, K, n, 2)
             ref_point = ref_point[:, tf.newaxis, :, :]
-            
+
         traj_moved = trajs - ref_point
 
         return traj_moved, para_dict
 
     @staticmethod
-    def move_back(trajs: tf.Tensor, para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
+    def move_back(trajs: tf.Tensor,
+                  para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
         """
         Move trajectories back to their original positions.
 
         :param trajs: trajectories moved to (0, 0) with reference point, shape = `[(batch,) (K,) pred, 2]`
-        :param para_dict: a dict of used parameters, `ref_point:tf.Tensor`
+        :param para_dict: a dict of used parameters, which contains `'ref_point': tf.Tensor`
+        
         :return traj_moved: moved trajectories
         """
         try:
@@ -233,19 +243,23 @@ class Process():
             else:   # [(batch,) K, pred, 2]
                 traj_moved = trajs + tf.expand_dims(ref_point, -3)
             return traj_moved
-            
+
         except:
             return trajs
 
     @staticmethod
-    def rotate(trajs: tf.Tensor, para_dict, ref: int = 0, use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+    def rotate(trajs: tf.Tensor,
+               para_dict: Dict[str, tf.Tensor],
+               ref: int = 0,
+               use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
         """
-        Rotate trajectories to referce angle.
+        Rotate trajectories to the referce angle.
 
         :param trajs: observations, shape = `[(batch,) obs, 2]`
         :param ref: reference angle, default is `0`
+
         :return traj_rotated: moved trajectories
-        :return para_dict: a dict of used parameters, `rotate_angle:tf.Tensor`
+        :return para_dict: a dict of used parameters, `'rotate_angle': tf.Tensor`
         """
         if use_new_para_dict:
             vector_x = (trajs[:, -1, 0] - trajs[:, 0, 0]) if len(trajs.shape) == 3 else (
@@ -256,7 +270,7 @@ class Process():
             main_angle = tf.atan((vector_y + 0.01)/(vector_x + 0.01))
             angle = ref - main_angle
             para_dict['ROTATE'] = angle
-        
+
         else:
             angle = para_dict['ROTATE']
 
@@ -273,12 +287,14 @@ class Process():
         return traj_rotated, para_dict
 
     @staticmethod
-    def rotate_back(trajs: tf.Tensor, para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
+    def rotate_back(trajs: tf.Tensor,
+                    para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
         """
         Rotate trajectories back to their original angles.
 
         :param trajs: trajectories, shape = `[(batch, ) pred, 2]`
-        :param para_dict: a dict of used parameters, `rotate_matrix:tf.Tensor`
+        :param para_dict: a dict of used parameters, `'rotate_matrix': tf.Tensor`
+        
         :return traj_rotated: rotated trajectories
         """
         angle = -1 * para_dict['ROTATE']
@@ -293,7 +309,10 @@ class Process():
         return traj_rotated
 
     @staticmethod
-    def scale(trajs: tf.Tensor, para_dict, ref: float = 1, use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+    def scale(trajs: tf.Tensor,
+              para_dict: Dict[str, tf.Tensor],
+              ref: float = 1,
+              use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
         """
         Scale trajectories' direction vector into (x, y), where |x| <= 1, |y| <= 1.
         Reference point when scale is the `last` observation point.
@@ -336,7 +355,8 @@ class Process():
         return traj_scaled, para_dict
 
     @staticmethod
-    def scale_back(trajs: tf.Tensor, para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
+    def scale_back(trajs: tf.Tensor,
+                   para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
         """
         Scale trajectories back to their original.
         Reference point is the `first` prediction point.
@@ -373,7 +393,10 @@ class Process():
         return traj_scaled
 
     @staticmethod
-    def upSampling(trajs: tf.Tensor, para_dict, sample_time:int, use_new_para_dict=True):
+    def upSampling(trajs: tf.Tensor,
+                   para_dict: Dict[str, tf.Tensor],
+                   sample_time: int,
+                   use_new_para_dict=True):
 
         if use_new_para_dict:
             para_dict['UPSAMPLING'] = sample_time
@@ -385,32 +408,31 @@ class Process():
 
         if len(trajs.shape) == 3:   # (batch, n, 2)
             return tf.image.resize(trajs[:, :, :, tf.newaxis], [sample_number, 2])[:, :, :, 0], para_dict
-        
+
         elif len(trajs.shape) == 4:   # (batch, K, n, 2)
             K = trajs.shape[1]
             results = []
             for k in range(K):
                 results.append(tf.image.resize(
-                    trajs[:, k, :, :, tf.newaxis], 
+                    trajs[:, k, :, :, tf.newaxis],
                     [sample_number, 2])[:, :, :, 0])
-            
+
             return tf.transpose(tf.stack(results), [1, 0, 2, 3]), para_dict
 
     @staticmethod
-    def upSampling_back(trajs: tf.Tensor, para_dict):
+    def upSampling_back(trajs: tf.Tensor,
+                        para_dict: Dict[str, tf.Tensor]):
         sample_time = para_dict['UPSAMPLING']
         sample_number = trajs.shape[-2]
         original_number = sample_number // sample_time
         original_index = tf.range(original_number) * sample_time
 
         return tf.gather(trajs, original_index, axis=-2)
-        
-
 
     @staticmethod
-    def update(new: Union[tuple, list], 
+    def update(new: Union[tuple, list],
                old: Union[tuple, list]) -> tuple:
-               
+
         if type(old) == list:
             old = tuple(old)
         if type(new) == list:

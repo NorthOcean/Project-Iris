@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2020-12-24 11:09:35
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-19 20:07:30
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2020-12-24 11:09:35
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-08-04 14:53:23
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 import os
 import re

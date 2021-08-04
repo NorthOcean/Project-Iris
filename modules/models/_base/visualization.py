@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2021-04-09 09:10:39
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-19 19:52:04
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2021-04-09 09:10:39
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-08-04 14:51:42
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 from typing import List
 

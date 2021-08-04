@@ -1,10 +1,12 @@
-'''
-Author: Conghao Wong
-Date: 2021-04-08 19:56:34
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-19 19:55:30
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2021-04-08 19:56:34
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-08-04 14:53:38
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 import os
 import shutil
