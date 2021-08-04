@@ -151,7 +151,7 @@ class MSN_D(MSNAlpha):
     def create_model(self, model_type=None, *args, **kwargs):
         return super().create_model(_MSNAlphaModelPlus, *args, **kwargs)
 
-    def print_test_result_info(self, loss_dict, **kwargs):
+    def print_test_results(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']
         self.print_parameters(title='test results', **
                             dict({'dataset': dataset}, **loss_dict))

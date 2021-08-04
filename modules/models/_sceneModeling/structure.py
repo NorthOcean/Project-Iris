@@ -197,16 +197,6 @@ class Structure(base.Structure):
                             rotate=self.args.rotate,
                             add_noise=self.args.add_noise)
 
-    def print_training_info(self):
-        self.print_parameters(title='training options',
-                            model_name=self.args.model_name,
-                            test_set=self.args.test_set,
-                            batch_number=int(
-                                np.ceil(self.train_number / self.args.batch_size)),
-                            batch_size=self.args.batch_size,
-                            lr=self.args.lr,
-                            train_number=self.train_number)
-
     def write_test_results(self,
                            model_outputs: List[tf.Tensor],
                            agents: Dict[str, List[Agent]],

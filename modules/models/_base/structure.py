@@ -1,13 +1,14 @@
-'''
-Author: Conghao Wong
-Date: 2020-12-24 18:20:20
-LastEditors: Conghao Wong
-LastEditTime: 2021-04-19 19:43:42
-Description: file content
-'''
+"""
+@Author: Conghao Wong
+@Date: 2020-12-24 18:20:20
+@LastEditors: Conghao Wong
+@LastEditTime: 2021-08-02 14:37:05
+@Description: file content
+@Github: https://github.com/conghaowoooong
+@Copyright 2021 Conghao Wong, All Rights Reserved.
+"""
 
 import os
-import re
 from argparse import Namespace
 from typing import Dict, List, Tuple, Union
 
@@ -219,7 +220,7 @@ class Structure(BaseObject):
     def __init__(self, Args: List[str], *args, **kwargs):
         """
         Init the training structure
-        
+
         :param Args: args used when training. (got from `sys.argv`)
         """
         super().__init__()
@@ -227,6 +228,8 @@ class Structure(BaseObject):
         self.model = None
         self.args = ArgType(Args)
         self.gpu_config()
+
+        self.important_args = []
 
     def gpu_config(self):
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -446,19 +449,72 @@ class Structure(BaseObject):
     def print_dataset_info(self):
         self.print_parameters(title='dataset options')
 
-    def print_training_info(self):
-        self.print_parameters(title='training options')
+    def __get_important_args(self):
+        args_dict = dict(zip(
+            self.important_args,
+            [getattr(self.args, n) for n in self.important_args]))
+        return args_dict
 
-    def print_test_result_info(self, loss_dict, **kwargs):
+    def __print_train_info(self):
+        args_dict = self.__get_important_args()
+        self.print_parameters(title='Training Options',
+                              model_name=self.args.model_name,
+                              batch_size=self.args.batch_size,
+                              epoch=self.args.epochs,
+                              gpu=self.args.gpu,
+                              **args_dict)
+        self.print_train_info()
+
+    def __print_test_info(self):
+        args_dict = self.__get_important_args()
+        self.print_parameters(title='Test Options',
+                              model_name=self.args.model_name,
+                              batch_size=self.args.batch_size,
+                              gpu=self.args.gpu,
+                              **args_dict)
+        self.print_test_info()
+
+    def print_train_info(self):
+        """
+        Information to show (or to log into files) before training
+        """
+        pass
+
+    def print_test_info(self):
+        """
+        Information to show (or to log into files) before testing
+        """
+        pass
+
+    def print_train_results(self, best_epoch: int, best_metric: float):
+        """
+        Information to show (or to log into files) after training
+        """
+        self.log('Training done.')
+        self.log('During training, the model reaches the best metric ' +
+                 '`{}` at epoch {}.'.format(best_metric, best_epoch))
+
+        self.log(('Tensorboard file is saved at `{}`. ' +
+                  'To open this log file, please use `tensorboard ' +
+                  '--logdir {}`').format(self.args.log_dir,
+                                         self.args.log_dir))
+        self.log(('Trained model is saved at `{}`. ' +
+                  'To re-test this model, please use ' +
+                  '`python main.py --load {}`.').format(self.args.log_dir,
+                                                        self.args.log_dir))
+
+    def print_test_results(self, loss_dict, **kwargs):
+        """
+        Information to show (or to log into files) after testing
+        """
         dataset = kwargs['dataset_name']
-        self.print_parameters(title='test results',
-                            dataset=dataset,
-                            **loss_dict)
-        with open('./test_log.txt', 'a') as f:
-            f.write('{}, {}, {}\n'.format(
-                self.args.load,
-                dataset,
-                loss_dict))
+        self.print_parameters(title='Test Results',
+                              dataset=dataset,
+                              **loss_dict)
+        self.log('{}, {}, {}\n'.format(
+                 self.args.load,
+                 dataset,
+                 loss_dict))
 
     def run_train_or_test(self):
         """
@@ -491,7 +547,7 @@ class Structure(BaseObject):
         self.train_number = len(dataset_train)
 
         self.print_dataset_info()
-        self.print_training_info()
+        self.__print_train_info()
 
         if self.args.save_model:
             arg_save_path = os.path.join(dir_check(self.args.log_dir),
@@ -563,7 +619,7 @@ class Structure(BaseObject):
             step_dict = dict(zip(['epoch', 'best'], [epoch, best_metric]))
             try:
                 loss_dict = dict(
-                    step_dict, **dict(loss_dict, **loss_dict_eval))  # 拼接字典
+                    step_dict, **dict(loss_dict, **loss_dict_eval))
             except UnboundLocalError as e:
                 loss_dict = dict(step_dict, **loss_dict)
 
@@ -578,23 +634,14 @@ class Structure(BaseObject):
                     value = loss_dict[loss_name]
                     tf.summary.scalar(loss_name, value, step=epoch)
 
-        self.print_training_done_info()
-        if self.args.save_model:
+        self.print_train_results(best_epoch=best_epoch,
+                                 best_metric=best_metric)
+
+        if self.args.save_model and not self.args.save_best:
             model_save_path = os.path.join(
                 self.args.log_dir,
                 '{}.{}'.format(self.args.model_name, self.args.save_format))
-
             self.save_model(model_save_path)
-            self.log(('Trained model is saved at `{}`.\n' +
-                              'To re-test this model, please use ' +
-                              '`python main.py --load {}`.').format(model_save_path,
-                                                                    self.args.log_dir))
-
-    def print_training_done_info(self, **kwargs):
-        self.log(('Training done.' +
-                          'Tensorboard training log file is saved at `{}`' +
-                          'To open this log file, please use `tensorboard ' +
-                          '--logdir {}`').format(self.args.log_dir, self.args.log_dir))
 
     def run_test(self):
         self.test()
@@ -605,6 +652,8 @@ class Structure(BaseObject):
         """
         # Load dataset
         dataset_test = self.load_test_dataset(*args, **kwargs)
+
+        self.__print_test_info()
 
         # Start test
         # model_inputs_all = []
@@ -636,7 +685,7 @@ class Structure(BaseObject):
                 tf.stack(loss_dict_all[key])).numpy()
 
         # Write test results
-        self.print_test_result_info(loss_dict_all, **kwargs)
+        self.print_test_results(loss_dict_all, **kwargs)
 
         model_inputs_all = list(dataset_test.as_numpy_iterator())
         model_outputs_all = stack_results(model_outputs_all)

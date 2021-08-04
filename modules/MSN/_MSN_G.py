@@ -177,7 +177,7 @@ class MSN_G(MSNAlpha):
     def create_model(self, model_type=None):
         return super().create_model(model_type=self.alpha_model)
 
-    def print_test_result_info(self, loss_dict, **kwargs):
+    def print_test_results(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']
         self.print_parameters(title='test results', **
                             dict({'dataset': dataset}, **loss_dict))

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 16:50:37
+@LastEditTime: 2021-08-02 14:54:51
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -32,12 +32,21 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
 
         self.linear = linear_prediction
 
+    @property
+    def beta_model(self) -> VIrisBetaModel:
+        try:
+            return self.training_structure.beta.model
+        except:
+            raise ValueError('Structure object (id {}) has no `model` item.'.format(
+                id(self.training_structure)))
+
     def post_process(self, outputs: List[tf.Tensor],
                      training=None,
                      *args, **kwargs) -> List[tf.Tensor]:
 
         # shape = ((batch, Kc, n, 2))
-        outputs = VIrisAlphaModel.post_process(self, outputs, training, **kwargs)
+        outputs = VIrisAlphaModel.post_process(
+            self, outputs, training, **kwargs)
 
         if training:
             return outputs
@@ -63,9 +72,8 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
             # call the second stage model
             beta_inputs = [inp for inp in current_inputs]
             beta_inputs.append(proposals)
-            final_results = self.training_structure.beta(
-                beta_inputs, return_numpy=False)[0]
-        
+            final_results = self.beta_model.forward(beta_inputs)[0]
+
         # check failure cases
         if self.args.check:
             final_results = angle_check(pred=final_results,
@@ -79,7 +87,7 @@ class VIris(VIrisAlpha):
     """
     Structure for the deterministic `Vertical`
     """
-    
+
     alpha_model = _VIrisAlphaModelPlus
     beta_structure = VIrisBeta
 
@@ -105,7 +113,7 @@ class VIris(VIrisAlpha):
 
         if self.args.loadb.startswith('l'):
             self.linear_predict = True
-        
+
         else:
             self.beta.args = VArgs(self.beta.load_args(Args, self.args.loadb),
                                    default_args=self.args)
@@ -126,14 +134,13 @@ class VIris(VIrisAlpha):
         return super().create_model(model_type=self.alpha_model,
                                     *args, **kwargs)
 
-    def print_test_result_info(self, loss_dict, **kwargs):
+    def print_test_results(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']
         self.print_parameters(title='test results', **
-                            dict({'dataset': dataset}, **loss_dict))
+                              dict({'dataset': dataset}, **loss_dict))
         self.log('Results from {}, {}, {}, {}, {}'.format(
             self.args.loada,
             self.args.loadb,
             self.args.p_index,
             dataset,
             loss_dict))
-

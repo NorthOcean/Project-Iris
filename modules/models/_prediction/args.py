@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-22 10:59:50
+@LastEditTime: 2021-08-03 11:15:39
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -20,7 +20,8 @@ class PredictionArgs(base.Args):
     --------------
     A set of args used in training universal prediction models
     """
-    def __init__(self, args: Union[Namespace, List[str]], 
+
+    def __init__(self, args: Union[Namespace, List[str]],
                  default_args: Union[Namespace, dict] = None):
 
         super().__init__(args, default_args=default_args)
@@ -38,7 +39,7 @@ class PredictionArgs(base.Args):
         Prediction frames.
         """
         return self._get('pred_frames', 12, changeable=False)
-        
+
     @property
     def draw_results(self) -> int:
         """
@@ -95,22 +96,6 @@ class PredictionArgs(base.Args):
         return self._get('test', 1, changeable=False)
 
     @property
-    def start_test_percent(self) -> float:
-        """
-        Set when to start val during training.
-        Range of this arg is [0.0, 1.0]. 
-        The val will start at epoch = args.epochs * args.start_test_percent.
-        """
-        return self._get('start_test_percent', 0.0, changeable=False)
-
-    @property
-    def test_step(self) -> int:
-        """
-        Val step in epochs.
-        """
-        return self._get('test_step', 3, changeable=False)
-
-    @property
     def test_mode(self) -> str:
         """
         Test settings, canbe `one` or `all` or `mix`.
@@ -120,20 +105,6 @@ class PredictionArgs(base.Args):
         that made up of alltest datasets of this dataset.
         """
         return self._get('test_mode', 'one', changeable=True)
-
-    @property
-    def epochs(self) -> int:
-        """
-        Training epochs.
-        """
-        return self._get('epochs', 500, changeable=False)
-
-    @property
-    def batch_size(self) -> int:
-        """
-        Training batch_size.
-        """
-        return self._get('batch_size', 5000, changeable=False)
 
     @property
     def max_batch_size(self) -> int:
@@ -155,20 +126,6 @@ class PredictionArgs(base.Args):
         Learning rate.
         """
         return self._get('lr', 0.001, changeable=False)
-
-    @property
-    def save_model(self) -> int:
-        """
-        Controls if save the model.
-        """
-        return self._get('save_model', 1, changeable=False)
-
-    @property
-    def save_best(self) -> int:
-        """
-        Controls if save the best model when val.
-        """
-        return self._get('save_best', 1, changeable=False)
 
     @property
     def diff_weights(self) -> float:
@@ -222,14 +179,14 @@ class PredictionArgs(base.Args):
     @property
     def K(self) -> int:
         """
-        Number of multiple generation when test.
+        Number of multiple generations when test.
         """
         return self._get('K', 20, changeable=True)
 
     @property
     def K_train(self) -> int:
         """
-        Number of multiple generation when training.
+        Number of multiple generations when training.
         """
         return self._get('K_train', 10, changeable=False)
 

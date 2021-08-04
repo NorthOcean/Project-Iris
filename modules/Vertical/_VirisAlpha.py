@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 20:58:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 16:47:15
+@LastEditTime: 2021-08-04 10:21:12
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -32,6 +32,8 @@ class VIrisAlphaModel(M.prediction.Model):
 
         super().__init__(Args, training_structure,
                          *args, **kwargs)
+        
+        self.args = Args
 
         # Preprocess
         self.set_preprocess('move')
@@ -64,12 +66,12 @@ class VIrisAlphaModel(M.prediction.Model):
         self.gcn = GraphConv(units=128,
                              activation=None)
 
-        self.adj_fc = keras.layers.Dense(Args.K_train, tf.nn.tanh)
+        self.adj_fc = keras.layers.Dense(Args.Kc, tf.nn.tanh)
 
         self.fc1 = keras.layers.Dense(128, activation=tf.nn.tanh)
         self.fc2 = keras.layers.Dense(self.n_pred * 2)
 
-        self.reshape = keras.layers.Reshape([Args.K_train, self.n_pred, 2])
+        self.reshape = keras.layers.Reshape([Args.Kc, self.n_pred, 2])
 
     def call(self, inputs: List[tf.Tensor],
              training=None, mask=None) -> tf.Tensor:
@@ -122,7 +124,7 @@ class VIrisAlpha(M.prediction.Structure):
         super().__init__(Args, *args, **kwargs)
 
         self.args = VArgs(Args)
-        self.important_args += ['Kc', 'K_train', 'p_index']
+        self.important_args += ['Kc', 'p_index']
 
         self.set_model_inputs('traj', 'maps')
         self.set_model_groundtruths('gt')

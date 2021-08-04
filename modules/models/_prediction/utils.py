@@ -14,6 +14,7 @@ import tensorflow as tf
 
 from .. import base
 from .agent import PredictionAgent as Agent
+from tqdm import tqdm
 
 
 class Loss():
@@ -437,9 +438,10 @@ class IO(base.BaseObject):
             call = cls._get_dest_traj
         elif type_name == 'GT':
             call = cls._get_gt_traj
-        return call(cls, input_agents)
+        return call(input_agents)
 
-    def _get_obs_traj(self, input_agents: List[Agent]) -> tf.Tensor:
+    @classmethod
+    def _get_obs_traj(cls, input_agents: List[Agent]) -> tf.Tensor:
         """
         Get observed trajectories from agents.
 
@@ -447,11 +449,12 @@ class IO(base.BaseObject):
         :return inputs: a Tensor of observed trajectories
         """
         inputs = []
-        for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare trajectories...'):
+        for agent in tqdm(input_agents, 'Prepare trajectories...'):
             inputs.append(agent.traj)
         return tf.cast(inputs, tf.float32)
 
-    def _get_gt_traj(self, input_agents: List[Agent], destination=False) -> tf.Tensor:
+    @classmethod
+    def _get_gt_traj(cls, input_agents: List[Agent], destination=False) -> tf.Tensor:
         """
         Get groundtruth trajectories from agents.
 
@@ -459,7 +462,7 @@ class IO(base.BaseObject):
         :return inputs: a Tensor of gt trajectories
         """
         inputs = []
-        for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare groundtruth...'):
+        for agent in tqdm(input_agents, 'Prepare groundtruth...'):
             if destination:
                 inputs.append(np.expand_dims(agent.groundtruth[-1], 0))
             else:
@@ -467,10 +470,12 @@ class IO(base.BaseObject):
 
         return tf.cast(inputs, tf.float32)
 
-    def _get_dest_traj(self, input_agents: List[Agent]) -> tf.Tensor:
-        return self._get_gt_traj(input_agents, destination=True)
+    @classmethod
+    def _get_dest_traj(cls, input_agents: List[Agent]) -> tf.Tensor:
+        return cls._get_gt_traj(input_agents, destination=True)
 
-    def _get_context_map(self, input_agents: List[Agent]) -> tf.Tensor:
+    @classmethod
+    def _get_context_map(cls, input_agents: List[Agent]) -> tf.Tensor:
         """
         Get context map from agents.
 
@@ -478,11 +483,12 @@ class IO(base.BaseObject):
         :return inputs: a Tensor of maps
         """
         inputs = []
-        for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare maps...'):
+        for agent in tqdm(input_agents, 'Prepare maps...'):
             inputs.append(agent.Map)
         return tf.cast(inputs, tf.float32)
 
-    def _get_context_map_paras(self, input_agents: List[Agent]) -> tf.Tensor:
+    @classmethod
+    def _get_context_map_paras(cls, input_agents: List[Agent]) -> tf.Tensor:
         """
         Get parameters of context map from agents.
 
@@ -490,7 +496,7 @@ class IO(base.BaseObject):
         :return inputs: a Tensor of map paras
         """
         inputs = []
-        for agent_index_current, agent in self.log_timebar(input_agents, 'Prepare maps...'):
+        for agent in tqdm(input_agents, 'Prepare maps...'):
             inputs.append(agent.real2grid)
         return tf.cast(inputs, tf.float32)
 

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:45:53
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 16:55:08
+@LastEditTime: 2021-08-03 09:56:44
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -26,8 +26,8 @@ class VIrisBetaModel(M.prediction.Model):
     """
     Second stage `Vertical` model.
 
-    It can be applyed on both first stage generative `Vertical-G`
-    and first stage deterministic `Vertical-D`
+    It can be applyed on both the first stage generative `Vertical-G`
+    and the first stage deterministic `Vertical-D`
     """
 
     def __init__(self, Args: VArgs,
@@ -267,7 +267,7 @@ class VIrisBeta(M.prediction.Structure):
         proposals = model_inputs[-1]
         return tf.data.Dataset.from_tensor_slices((trajs, maps, proposals))
 
-    def print_test_result_info(self, loss_dict, dataset_name, **kwargs):
+    def print_test_results(self, loss_dict, dataset_name, **kwargs):
         self.print_parameters(title='rest results',
                               **dict({'dataset': dataset_name}, **loss_dict))
 

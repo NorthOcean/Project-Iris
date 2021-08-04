@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-15 09:26:41
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-21 11:16:39
+@LastEditTime: 2021-08-02 11:18:39
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -95,14 +95,14 @@ class BaseObject():
 
     @staticmethod
     def print_parameters(title='null', **kwargs):
-        print('>>> ' + title + ':')
+        print('\n>>> ' + title + ':')
         for key in kwargs:
             print('    - {} is {}.'.format(
                 key,
                 kwargs[key].numpy() if type(kwargs[key]) == tf.Tensor
                 else kwargs[key]
             ))
-        print('\n')
+        print('')
 
     @staticmethod
     def log_bar(percent, total_length=30):

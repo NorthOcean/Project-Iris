@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-28 10:06:20
+@LastEditTime: 2021-08-03 09:06:28
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -75,6 +75,7 @@ class Model(base.Model):
 
         super().__init__(Args, training_structure, *args, **kwargs)
 
+        self.args = Args
         self._preprocess_list = []
         self._preprocess_para = {MOVE: -1,
                                  ROTATE: 0,
@@ -266,7 +267,7 @@ class Structure(base.Structure):
 
         self.args = PredictionArgs(Args)
 
-        self.important_args = ['dataset', 'test_set', 'lr']
+        self.important_args += ['dataset', 'test_set']
 
         self.model_inputs = ['TRAJ']
         self.model_groundtruths = ['GT']
@@ -476,20 +477,6 @@ class Structure(base.Structure):
         self.print_parameters(title='dataset options',
                               rotate_times=self.args.rotate,
                               add_noise=self.args.add_noise)
-
-    def print_training_info(self):
-        bn = int(np.ceil(self.train_number / self.args.batch_size))
-        args_dict = dict(zip(
-            self.important_args, 
-            [getattr(self.args, n) for n in self.important_args]))
-
-        self.print_parameters(
-            title='training options',
-            model_name=self.args.model_name,
-            batch_number=bn,
-            batch_size=self.args.batch_size,
-            train_number=self.train_number,
-            **args_dict)
 
     def write_test_results(self, model_outputs: List[tf.Tensor],
                            agents: Dict[str, List[agent_type]],

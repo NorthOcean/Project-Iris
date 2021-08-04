@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-22 16:27:00
+@LastEditTime: 2021-08-02 11:32:01
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -26,6 +26,7 @@ class BaseTrainArgs(BaseArgs):
     -------------
     The arg class that contains basic args for training universal models.
     """
+
     def __init__(self, args: Union[Namespace, List[str]],
                  default_args: Union[Namespace, dict] = None):
 
@@ -63,15 +64,29 @@ class BaseTrainArgs(BaseArgs):
                                self.model +
                                self.test_set)
             self._args.log_dir = os.path.join(dir_check(self.save_base_dir),
-                                log_dir_current)
+                                              log_dir_current)
         else:
             dir_check(self._args.log_dir)
-    
+
     def __str__(self) -> str:
         text = ''
         for key, value in self._args.__dict__.items():
             text += '{}: {}, '.format(key, value)
         return text
+
+    @property
+    def batch_size(self) -> int:
+        """
+        Batch size when implementation.
+        """
+        return self._get('batch_size', 5000, changeable=False)
+
+    @property
+    def epochs(self) -> int:
+        """
+        Maximum training epochs.
+        """
+        return self._get('epochs', 500, changeable=False)
 
     @property
     def force_set(self) -> str:
@@ -106,11 +121,35 @@ class BaseTrainArgs(BaseArgs):
         return self._get('save_base_dir', './logs', changeable=False)
 
     @property
+    def save_best(self) -> int:
+        """
+        Controls if save model with the best val results when training.
+        """
+        return self._get('save_best', 1, changeable=False)
+
+    @property
     def save_format(self) -> str:
         """
         Model save format, canbe `tf` or `h5`.
+        (Current useless)
         """
         return self._get('save_format', 'tf', changeable=False)
+
+    @property
+    def save_model(self) -> int:
+        """
+        Controls if save the final model at the end of training.
+        """
+        return self._get('save_model', 1, changeable=False)
+
+    @property
+    def start_test_percent(self) -> float:
+        """
+        Set when to start val during training.
+        Range of this arg is [0.0, 1.0]. 
+        The val will start at epoch = args.epochs * args.start_test_percent.
+        """
+        return self._get('start_test_percent', 0.0, changeable=False)
 
     @property
     def log_dir(self) -> str:
@@ -138,7 +177,7 @@ class BaseTrainArgs(BaseArgs):
     @property
     def model_name(self) -> str:
         """
-        Model's name when saving.
+        Customized model name.
         """
         return self._get('model_name', 'model', changeable=False)
 
@@ -158,6 +197,13 @@ class BaseTrainArgs(BaseArgs):
             return fs
         else:
             return self._get('test_set', 'zara1', changeable=False)
+
+    @property
+    def test_step(self) -> int:
+        """
+        Epoch interval to run validation during training.
+        """
+        return self._get('test_step', 3, changeable=False)
 
     def _get(self, name: str, default: Any, changeable=False):
         try:
