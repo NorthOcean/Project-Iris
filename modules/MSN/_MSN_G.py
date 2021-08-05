@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-24 09:14:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 11:00:12
+@LastEditTime: 2021-08-05 16:24:13
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -143,12 +143,13 @@ class MSN_G(MSNAlpha):
         self.linear_predict = False
 
         # load gamma weights
-        if ('null' in [self.args.loada, self.args.loadb]) and \
-                (self.args.loadc == 'null' and self.args.linear == 0):
-            self.logger.error(e := ('`MSNAlpha` or `MSNBeta_G` or `MSNBeta_D` not' +
-                              ' found! Please specific their paths via' +
-                                    ' `--loada` or `--loadb`.'))
-            raise FileNotFoundError(e)
+        if ('null' in [self.args.loada, self.args.loadb] and
+                self.args.loadc == 'null'):
+
+            self.log(('`MSNAlpha` or `MSNBeta_G` or `MSNBeta_D` not' +
+                      ' found! Please specific their paths via' +
+                      ' `--loada` or `--loadb`.'), level='error')
+            raise FileNotFoundError
 
         if self.args.loadc.startswith('l'):
             self.linear_predict = True
@@ -180,7 +181,7 @@ class MSN_G(MSNAlpha):
     def print_test_results(self, loss_dict, **kwargs):
         dataset = kwargs['dataset_name']
         self.print_parameters(title='test results', **
-                            dict({'dataset': dataset}, **loss_dict))
+                              dict({'dataset': dataset}, **loss_dict))
 
         self.log('Results from {}, {}, {}, {}, {}, K={}, sigma={}'.format(
             self.args.loada,

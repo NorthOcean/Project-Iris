@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-12-24 18:20:20
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-02 14:37:05
+@LastEditTime: 2021-08-05 16:53:32
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -269,7 +269,7 @@ class Structure(BaseObject):
 
     def load_from_checkpoint(self, model_path, *args, **kwargs) -> Model:
         """
-        Load already trained models from `.h5` or `.tf` files according to args.
+        Load already trained models from saved files.
 
         :param model_path: target dir where your model puts in
         :return model: model loaded

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-02 11:32:01
+@LastEditTime: 2021-08-05 17:10:57
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -92,7 +92,8 @@ class BaseTrainArgs(BaseArgs):
     def force_set(self) -> str:
         """
         Force test dataset. 
-        Only works on ETH-UCY dataset when arg `load` is not `null`.
+        Only works when `args.load` is not `'null'`.
+        It is used to test models on their test datasets.
         """
         return self._get('force_set', 'null', changeable=True)
 
@@ -100,30 +101,22 @@ class BaseTrainArgs(BaseArgs):
     def gpu(self) -> str:
         """
         Speed up training or test if you have at least one nvidia GPU. 
-        Use `_` to separate if you want to use more than one gpus. 
         If you have no GPUs or want to run the code on your CPU, 
         please set it to `-1`.
         """
         return self._get('gpu', '0', changeable=True)
 
     @property
-    def verbose(self) -> int:
-        """
-        Set if print logs
-        """
-        return self._get('verbose', 1, changeable=True)
-
-    @property
     def save_base_dir(self) -> str:
         """
-        Base saving dir of logs.
+        Base folder to save all running logs.
         """
         return self._get('save_base_dir', './logs', changeable=False)
 
     @property
     def save_best(self) -> int:
         """
-        Controls if save model with the best val results when training.
+        Controls if save model with the best validation results when training.
         """
         return self._get('save_best', 1, changeable=False)
 
@@ -131,7 +124,7 @@ class BaseTrainArgs(BaseArgs):
     def save_format(self) -> str:
         """
         Model save format, canbe `tf` or `h5`.
-        (Current useless)
+        *This arg is now useless.*
         """
         return self._get('save_format', 'tf', changeable=False)
 
@@ -145,24 +138,24 @@ class BaseTrainArgs(BaseArgs):
     @property
     def start_test_percent(self) -> float:
         """
-        Set when to start val during training.
-        Range of this arg is [0.0, 1.0]. 
-        The val will start at epoch = args.epochs * args.start_test_percent.
+        Set when to start validation during training.
+        Range of this arg is `0 <= x <= 1`. 
+        Validation will start at `epoch = args.epochs * args.start_test_percent`.
         """
         return self._get('start_test_percent', 0.0, changeable=False)
 
     @property
     def log_dir(self) -> str:
         """
-        Log dir for saving logs. If set to `null`,
-        logs will save at `save_base_dir/current_model`.
+        Folder to save training logs and models. If set to `null`,
+        logs will save at `args.save_base_dir/current_model`.
         """
         return self._get('log_dir', 'null', changeable=False)
 
     @property
     def load(self) -> str:
         """
-        Log folder to load model. If set to `null`,
+        Folder to load model. If set to `null`,
         it will start training new models according to other args.
         """
         return self._get('load', 'null', changeable=True)
@@ -170,7 +163,7 @@ class BaseTrainArgs(BaseArgs):
     @property
     def model(self) -> str:
         """
-        Model used to train.
+        Model type used to train or test.
         """
         return self._get('model', 'none', changeable=False)
 
@@ -184,14 +177,16 @@ class BaseTrainArgs(BaseArgs):
     @property
     def restore(self) -> str:
         """
-        Path to the pre-trained models before training.
+        Path to restore the pre-trained weights before training.
+        It will not restore any weights if `args.restore == 'null'`
         """
         return self._get('restore', 'null', changeable=True)
 
     @property
     def test_set(self) -> str:
         """
-        Test dataset. Only works on ETH-UCY dataset.
+        Test dataset. Only works on ETH-UCY dataset when training.
+        (The `leave-one-out` training strategy.)
         """
         if (fs := self.force_set) != 'null':
             return fs

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-12-24 11:09:35
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 14:53:23
+@LastEditTime: 2021-08-05 16:39:31
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -107,7 +107,7 @@ class Structure(base.Structure):
         """
         Run test of trajectory prediction on ETH-UCY or SDD dataset.
         """
-        if self.args.test:
+        if True:
             if self.args.test_mode == 'all':
                 with open('./test_log.txt', 'a') as f:
                     f.write('-'*40 + '\n')

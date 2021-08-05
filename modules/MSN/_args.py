@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-01 20:28:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 15:25:43
+@LastEditTime: 2021-08-05 16:22:54
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -40,13 +40,6 @@ class MSNArgs(M.prediction.PredictionArgs):
         Path for the third stage model (Preserved)
         """
         return self._get('loadc', 'null', changeable=True)
-
-    @property
-    def linear(self) -> int:
-        """
-        Controls whether use linear prediction in the last stage
-        """
-        return self._get('linear', 0, changeable=False)
 
     @property
     def check(self) -> int:

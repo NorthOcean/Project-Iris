@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 10:19:30
+@LastEditTime: 2021-08-05 16:46:04
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -43,23 +43,24 @@ class PredictionArgs(base.Args):
     @property
     def draw_results(self) -> int:
         """
-        Controls if draw visualized results on videoframes.
-        Make sure that you have put video files.
+        Controls if draw visualized results on video frames.
+        Make sure that you have put video files into `./videos`
+        according to the specific name way.
         """
         return self._get('draw_results', 0, changeable=True)
 
     @property
     def dataset(self) -> str:
         """
-        Dataset. Can be `ethucy` or `sdd`.
+        Prediction dataset. Accept both `'ethucy'` and `'sdd'`.
         """
         return self._get('dataset', 'ethucy', changeable=True)
 
     @property
     def train_percent(self) -> str:
         """
-        Percent of training data used in training datasets.
-        Split with `_` if you want to specify each dataset,
+        Percent of training samples used in each training dataset when training.
+        Split with `_` if you want to specify the train percent on each dataset,
         for example `0.5_0.9_0.1`.
         """
         return self._get('train_percent', '1.0_', changeable=False)
@@ -67,14 +68,15 @@ class PredictionArgs(base.Args):
     @property
     def step(self) -> int:
         """
-        Frame step for obtaining training data.
+        Frame interval for sampling training data.
         """
         return self._get('step', 1, changeable=True)
 
     @property
     def add_noise(self) -> int:
         """
-        Controls if add noise to training data
+        Controls if add noise to training data.
+        *This arg is not used in the current training structure.*
         """
         return self._get('add_noise', 0, changeable=False)
 
@@ -85,40 +87,26 @@ class PredictionArgs(base.Args):
         This arg is the time of rotation, for example set to 1 will 
         rotatetraining data 180 degree once; 
         set to 2 will rotate them 120 degreeand 240 degree.
+        *This arg is not used in the current training structure.*
         """
         return self._get('rotate', 0, changeable=False)
 
     @property
-    def test(self) -> int:
-        """
-        Controls if run test.
-        """
-        return self._get('test', 1, changeable=False)
-
-    @property
     def test_mode(self) -> str:
         """
-        Test settings, canbe `one` or `all` or `mix`.
-        When set to `one`, it will test the test_set only;
-        When set to `all`, it will test on all test datasets of this dataset;
-        When set to `mix`, it will test on one mix dataset 
-        that made up of alltest datasets of this dataset.
+        Test settings, canbe `'one'` or `'all'` or `'mix'`.
+        When set it to `one`, it will test the model on the `args.test_set` only;
+        When set it to `all`, it will test on each of the test dataset in `args.dataset`;
+        When set it to `mix`, it will test on all test dataset in `args.dataset` together.
         """
         return self._get('test_mode', 'one', changeable=True)
 
     @property
     def max_batch_size(self) -> int:
         """
-        Maximun batch_size.
+        Maximun batch size.
         """
         return self._get('max_batch_size', 20000, changeable=True)
-
-    @property
-    def dropout(self) -> float:
-        """
-        Dropout rate.
-        """
-        return self._get('dropout', 0.5, changeable=False)
 
     @property
     def lr(self) -> float:
@@ -126,13 +114,6 @@ class PredictionArgs(base.Args):
         Learning rate.
         """
         return self._get('lr', 0.001, changeable=False)
-
-    @property
-    def diff_weights(self) -> float:
-        """
-        Parameter of linera prediction.
-        """
-        return self._get('diff_weights', 0.95, changeable=False)
 
     @property
     def init_position(self) -> int:
@@ -151,28 +132,28 @@ class PredictionArgs(base.Args):
     @property
     def window_size_guidance_map(self) -> int:
         """
-        Resolution of map.(grids per meter)
+        Resolution of map (grids per meter).
         """
         return self._get('window_size_guidance_map', 10, changeable=False)
 
     @property
     def avoid_size(self) -> int:
         """
-        Avoid size in grids.
+        Avoid size in grid cells when modeling social interaction.
         """
         return self._get('avoid_size', 15, changeable=False)
 
     @property
     def interest_size(self) -> int:
         """
-        Interest size in grids.
+        Interest size in grid cells when modeling social interaction.
         """
         return self._get('interest_size', 20, changeable=False)
 
     @property
     def map_half_size(self) -> int:
         """
-        Local map's size.
+        Local map's half size.
         """
         return self._get('map_half_size', 50, changeable=False)
 
@@ -180,6 +161,7 @@ class PredictionArgs(base.Args):
     def K(self) -> int:
         """
         Number of multiple generations when test.
+        This arg only works for `Generative Models`.
         """
         return self._get('K', 20, changeable=True)
 
@@ -187,6 +169,7 @@ class PredictionArgs(base.Args):
     def K_train(self) -> int:
         """
         Number of multiple generations when training.
+        This arg only works for `Generative Models`.
         """
         return self._get('K_train', 10, changeable=False)
 
@@ -194,28 +177,28 @@ class PredictionArgs(base.Args):
     def sigma(self) -> float:
         """
         Sigma of noise.
+        This arg only works for `Generative Models`.
         """
         return self._get('sigma', 1.0, changeable=True)
 
     @property
     def draw_distribution(self) -> int:
         """
-        Conrtols if draw distributions ofpredictions instead of points.
+        Conrtols if draw distributions of predictions instead of points.
         """
         return self._get('draw_distribution', 0, changeable=True)
 
     @property
     def prepare_type(self) -> str:
         """
-        Prepare argument. Do Not Change it.
+        Prepare argument. ***Do Not Change it***.
         """
         return self._get('prepare_type', 'test', changeable=True)
 
     @property
     def use_maps(self) -> int:
         """
-        Controls if uses the trajectory maps in models.
-        Do not change it when test or training.
+        Controls if uses the trajectory maps or the social maps in the model.
         """
         return self._get('use_maps', 1, changeable=False)
 

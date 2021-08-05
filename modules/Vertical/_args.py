@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 10:50:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-27 20:30:03
+@LastEditTime: 2021-08-05 16:21:26
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -20,9 +20,6 @@ class VArgs(M.prediction.PredictionArgs):
                  default_args: Union[Namespace, dict] = None):
                  
         super().__init__(args, default_args)
-
-        if self._args.force_pred_frames != -1:
-            self._args.pred_frames = self._args.force_pred_frames
 
     @property
     def p_index(self) -> str:
@@ -55,27 +52,6 @@ class VArgs(M.prediction.PredictionArgs):
         return self._get('loadb', 'null', changeable=True)
 
     @property
-    def loadc(self) -> str:
-        """
-        Path for gamma model. (Unused)
-        """
-        return self._get('loadc', 'null', changeable=True)
-
-    @property
-    def linear(self) -> int:
-        """
-        Controls whether use linear prediction instead of beta model.
-        """
-        return self._get('linear', 0, changeable=False)
-
-    @property
-    def force_pred_frames(self) -> int:
-        """
-        force setting of predict frames when test.
-        """
-        return self._get('force_pred_frames', -1, changeable=True)
-
-    @property
     def check(self) -> int:
         """
         Controls whether apply the results choosing strategy.
@@ -85,6 +61,6 @@ class VArgs(M.prediction.PredictionArgs):
     @property
     def points(self) -> int:
         """
-        Controls number of points input to the beta model.
+        Controls number of points (representative time steps) input to the beta model.
         """
         return self._get('points', 1, changeable=False)

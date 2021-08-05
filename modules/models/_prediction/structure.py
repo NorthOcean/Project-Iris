@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 14:40:39
+@LastEditTime: 2021-08-05 16:39:26
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -350,7 +350,7 @@ class Structure(base.Structure):
         """
         Run test of trajectory prediction on ETH-UCY or SDD dataset.
         """
-        if self.args.test:
+        if True:
             info = PredictionDatasetInfo()
             if self.args.test_mode == 'all':
                 for dataset in info.sdd_test_sets if self.args.dataset == 'sdd' else info.ethucy_testsets:
