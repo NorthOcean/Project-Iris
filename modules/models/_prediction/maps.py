@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-22 11:29:36
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 16:36:07
+@LastEditTime: 2021-08-05 09:26:46
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -71,7 +71,7 @@ class MapManager(base.BaseObject):
             self.void_map, self.W, self.b = [
                 init_manager.void_map, init_manager.W, init_manager.b]
         else:
-            self.void_map, self.W, self.b = self._init_guidance_map(agents)
+            self.void_map, self.W, self.b = self.init_guidance_map(agents)
 
     @property
     def real2grid_paras(self) -> np.ndarray:
@@ -82,7 +82,16 @@ class MapManager(base.BaseObject):
         """
         return np.stack([self.W, self.b])   # (2, 2)
 
-    def _init_guidance_map(self, agents: List[PredictionAgent]):
+    def init_guidance_map(self, agents: Union[List[PredictionAgent], np.ndarray]):
+        """
+        Init the trajectory map via a list of agents.
+
+        :param agents: a list of agents, or a batch of trajectories
+
+        :return guidance_map: initialized trajectory map
+        :return W: map parameter `W`
+        :return b: map parameter `b`
+        """
         if issubclass(type(agents[0]), PredictionAgent):
             traj = get_trajectories(agents)
         else:
@@ -99,17 +108,14 @@ class MapManager(base.BaseObject):
         y_max = np.max(traj[:, 1])
         y_min = np.min(traj[:, 1])
 
-        guidance_map = np.zeros([
-            int((x_max - x_min + 2*self.args.window_size_expand_meter)
-                * self.args.window_size_guidance_map) + 1,
-            int((y_max - y_min + 2*self.args.window_size_expand_meter)
-                * self.args.window_size_guidance_map) + 1,
-        ])
-        W = np.array([self.args.window_size_guidance_map,
-                      self.args.window_size_guidance_map])
-        b = np.array([x_min - self.args.window_size_expand_meter,
-                      y_min - self.args.window_size_expand_meter])
-        self.map_coe = [x_max, x_min, y_max, y_min]
+        a = self.args.window_size_guidance_map
+        e = self.args.window_size_expand_meter
+
+        guidance_map = np.zeros([int((x_max - x_min + 2 * e) * a) + 1,
+                                 int((y_max - y_min + 2 * e) * a) + 1])
+        W = np.array([a, a])
+        b = np.array([x_min - e, y_min - e])
+
         return guidance_map.astype(np.float32), W, b
 
     def build_guidance_map(self, agents: Union[List[PredictionAgent], np.ndarray],
@@ -245,12 +251,12 @@ class MapManager(base.BaseObject):
         centers = np.maximum(centers, half_size)
         centers = np.array([np.minimum(centers[:, 0], a - half_size),
                             np.minimum(centers[:, 1], b - half_size)]).T
-        
+
         cuts = []
         for m, c in zip(maps, centers):
             cuts.append(m[c[0] - half_size: c[0] + half_size,
                           c[1] - half_size: c[1] + half_size])
-                    
+
         return np.array(cuts)
 
     def _add_to_map(self, target_map: np.ndarray,
@@ -316,14 +322,15 @@ class MapManager(base.BaseObject):
 
         new_map = np.zeros_like(source_map)
         for pos, a in zip(traj, amplitude):
-            if (pos[0]-radius >= 0 and 
-                pos[1]-radius >= 0 and 
-                pos[0]+radius+1 < new_map.shape[0] and 
-                pos[1]+radius+1 < new_map.shape[1]):
+            if (pos[0]-radius >= 0 and
+                pos[1]-radius >= 0 and
+                pos[0]+radius+1 < new_map.shape[0] and
+                    pos[1]+radius+1 < new_map.shape[1]):
 
                 new_map[pos[0]-radius:pos[0]+radius+1, pos[1]-radius:pos[1]+radius+1] = \
                     a * add_mask + \
-                    new_map[pos[0]-radius:pos[0]+radius+1, pos[1]-radius:pos[1]+radius+1]
+                    new_map[pos[0]-radius:pos[0]+radius +
+                            1, pos[1]-radius:pos[1]+radius+1]
 
         if max_limit:
             new_map = np.sign(new_map)

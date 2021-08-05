@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-03 11:15:39
+@LastEditTime: 2021-08-05 10:19:30
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -218,3 +218,13 @@ class PredictionArgs(base.Args):
         Do not change it when test or training.
         """
         return self._get('use_maps', 1, changeable=False)
+
+    @property
+    def use_extra_maps(self) -> int:
+        """
+        Controls if uses the calculated trajectory maps or the given trajectory maps. 
+        The model will load maps from `./dataset_npz/.../agent1_maps/trajMap.png`
+        if set it to `0`, and load from `./dataset_npz/.../agent1_maps/trajMap_load.png` 
+        if set this item to `1`.
+        """
+        return self._get('use_extra_maps', 0, changeable=True)

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 09:52:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 16:49:07
+@LastEditTime: 2021-08-05 10:34:40
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -23,6 +23,11 @@ from ..maps import MapManager
 from ..traj import EntireTrajectory
 from ..utils import calculate_length
 from ._datasetManager import PredictionDatasetInfo
+
+
+class TrajMapNotFoundError(FileNotFoundError):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 
 class DatasetManager(base.DatasetManager):
@@ -285,7 +290,7 @@ class DatasetManager(base.DatasetManager):
         """
 
         map_manager = MapManager(self.args, agents)
-        
+
         if save_map_file:
             traj_map = map_manager.build_guidance_map(
                 agents=agents,
@@ -306,7 +311,7 @@ class DatasetManager(base.DatasetManager):
 
         centers = np.concatenate(centers, axis=0)
         centers = map_manager.real2grid(centers)
-        cuts = map_manager.cut_map(social_maps, 
+        cuts = map_manager.cut_map(social_maps,
                                    centers,
                                    self.args.map_half_size)
         paras = map_manager.real2grid_paras
@@ -417,16 +422,26 @@ class DatasetsManager(base.DatasetsManager):
 
             if self.args.use_maps:
                 map_path = dir_check(data_path.split('.np')[0] + '_maps')
-                
+                map_file = ('trajMap.png' if not self.args.use_extra_maps
+                            else 'trajMap_load.png')
+
                 try:
                     agents = self.load_maps(map_path, agents,
-                                            map_file='trajMap.png',
+                                            map_file=map_file,
                                             social_file='socialMap.npy',
                                             para_file='para.txt',
                                             centers_file='centers.txt')
+
+                except TrajMapNotFoundError:
+                    path = os.path.join(map_path, map_file)
+                    self.log(s := ('Trajectory map `{}`'.format(path) +
+                                   ' not found, stop running...'),
+                             level='error')
+                    exit()
+
                 except:
                     self.log('Load maps failed, start re-making...')
-                    
+
                     dm.make_maps(agents, map_path,
                                  save_map_file='trajMap.png',
                                  save_social_file='socialMap.npy',
@@ -434,11 +449,11 @@ class DatasetsManager(base.DatasetsManager):
                                  save_centers_file='centers.txt')
 
                     agents = self.load_maps(map_path, agents,
-                                            map_file='trajMap.png',
+                                            map_file=map_file,
                                             social_file='socialMap.npy',
                                             para_file='para.txt',
                                             centers_file='centers.txt')
-                                 
+
                 self.log('Successfully load maps from `{}`.'.format(map_path))
 
             if mode == 'train':
@@ -488,21 +503,26 @@ class DatasetsManager(base.DatasetsManager):
         :return agents: agents with maps
         """
         traj_map = cv2.imread(os.path.join(base_path, map_file))
-        traj_map = (traj_map[:, :, 0]).astype(np.float32)/255.0
 
         if traj_map is None:
-            raise FileNotFoundError
+            if self.args.use_extra_maps:
+                raise TrajMapNotFoundError
+            else:
+                raise FileNotFoundError
 
-        social_map = np.load(os.path.join(base_path, social_file), allow_pickle=True)
+        traj_map = (traj_map[:, :, 0]).astype(np.float32)/255.0
+
+        social_map = np.load(os.path.join(
+            base_path, social_file), allow_pickle=True)
         para = np.loadtxt(os.path.join(base_path, para_file))
         centers = np.loadtxt(os.path.join(base_path, centers_file))
 
         batch_size = len(social_map)
         traj_map = np.repeat(traj_map[np.newaxis, :, :], batch_size, axis=0)
-        traj_map_cut = MapManager.cut_map(traj_map, 
-                                          centers, 
+        traj_map_cut = MapManager.cut_map(traj_map,
+                                          centers,
                                           self.args.map_half_size)
-        
+
         for agent, t_map, s_map in zip(agents, traj_map_cut, social_map):
             PredictionAgent.set_map(agent, 0.5*t_map + 0.5*s_map, para)
 
