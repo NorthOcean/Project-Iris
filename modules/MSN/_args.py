@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-01 20:28:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-03 09:46:16
+@LastEditTime: 2021-08-05 15:25:43
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -61,5 +61,5 @@ class MSNArgs(M.prediction.PredictionArgs):
         The number of hidden behavior categories in `AlphaModel`,
         or the number of multiple generations when training in `BetaModel`.
         """
-        return super().K_train
+        return self._get('K_train', 10, changeable=False)
 
