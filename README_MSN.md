@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-08-05 17:20:35
+ * @LastEditTime: 2021-08-06 09:32:23
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -14,9 +14,81 @@
 
 ## Training
 
+The `MSN` contains two main sub-networks, the `MSNAlpha` and the `MSNBeta`. Please train each of them to evaluate the `MSN` performence.
+
+### `MSNAlpha`
+
+To train the `MSNAlpha` model, you can pass the `--model msna` argument to run the `main.py`. Attention that please leave the argument `--load` default when training, or it will start evaluating the loaded model. You should also specific the number of `hidden behavior category` by the argument `--K_train` before training the `MSNAlpha`. See section `Args Used` to learn how other args work when training and evaluating.
+For example, you can train the `MSNAlpha` via the following commands:
+
+```bash
+cd ~/Project-Iris
+python main.py --model msna --K_train 20 --model_name MyAlphaModel --test_set zara1
+```
+
+Note that when training on the `Stanford Drone Dataset` (SDD), you should pass the argument `--dataset sdd` instead of `--test_set zara1`.
+Model weights will be saved at `./logs/TIME+MODELNAME+msna+DATASET` after training. Please see the terminal outputs or the log file `./test.log` to confirm the output folder. You can evaluate the separate `MSNAlpha` by:
+
+```bash
+python main.py --load YOUR_OUTPUT_FOLDER
+```
+
+When evaluating models that was trained on `SDD`, you should also add the argument `--dataset sdd`, and then specific the test mode via `--test_mode xxx`. See details in Section `Args Used`.
+
+### `MSNBeta`
+
+Similar to the above `MSNAlpha`, you can pass the `--model msnb` argument to train the `MSNBeta` model. You should also leave the `--load` argument original when training. Please see section `Args Used` to learn how other args work when training and evaluating.
+You can start training by the simple command:
+
+```bash
+python main.py --model msnb --model_name MyBetaModel --test_set zara1
+```
+
+You can also evaluate the single `MSNBeta` by:
+
+```bash
+python main.py --load YOUR_OUTPUT_FOLDER
+```
+
 ## Evaluation
 
+You can use the following command to evaluate the `MSN` performence:
+
+```bash
+python main.py --model msn --loada ALPHA_MODEL_PATH --loadb BETA_MODEL_PATH
+```
+
+The test dataset is the same as the `MSNAlpha` (which is pass by the `--loada`).
+When evaluating on `SDD`, you should also add the `--dataset sdd`, and specific the test mode. For example,
+
+```bash
+python main.py \
+    --model msn \
+    --loada ALPHA_MODEL_PATH \
+    --loadb BETA_MODEL_PATH \
+    --dataset sdd --test_mode mix
+```
+
 ## Pre-Trained Models
+
+We have provided our pre-trained models to help you evaluate the `MSN` performance quickly. Click [here](pan.baidu.com) to download the zipped weights file, and unzip it to the project's root folder. It contains model weights that trained on `ETH-UCY` by the `leave-one-out` stragety, and on `SDD` via the dataset split method from SimAug.
+
+For example, you can use the following command to evaluate the `MSN` on `hotel` dataset in `ETH-UCY`:
+
+```bash
+python main.py --model msn \
+    --loada ./pretrained_models/msn/a_K20_hotel \
+    --loadb ./pretrained_models/msn/b_hotel
+```
+
+Or evaluate it on `SDD`:
+
+```bash
+python main.py --model msn \
+    --loada ./pretrained_models/msn/a_K20_sdd \
+    --loadb ./pretrained_models/msn/b_sdd \
+    --dataset sdd --test_mode mix
+```
 
 ## Args Used
 
