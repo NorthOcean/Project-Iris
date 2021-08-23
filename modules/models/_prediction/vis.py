@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-08-20 23:05:05
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 14:52:32
+@LastEditTime: 2021-08-23 18:10:08
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -16,7 +16,6 @@ import tensorflow as tf
 
 from .. import base
 from .agent import PredictionAgent
-from .dataset._trainManager import PredictionDatasetInfo
 
 SMALL_POINTS = True
 OBS_IMAGE = './vis_pngs/obs_small.png' if SMALL_POINTS else './vis_pngs/obs.png'
@@ -26,11 +25,11 @@ DISTRIBUTION_IMAGE = './vis_pngs/dis.png'
 
 
 class TrajVisualization(base.Visualization):
-    def __init__(self, dataset):
+    def __init__(self, dataset: str):
         super().__init__()
 
         if dataset:
-            self.DM = PredictionDatasetInfo()(dataset)
+            self.DM = base.Dataset.get(dataset)
             self.set_video(video_capture=cv2.VideoCapture(self.DM.video_path),
                            video_paras=self.DM.paras,
                            video_weights=self.DM.weights)
@@ -76,6 +75,9 @@ class TrajVisualization(base.Visualization):
         time = 1000 * obs_frame / self.video_paras[1]
         self.video_capture.set(cv2.CAP_PROP_POS_MSEC, time - 1)
         _, f = self.video_capture.read()
+
+        if f is None:
+            raise FileNotFoundError('Video at `{}` NOT FOUND.'.format(self.DM.video_path))
 
         for agent in agents:
             obs = self.real2pixel(agent.traj)

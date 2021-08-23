@@ -2,15 +2,16 @@
 @Author: Conghao Wong
 @Date: 2020-11-10 09:31:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 15:33:23
+@LastEditTime: 2021-08-23 18:04:32
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
+import os
 from typing import Dict, List, Tuple
 
-import numpy as np
+import biplist
 
 
 class Dataset():
@@ -48,6 +49,17 @@ class Dataset():
         self._weights = weights
         self._scale = scale
 
+    @staticmethod
+    def get(dataset: str, root_dir='./datasets/subsets'):
+        plist_path = os.path.join(root_dir, '{}.plist'.format(dataset))
+        try:
+            dic = biplist.readPlist(plist_path)
+        except:
+            raise FileNotFoundError(
+                'Dataset file `{}`.plist NOT FOUND.'.format(dataset))
+
+        return Dataset(**dic)
+
     @property
     def dataset(self):
         return self._dataset
@@ -84,3 +96,25 @@ class Dataset():
     @property
     def scale(self):
         return self._scale
+
+
+class DatasetsInfo():
+    def __init__(self, train: List[str],
+                 test: List[str],
+                 val: List[str],
+                 *args, **kwargs):
+
+        self.train_sets = train
+        self.test_sets = test
+        self.val_sets = val
+
+    @staticmethod
+    def get(dataset: str, root_dir='./datasets'):
+        plist_path = os.path.join(root_dir, '{}.plist'.format(dataset))
+        try:
+            dic = biplist.readPlist(plist_path)
+        except:
+            raise FileNotFoundError(
+                'Dataset file `{}`.plist NOT FOUND.'.format(dataset))
+
+        return DatasetsInfo(**dic)

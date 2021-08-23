@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 17:10:57
+@LastEditTime: 2021-08-23 18:02:02
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -92,10 +92,12 @@ class BaseTrainArgs(BaseArgs):
     def force_set(self) -> str:
         """
         Force test dataset. 
-        Only works when `args.load` is not `'null'`.
-        It is used to test models on their test datasets.
+        Only works when evaluating when `test_mode` is `one`.
         """
-        return self._get('force_set', 'null', changeable=True)
+        fs = self._get('force_set', 'null', changeable=True)
+        if fs == 'null':
+            fs = self.test_set
+        return fs
 
     @property
     def gpu(self) -> str:
@@ -185,13 +187,9 @@ class BaseTrainArgs(BaseArgs):
     @property
     def test_set(self) -> str:
         """
-        Test dataset. Only works on ETH-UCY dataset when training.
-        (The `leave-one-out` training strategy.)
+        Dataset used when training or evaluating.
         """
-        if (fs := self.force_set) != 'null':
-            return fs
-        else:
-            return self._get('test_set', 'zara1', changeable=False)
+        return self._get('test_set', 'zara1', changeable=False)
 
     @property
     def test_step(self) -> int:

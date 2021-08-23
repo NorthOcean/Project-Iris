@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 16:39:26
+@LastEditTime: 2021-08-23 17:56:39
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -21,7 +21,6 @@ from .. import base
 from ..helpmethods import dir_check
 from .agent import PredictionAgent as Agent
 from .args import PredictionArgs
-from .dataset._datasetManager import PredictionDatasetInfo
 from .dataset._trainManager import DatasetsManager
 from .utils import IO, Loss, Process
 from .vis import TrajVisualization
@@ -351,9 +350,10 @@ class Structure(base.Structure):
         Run test of trajectory prediction on ETH-UCY or SDD dataset.
         """
         if True:
-            info = PredictionDatasetInfo()
+            info = base.DatasetsInfo.get(self.args.test_set)
+            
             if self.args.test_mode == 'all':
-                for dataset in info.sdd_test_sets if self.args.dataset == 'sdd' else info.ethucy_testsets:
+                for dataset in info.test_sets:
                     agents = DatasetsManager.load_dataset_files(
                         self.args, dataset)
                     self.test(agents=agents, dataset_name=dataset)
@@ -361,7 +361,7 @@ class Structure(base.Structure):
             elif self.args.test_mode == 'mix':
                 agents = []
                 dataset = ''
-                for dataset_c in info.sdd_test_sets if self.args.dataset == 'sdd' else info.ethucy_testsets:
+                for dataset_c in info.test_sets:
                     agents_c = DatasetsManager.load_dataset_files(
                         self.args, dataset_c)
                     agents += agents_c
@@ -370,9 +370,9 @@ class Structure(base.Structure):
                 self.test(agents=agents, dataset_name='mix: '+dataset)
 
             elif self.args.test_mode == 'one':
-                agents = DatasetsManager.load_dataset_files(
-                    self.args, self.args.test_set)
-                self.test(agents=agents, dataset_name=self.args.test_set)
+                ds = self.args.force_set
+                agents = DatasetsManager.load_dataset_files(self.args, ds)
+                self.test(agents=agents, dataset_name=ds)
 
     def get_inputs_from_agents(self, input_agents: List[agent_type]) -> Tuple[List[tf.Tensor], tf.Tensor]:
         """

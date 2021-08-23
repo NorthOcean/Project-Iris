@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-13 12:03:47
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 14:55:02
+@LastEditTime: 2021-08-23 18:05:37
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -11,11 +11,10 @@
 from typing import List, Tuple
 
 from ...helpmethods import dir_check
-from ..baseObject import BaseObject
 from ..agent import Agent
 from ..args.args import BaseTrainArgs as Args
-from ._dataset import Dataset
-from ._datasetInfo import DatasetInfo
+from ..baseObject import BaseObject
+from ._dataset import Dataset, DatasetsInfo
 
 
 class DatasetManager(BaseObject):
@@ -78,23 +77,24 @@ class DatasetsManager(BaseObject):
     arg_type = Args
     agent_type = Agent
     datasetManager_type = DatasetManager
-    datasetInfo_type = DatasetInfo
 
     def __init__(self, args: Args, **kwargs):
         super().__init__()
 
         self._args = args
-        self._dataset_info = self.datasetInfo_type()
+        self._dataset_info = DatasetsInfo.get(args.test_set)
 
     @property
     def args(self) -> arg_type:
         return self._args
 
     @property
-    def dataset_info(self) -> datasetInfo_type:
+    def dataset_info(self) -> DatasetsInfo:
         return self._dataset_info
 
-    def get_train_and_test_agents(self) \
+    def get_train_and_test_agents(self, train_sets: List[str],
+                                  test_sets: List[str],
+                                  val_sets: List[str]) \
         -> Tuple[List[agent_type],
                  List[agent_type],
                  int,
@@ -102,28 +102,12 @@ class DatasetsManager(BaseObject):
         """
         Get training data
         """
-        datasets = self.dataset_info.dataset_list[self.args.dataset]
-        self.train_percent = dict(
-            zip(datasets, [1.0 for _ in range(len(datasets))]))
-
-        percents = [
-            item for item in self.args.train_percent.split('_') if len(item)]
-        if len(percents) == 1:
-            percent = min(max(0.0, float(percents[0])), 1.0)
-            self.train_percent = dict(
-                zip(datasets, [percent for _ in range(len(datasets))]))
-
-        else:
-            for index, percent in enumerate(percents):
-                percent = min(max(0.0, float(percent)), 1.0)
-                dataset_name = self.dataset_info.dataset_list[self.args.dataset][index]
-                self.train_percent[dataset_name] = percent
 
         # Prepare train agents
         data_managers_train = []
         sample_number_original = 0
         sample_time = 1
-        for dataset in self.train_list:
+        for dataset in train_sets:
             dm = self.datasetManager_type(self.args, dataset)
             data_managers_train.append(dm)
             dm.load_data()
@@ -131,13 +115,17 @@ class DatasetsManager(BaseObject):
 
         # Prepare test agents
         data_managers_test = []
-        for dataset in self.val_list:
-            data_managers_test.append(self.datasetManager_type(self.args, dataset))
+        for dataset in test_sets:
+            data_managers_test.append(
+                self.datasetManager_type(self.args, dataset))
 
         # Prepare test and train data
-        test_agents = self.prepare_train_files(data_managers_test)
-        train_agents = self.prepare_train_files(
-            data_managers_train, mode='train')
+        test_agents = self.prepare_train_files(data_managers_test,
+                                               mode='test')
+        train_agents = self.prepare_train_files(data_managers_train,
+                                                mode='train',
+                                                train_percent=self.args.train_percent)
+        
         sample_time = len(train_agents) // sample_number_original
 
         return (train_agents,
@@ -145,10 +133,10 @@ class DatasetsManager(BaseObject):
                 len(train_agents),
                 sample_time)
 
-    def prepare_train_files(
-            self,
-            dataset_managers: List[datasetManager_type],
-            mode='test') -> List[agent_type]:
+    def prepare_train_files(self, dataset_managers: List[datasetManager_type],
+                            mode='test',
+                            train_percent: str = '1') -> List[agent_type]:
+
         raise NotImplementedError('Please rewrite this method.')
 
     @classmethod

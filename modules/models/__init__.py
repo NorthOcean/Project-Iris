@@ -5,7 +5,7 @@ Models
 @Author: Conghao Wong
 @Date: 2021-03-15 10:49:31
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 14:51:21
+@LastEditTime: 2021-08-23 18:03:26
 @Description: Description: A framework for training, eval, and test on models based on `tensorflow 2`.
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -88,8 +88,7 @@ to change your loss functions and metrics.
 
 2. For trajectory prediction models, what your should do is to rewrite the
 `prediction.Structure.create_model` method.
-Default dataset used for training is `ETH-UCY` or `SDD`, which can be changed by
-subclassing `prediction.PredictionDatasetInfo`.
+Default dataset used for training is `ETH-UCY` or `SDD`.
 
 ```python
 class MyPredictionTrainingStructure(M.prediction.Structure):
@@ -156,5 +155,4 @@ prediction.Process      # basic process methods for trajectory data
 
 from . import _base as base
 from . import _prediction as prediction
-from . import _sceneModeling as sceneModeling
 from . import helpmethods

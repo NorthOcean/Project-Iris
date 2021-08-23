@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 09:52:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 10:34:40
+@LastEditTime: 2021-08-23 17:39:19
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -22,7 +22,6 @@ from ..args import PredictionArgs
 from ..maps import MapManager
 from ..traj import EntireTrajectory
 from ..utils import calculate_length
-from ._datasetManager import PredictionDatasetInfo
 
 
 class TrajMapNotFoundError(FileNotFoundError):
@@ -34,7 +33,7 @@ class DatasetManager(base.DatasetManager):
     """
     DatasetManager
     --------------
-    Manage all training data from one prediction dataset.
+    Manage all training data from one prediction dataset (subdataset).
 
     Properties
     ----------
@@ -66,7 +65,7 @@ class DatasetManager(base.DatasetManager):
         """
         super().__init__(args, dataset_name)
 
-        self._dataset_info = PredictionDatasetInfo()(dataset_name)
+        self._dataset_info = base.Dataset.get(dataset_name)
         self._custom_list = custom_list
 
     @property
@@ -340,7 +339,6 @@ class DatasetsManager(base.DatasetsManager):
     """
 
     arg_type = PredictionArgs
-    datasetInfo_type = PredictionDatasetInfo
     agent_type = PredictionAgent
     datasetManager_type = DatasetManager
 
@@ -349,21 +347,14 @@ class DatasetsManager(base.DatasetsManager):
         self.prepare_datasets(prepare_type)
 
     def prepare_datasets(self, prepare_type='all'):
-        self.dataset_list = self.dataset_info.dataset_list[self.args.dataset]
-        test_list = self.dataset_info.dataset_list[self.args.dataset + 'test']
-
-        if self.args.dataset == 'ethucy':
-            self.train_list = [
-                i for i in self.dataset_list if not i == self.args.test_set]
-            self.val_list = [self.args.test_set]
-
-        elif self.args.dataset == 'sdd':
-            self.train_list = [
-                i for i in self.dataset_list if not i in self.dataset_info.sdd_test_sets + self.dataset_info.sdd_val_sets]
-            self.val_list = self.dataset_info.sdd_test_sets
+        train_list = self.dataset_info.train_sets
+        test_list = self.dataset_info.test_sets
+        val_list = self.dataset_info.val_sets
 
         if prepare_type == 'all':
-            self.train_info = self.get_train_and_test_agents()
+            self.train_info = self.get_train_and_test_agents(train_list,
+                                                             test_list,
+                                                             val_list)
 
         elif prepare_type == 'test':
             for index, dataset in enumerate(test_list):
@@ -382,12 +373,9 @@ class DatasetsManager(base.DatasetsManager):
     def args(self) -> arg_type:
         return self._args
 
-    @property
-    def dataset_info(self) -> datasetInfo_type:
-        return self._dataset_info
-
     def prepare_train_files(self, dataset_managers: List[DatasetManager],
-                            mode='test') -> List[PredictionAgent]:
+                            mode='test',
+                            train_percent: str = '1') -> List[PredictionAgent]:
         """
         Make or load train files to get train agents.
         (a list of agent managers, type = `PredictionAgent`)
@@ -399,7 +387,17 @@ class DatasetsManager(base.DatasetsManager):
         count = 1
         dir_check('./dataset_npz/')
 
-        for dm in dataset_managers:
+        percents = [item for item in train_percent.split('_') if len(item)]
+        if len(percents) == 1:
+            percent = min(max(0.0, float(percents[0])), 1.0)
+            percents = [percent] * len(dataset_managers)
+
+        else:
+            percents = [min(max(0.0, float(p)), 1.0) for p in percents]
+            while len(percents) < len(dataset_managers):
+                percents.append(1.0)
+
+        for dm, p in zip(dataset_managers, percents):
             print('({}/{})  Prepare test data in `{}`...'.format(
                 count, len(dataset_managers), dm.dataset_name))
 
@@ -457,9 +455,10 @@ class DatasetsManager(base.DatasetsManager):
                 self.log('Successfully load maps from `{}`.'.format(map_path))
 
             if mode == 'train':
-                if (train_percent := self.train_percent[dm.dataset_name]) < 1.0:
+                if p < 1.0:
                     agents = random.sample(
-                        agents, int(train_percent * len(agents)))
+                        agents,
+                        int(train_percent * len(agents)))
 
             all_agents += agents
             count += 1
