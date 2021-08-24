@@ -2,7 +2,7 @@
 %% Author: Conghao Wong
 %% Date: 2021-07-19 19:19:13
 %% LastEditors: Conghao Wong
-%% LastEditTime: 2021-07-19 20:56:58
+%% LastEditTime: 2021-07-23 10:40:28
 %% Description: file content
 %% Github: https://github.com/conghaowoooong
 %% Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -37,8 +37,8 @@ They have over 185,000 social behaviors, and 40,000 scene interactive behaviors.
 We employ two metrics to evaluating the prediction accuracy, including the Mean Average Displacement (MAD) error and the Final Average Displacement (FAD) error \cite{youWillNeverWalkAlone}.
 
 (a) \textbf{MAD}:
-Mean Euclidean distance between ground truth and predicted points of all steps.
-Formally,
+Mean Euclidean distance between ground truth and predictions of all steps.
+For one agent, we have
 \begin{equation}
     \mbox{MAD}(y, \hat{y}) = \frac{1}{t_f} \sum_{t} \Vert p_t - \hat{p}_t \Vert_2.
 \end{equation}
@@ -51,29 +51,89 @@ Formally,
 \end{equation}
 
 \subsubsection{Baselines}
-We choose several state-of-the-art methods across both deterministic and generative models as our baselines, they are:
+We choose several state-of-the-art methods across both deterministic and generative models as our baselines.
+They are:
 
-\textbf{\SRLSTM}:
+\textbf{\SRLSTM} \cite{srLSTM}:
+An LSTM based model guides a novel state refinement module to refine all participants' states.
 
-\textbf{\TRANSFORMER}:
+\textbf{\TRANSFORMER} \cite{yu2020spatio}:
+A Transformer based model that aims at modeling interactions on both time and space dimensions.
 
-\textbf{\SOCIALGAN}:
+\textbf{\SOCIALGAN} \cite{socialGAN}:
+A GAN based stochastic model that guides social pooling to model interactions among agents.
 
-\textbf{\SOPHIE}:
+\textbf{\SOPHIE} \cite{sophie}:
+An attentive GAN based model that considering both social interactions and scene context.
 
-\textbf{\BIGAT}:
+\textbf{\BIGAT} \cite{bigat}:
+A model that takes both bicycle-GAN and graph representation to model social interactions.
 
-\textbf{\PEEKING}:
+\textbf{\GARDEN} \cite{Liang_2020_CVPR}:
+TODO
 
-\textbf{\SIMAUG}:
+\textbf{\SIMAUG} \cite{liang2020simaug}:
+A model that builds additional 3D multi-view simulation datasets to solve the hardest camera views.
+
+\textbf{\PECNET} \cite{mangalam2020not}:
+A goal-conditioned prediction model that divide the task into goal and trajectory two stages.
+
+\textbf{\TPNMS} \cite{liang2020temporal}:
+TODO
+
+\textbf{\SRPAMI} \cite{zhang2020social}:
+An update version of \SRLSTM~that exploits spatial-edge LSTMs to enhance the capacity.
+
+\textbf{TP} \cite{giuliari2020transformer}:
+A Transformer based ``simple'' model without considering interactions but reaches great performance.
+
+\textbf{\TRAJECTRONPP} \cite{salzmann2020trajectron}:
+A recurrent-graph based model that aims at catching agents and scene dynamic constraints.
+
+\textbf{Introvert} \cite{shafiee2021introvert}:
+TODO
+
+\textbf{LB-EBM} \cite{pang2021trajectory}:
+TODO
+
+\textbf{\YNET}$^{\dagger}$ \cite{mangalam2020goals}:
+A model that focus on the long-term prediction by exploring the distributions of waypoints and goals.
+
+\textbf{MSN}$^{\dagger}$ \cite{wong2021msn}:
+A model that guides predictors with various ``styles'' for the same agent to obtain multi-style predictions.
 
 \subsubsection{Implementation Details}
 
+\subfile{_tab_ade_all.tex}
+
 \subsection{Comparision to State-of-the-Art Methods}
+We show the performance comparisions between \MODEL~and several state-of-the-art methods in \TABLE{tab_ade_all}.
+Metrics are displayed in the form of ``MAD/FAD'' with the ``best-of-$K$'' evaluation\cite{socialGAN,sophie,salzmann2020trajectron}.
+Results are shown in meters on ETH-UCY datasets, and in pixels on SDD datasets.
+Lower value indicates better performance.
+
+\subsubsection{ETH-UCY Benchmark}
+As shown in \TABLE{tab_ade_all}, \MODEL~achieves a superior performance compared to a lot of state-of-the-art methods on most sub-datasets in ETH-UCY.
+\MODEL~improves the metrics on eth for over 26.6\% and 32.6\% compared with the SOTA LB-EBM.
+Even compared with the con-current \YNET~and MSN, \MODEL~also shows the impressive performance improvement, including approximately 21.4\% on MAD.
+Similarly, \MODEL~outperforms the SOTA Introvert on hotel for about 10.0\% MAD and 11.7\% FAD.
+Besides, \MODEL~has achieved comparable performance to the SOTA Introvert on the zara1 sub-dataset.
+Although \MODEL's performance on univ and zara2 is slightly worse than others, it still greatly exceeds SOTA methods in the average performance of all ETH-UCY sub-datasets.
+Compared with the current state-of-the-art Introvert, its average MAD has improved by 14.2\%, and FAD by 14.7\%.
+It shows \MODEL's superior average performance on ETH-UCY.
+
+\subsubsection{SDD}
+\MODEL~also has a better performance improvement to a lot of previous methods on SDD.
+Compared with the state-of-the-art LB-EBM, the MAD has been improved for over 17.2\%, and the FAD has been extremely improved for over 26.1\%.
+The con-current \YNET~also heavily outperforms the SOTA.
+However, \MODEL~still has 6.4\% improvement on MAD than \YNET, and 5.4\% on FAD than MSN.
+In general, we found that the \MODEL~has excellent performance on SDD.
 
 \subsection{Discusses}
 
 \subsubsection{Quantitative Analysis}
+
+\subfile{_tab_k.tex}
 
 \subsubsection{Qualitative Analysis}
 

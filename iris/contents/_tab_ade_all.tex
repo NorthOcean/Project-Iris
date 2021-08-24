@@ -1,0 +1,66 @@
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Author: Conghao Wong
+%% Date: 2021-06-16 10:02:49
+%% LastEditors: Conghao Wong
+%% LastEditTime: 2021-07-21 15:57:57
+%% Description: file content
+%% Github: https://github.com/conghaowoooong
+%% Copyright 2021 Conghao Wong, All Rights Reserved.
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[../paper.tex]{subfiles}
+
+\begin{document}
+    
+\begin{table*}[tbp]
+    \renewcommand{\arraystretch}{1.3}
+    \caption{
+        Comparisons of MAD and FAD.
+        Metrics are shown in the format of ``MAD/FAD''.
+        Lower means better.
+        $^{\dagger}$ denotes con-current works.
+        Results marked with \NA~are not reported.
+        Due to the difference of rounding methods, we consider methods with a difference of 0.01 meters in MAD or FAD have similar actual performance on ETH-UCY benchmark.
+    }
+    \label{tab_ade_all}
+    \centering
+    \begin{tabular}{c|c||c|c|c|c|c|c||c}
+        \hline
+        \multicolumn{2}{c||}{Models} & \multicolumn{6}{c||}{ETH-UCY~(meters)} &\multirow{2}{*}{\makecell[c]{SDD\\(pixels)}} \\
+        \cline{1-8}
+        Model & Notes & eth & hotel & univ & zara1 & zara2 & Average & \\
+        
+        \hline
+        \SRLSTM~\cite{srLSTM} & \multirow{2}{*}{Deterministic} & 0.63/1.25 & 0.37/0.74 & 0.51/1.10 & 0.41/0.90 & 0.32/0.70 & 0.45/0.94 & \NA~\\
+        \TRANSFORMER~\cite{yu2020spatio} & & 0.56/1.11 & 0.26/0.50 & 0.52/1.13 & 0.40/0.89 & 0.31/0.71 & 0.41/0.87 & \NA~\\
+
+        \hline
+        \SOCIALGAN~\cite{socialGAN} & \multirow{14}{*}{\makecell[c]{Generative,\\ $K = 20$ samples}} & 0.60/1.19 & 0.52/1.02 & 0.44/0.84 & 0.22/0.43 & 0.29/0.58 & 0.41/0.81 & 27.25/41.44 \\
+        \SOPHIE~\cite{sophie} & & 0.70/0.43 & 0.76/1.67 & 0.54/1.24 & 0.30/0.63 & 0.38/0.78 & 0.54/1.15 & 16.27/29.38 \\
+        \BIGAT~\cite{bigat} & & 0.69/1.29 & 0.49/1.01 & 0.55/1.32 & 0.30/0.62 & 0.36/0.75 & 0.48/1.00 & \NA~\\
+
+        \GARDEN~\cite{Liang_2020_CVPR} & & \NA~& \NA~& \NA~& \NA~& \NA~& \NA~& 14.78/27.09 \\
+        \SIMAUG~\cite{liang2020simaug} & & \NA~& \NA~& \NA~& \NA~& \NA~& \NA~& 12.03/23.98 \\
+        \PECNET~\cite{mangalam2020not} & & 0.54/0.87 & 0.18/0.24 & 0.35/0.60 & 0.22/0.39 & 0.17/0.30 & 0.29/0.48 & 9.96/15.88 \\
+        \TPNMS~\cite{liang2020temporal} & & 0.52/0.89 & 0.22/0.39 & 0.55/0.13 & 0.35/0.70 & 0.27/0.56 & 0.38/0.73 & \NA~\\
+        \SRPAMI~\cite{zhang2020social} & & 0.44/0.79 & 0.19/0.31 & 0.50/1.05 & 0.32/0.64 & 0.27/0.54 & 0.43/0.67 & \NA~\\
+        TP \cite{giuliari2020transformer} & & 0.61/1.12 & 0.18/0.30 & 0.35/0.65 & 0.22/0.38 & 0.17/0.32 & 0.31/0.55 & \NA~\\
+        \TRAJECTRONPP~\cite{salzmann2020trajectron} & & 0.43/0.86 & \MARK{0.12}/0.19 & 0.22/0.43 & 0.17/0.32 & \MARK{0.12/0.25} & \MARK{0.20}/0.39 & \NA \\
+        
+        % CVPR 2021
+        Introvert \cite{shafiee2021introvert} & & 0.42/0.70 & \MARK{0.11/0.17} & \MARK{0.20/0.32} & \MARK{0.16/0.27} & 0.16/0.25 & \MARK{0.21/0.34} & \NA \\
+        LB-EBM \cite{pang2021trajectory} & & \MARK{0.30/0.52} & 0.13/0.20 & 0.27/0.52 & 0.20/0.37 & 0.15/0.29 & \MARK{0.21}/0.38 & \MARK{8.87/15.61} \\
+        
+        \YNET$^{\dagger}$~\cite{mangalam2020goals} & & \MARK{0.28/0.33} & \MARK{0.10/0.14} & 0.24/0.41 & \MARK{0.17/0.27} & \MARK{0.13/0.22} & \MARK{0.18/0.27} & \MARK{7.85/11.85} \\ 
+        MSN$^{\dagger}$~\cite{wong2021msn} & & \MARK{0.27/0.41} & \MARK{0.11/0.17} & 0.28/0.48 & 0.22/0.36 & 0.18/0.29 & \MARK{0.21/0.34} & \MARK{7.68/12.16} \\
+        
+        \hline
+        \multirow{2}{*}{Ours}
+        & $K_c=20$ & \MARK{0.22/0.35} & \MARK{0.10/0.15} & 0.26/0.44 & \MARK{0.17/0.29} & 0.15/\MARK{0.24} & \MARK{0.18/0.29} & \MARK{7.34/11.53} \\
+        &   \\
+        
+        \hline
+    \end{tabular}
+\end{table*}
+
+\end{document}
