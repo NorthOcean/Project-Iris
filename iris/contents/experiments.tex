@@ -2,7 +2,7 @@
 %% Author: Conghao Wong
 %% Date: 2021-07-19 19:19:13
 %% LastEditors: Conghao Wong
-%% LastEditTime: 2021-08-24 15:57:17
+%% LastEditTime: 2021-08-24 19:48:08
 %% Description: file content
 %% Github: https://github.com/conghaowoooong
 %% Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -18,19 +18,19 @@
 
 \subsubsection{Datasets}
 We evaluate \MODEL~on three public available trajectory datasets, ETH\cite{youWillNeverWalkAlone}, UCY\cite{2007Crowds}, and Standford Drone Dataset (SDD)\cite{learningSocialEtiquette}.
-They are consist of different agents' trajectories with rich social interactions and scene constraints in various scenarios.
+They are consist of amount of agent trajectories with rich social interactions and scene constraints in various scenarios.
 
 (a) \textbf{The ETH-UCY Benchmark}:
 Many previous methods \cite{socialLSTM,socialGAN,sophie} take several sub-datasets from ETH and UCY, i.e., eth and hotel from the ETH dataset, plus univ, zara1, zara2 from the UCY dataset, to train or evaluate their models with the ``leave-one-out'' strategy.
 The ETH-UCY benchmark contains 1536 pedestrians in total with thousands of non-linear trajectories.
-The annotations are their coordinates in meters.
+The annotations are pedestrians's real-world coordinates in meters.
 
 (b) \textbf{Standford Drone Dataset}:
 the SDD\cite{learningSocialEtiquette} is a popular computer vision dataset.
 It canbe used in object dection, tracking, trajectory prediction, and many other tasks.
 It has 60 bird-view videos captured by drones over the Standford campus.
-More than 11,000 different kinds of agents are annotated in bounding boxes.
-They have over 185,000 social behaviors, and 40,000 scene interactive behaviors.
+More than 11,000 different kinds of agents are annotated with bounding boxes in pixels.
+It contains over 185,000 social behaviors, and 40,000 scene interactive behaviors.
 
 
 \subsubsection{Metrics}

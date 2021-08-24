@@ -2,7 +2,7 @@
 %% Author: Conghao Wong
 %% Date: 2021-07-19 19:16:52
 %% LastEditors: Conghao Wong
-%% LastEditTime: 2021-07-19 19:50:11
+%% LastEditTime: 2021-08-24 19:38:12
 %% Description: file content
 %% Github: https://github.com/conghaowoooong
 %% Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -14,20 +14,58 @@
     
 \section{\MODEL}
 
-Given a video clip that contains $N$ agents' observed trajectories during some period, the trajectory prediction is to forecast their future trajectories according to both their observations and their context.
-Let $p_t = ({p_x}_t, {p_y}_t)$ be some agent's 2D coordinate at time $t$ in the scene, we have the observation sequence $x = (p_1, p_2, ..., p_{t_h})$ among all $t_h$ observed steps.
-The prediction task is to find as much as possible future predictions $\hat{y} = (p_{t_h + 1}, p_{t_h + 2}, ..., p_{t_h + t_f})$ for each observed agent in future $t_f$ steps.
+\subsection{Problem Settings}
 
+Given a video clip $V = \{I_t\}$ that contains $N$ agents' observed trajectories during some period, the trajectory prediction is to forecast their future coordinate sequences according to their previous positions and the visual information of the scene.
+Let $p_t = ({p_x}_t, {p_y}_t)$ denote some agent's 2D coordinate at step $t$ in the scene.
+We denote his observation sequence among $t_h$ observed steps as $x = (p_1, p_2, ..., p_{t_h})$, and the future trajectory sequences in $t_f$ steps as $\hat{y} = (p_{t_h + 1}, p_{t_h + 2}, ..., p_{t_h + t_f})$.
+The prediction task is to find as much as possible future predictions $\{\hat{y}\}$ for each observed agent in future.
+Formally, it aims at finding a network $f$, such that $\{\hat{y}\} = f(x, V)$.
+
+\subsection{Method Overview}
 \subfile{_fig_intro.tex}
-\FIG{fig_overview} shows the main structure of our proposed \MODEL.
+
+In this paper, we propose the \MODEL, an encoder-decoder structure based prediction network, to give agent multiple acceptable predictions in crowd spaces.
+Unlike most previous methods, we employ the Discrete Fourier Transform (DFT) when encoding agents' trajectories.
+It helps the network learn agents' behavior patterns that are hardly to show in the time sequences.
+\FIG{fig_overview} shows the \MODEL~main structure.
 It contains two main designs, the \ALPHAMODEL~and \BETAMODEL.
 
-\subsection{Representative Points}
+\subsection{Key Points Prediction}
+
+The coarse \ALPHAMODEL~aims to forecasting agents positions on several key future time steps.
+
+\subsubsection{Trajectory Encoding}
+
+\subsubsection{Context Encoding}
+
+\subsubsection{Multi-Style Prediction}
 
 \subsection{Frequency Domain Interpolation}
 
-\subsection{Multiple Future Prediction}
+The fine \BETAMODEL~is used to reconstruct the prediction sequences from positions on several key future points.
+
+\subsubsection{Key Points Encoding}
+
+\subsubsection{Trajectory Decoding}
+
+
 
 \subsection{Loss Functions}
+
+We use the below loss function to tain each part of the \MODEL:
+\begin{equation}
+    \begin{aligned}
+        \mathcal{L} =& \mu_1 \underbrace{\Vert \hat{y}_K - y_k \Vert_2}_{\mbox{AKL}} + \mu_2 \underbrace{\mbox{KL}(P(f_k) \Vert \mathcal{N}(0, I))}_{\mbox{KL Loss}} + \\
+        &\mu_3 \underbrace{\Vert \hat{y} - y \Vert_2}_{\mbox{APL}} + \mu_4 \underbrace{\Vert E(\hat{y}) - E(y) \Vert_2}_{\mbox{AEL}},
+    \end{aligned}  
+\end{equation}
+where the KL Loss term is used for training the encoder-decoder structure in \ALPHAMODEL~to generative multiple predictions, and functions of other terms are listed below:
+
+(a) \textbf{AKL} indicates the Average Keypoints Loss.
+
+(b) \textbf{APL} indicates the Average Point-wise Loss.
+
+(c) \textbf{AEL} indicates the Average Energy Loss.
 
 \end{document}
