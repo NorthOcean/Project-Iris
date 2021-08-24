@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 16:46:04
+@LastEditTime: 2021-08-24 12:59:25
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -50,13 +50,6 @@ class PredictionArgs(base.Args):
         return self._get('draw_results', 0, changeable=True)
 
     @property
-    def dataset(self) -> str:
-        """
-        Prediction dataset. Accept both `'ethucy'` and `'sdd'`.
-        """
-        return self._get('dataset', 'ethucy', changeable=True)
-
-    @property
     def train_percent(self) -> str:
         """
         Percent of training samples used in each training dataset when training.
@@ -95,9 +88,9 @@ class PredictionArgs(base.Args):
     def test_mode(self) -> str:
         """
         Test settings, canbe `'one'` or `'all'` or `'mix'`.
-        When set it to `one`, it will test the model on the `args.test_set` only;
-        When set it to `all`, it will test on each of the test dataset in `args.dataset`;
-        When set it to `mix`, it will test on all test dataset in `args.dataset` together.
+        When set it to `one`, it will test the model on the `args.force_set` only;
+        When set it to `all`, it will test on each of the test dataset in `args.test_set`;
+        When set it to `mix`, it will test on all test dataset in `args.test_set` together.
         """
         return self._get('test_mode', 'one', changeable=True)
 
