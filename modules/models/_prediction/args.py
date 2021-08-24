@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-24 12:59:25
+@LastEditTime: 2021-08-24 17:35:10
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -92,7 +92,7 @@ class PredictionArgs(base.Args):
         When set it to `all`, it will test on each of the test dataset in `args.test_set`;
         When set it to `mix`, it will test on all test dataset in `args.test_set` together.
         """
-        return self._get('test_mode', 'one', changeable=True)
+        return self._get('test_mode', 'mix', changeable=True)
 
     @property
     def max_batch_size(self) -> int:
@@ -180,13 +180,6 @@ class PredictionArgs(base.Args):
         Conrtols if draw distributions of predictions instead of points.
         """
         return self._get('draw_distribution', 0, changeable=True)
-
-    @property
-    def prepare_type(self) -> str:
-        """
-        Prepare argument. ***Do Not Change it***.
-        """
-        return self._get('prepare_type', 'test', changeable=True)
 
     @property
     def use_maps(self) -> int:
