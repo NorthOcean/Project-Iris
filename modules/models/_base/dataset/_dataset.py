@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-10 09:31:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-23 18:04:32
+@LastEditTime: 2021-08-24 14:14:26
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -99,17 +99,7 @@ class Dataset():
 
 
 class DatasetsInfo():
-    def __init__(self, train: List[str],
-                 test: List[str],
-                 val: List[str],
-                 *args, **kwargs):
-
-        self.train_sets = train
-        self.test_sets = test
-        self.val_sets = val
-
-    @staticmethod
-    def get(dataset: str, root_dir='./datasets'):
+    def __init__(self, dataset: str, root_dir='./datasets'):
         plist_path = os.path.join(root_dir, '{}.plist'.format(dataset))
         try:
             dic = biplist.readPlist(plist_path)
@@ -117,4 +107,6 @@ class DatasetsInfo():
             raise FileNotFoundError(
                 'Dataset file `{}`.plist NOT FOUND.'.format(dataset))
 
-        return DatasetsInfo(**dic)
+        self.train_sets = dic['train']
+        self.test_sets = dic['test']
+        self.val_sets = dic['val']

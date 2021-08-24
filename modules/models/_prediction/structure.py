@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-23 17:56:39
+@LastEditTime: 2021-08-24 15:10:00
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -259,7 +259,7 @@ class Structure(base.Structure):
     """
 
     agent_type = Agent
-    datasetsManager_type = DatasetsManager
+    DM_type = DatasetsManager
 
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
@@ -350,28 +350,23 @@ class Structure(base.Structure):
         Run test of trajectory prediction on ETH-UCY or SDD dataset.
         """
         if True:
-            info = base.DatasetsInfo.get(self.args.test_set)
+            info = base.DatasetsInfo(self.args.test_set)
             
             if self.args.test_mode == 'all':
                 for dataset in info.test_sets:
-                    agents = DatasetsManager.load_dataset_files(
-                        self.args, dataset)
+                    agents = self.DM_type.load(self.args, dataset, mode='test')
                     self.test(agents=agents, dataset_name=dataset)
 
             elif self.args.test_mode == 'mix':
                 agents = []
-                dataset = ''
                 for dataset_c in info.test_sets:
-                    agents_c = DatasetsManager.load_dataset_files(
-                        self.args, dataset_c)
-                    agents += agents_c
-                    dataset += '{};'.format(dataset_c)
+                    agents += self.DM_type.load(self.args, dataset_c, mode='test')
 
-                self.test(agents=agents, dataset_name='mix: '+dataset)
+                self.test(agents=agents, dataset_name=self.args.test_set)
 
             elif self.args.test_mode == 'one':
                 ds = self.args.force_set
-                agents = DatasetsManager.load_dataset_files(self.args, ds)
+                agents = self.DM_type.load(self.args, ds, mode='test')
                 self.test(agents=agents, dataset_name=ds)
 
     def get_inputs_from_agents(self, input_agents: List[agent_type]) -> Tuple[List[tf.Tensor], tf.Tensor]:
@@ -397,11 +392,7 @@ class Structure(base.Structure):
         :return dataset_train: train dataset, type = `tf.data.Dataset`
         :return dataset_val: val dataset, type = `tf.data.Dataset`
         """
-        dm = self.datasetsManager_type(self.args, prepare_type='all')
-        agents_train = dm.train_info[0]
-        agents_test = dm.train_info[1]
-        train_number = dm.train_info[2]
-        sample_time = dm.train_info[3]
+        agents_train, agents_test = self.DM_type.load(self.args, 'auto', mode='train')
 
         train_data = self.get_inputs_from_agents(agents_train)
         test_data = self.get_inputs_from_agents(agents_test)

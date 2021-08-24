@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 09:52:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-23 17:39:19
+@LastEditTime: 2021-08-24 15:15:30
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -330,7 +330,7 @@ class DatasetsManager(base.DatasetsManager):
     --------------
     ```python
     # Prepare train agents from `DatasetManager`s
-    (method) prepare_train_files: (self: DatasetsManager, dataset_managers: List[DatasetManager], mode='test') -> List[PredictionAgent]
+    (method) load_fromManagers: (self: DatasetsManager, dataset_managers: List[DatasetManager], mode='test') -> List[PredictionAgent]
 
     # Save and load agents' data
     (method) zip_and_save: (save_dir, agents: List[PredictionAgent]) -> None
@@ -342,40 +342,16 @@ class DatasetsManager(base.DatasetsManager):
     agent_type = PredictionAgent
     datasetManager_type = DatasetManager
 
-    def __init__(self, args: PredictionArgs, prepare_type='all'):
+    def __init__(self, args: PredictionArgs):
         super().__init__(args)
-        self.prepare_datasets(prepare_type)
-
-    def prepare_datasets(self, prepare_type='all'):
-        train_list = self.dataset_info.train_sets
-        test_list = self.dataset_info.test_sets
-        val_list = self.dataset_info.val_sets
-
-        if prepare_type == 'all':
-            self.train_info = self.get_train_and_test_agents(train_list,
-                                                             test_list,
-                                                             val_list)
-
-        elif prepare_type == 'test':
-            for index, dataset in enumerate(test_list):
-                self.log('Preparing {}/{}...'.format(index+1, len(test_list)))
-                self.prepare_train_files([DatasetManager(self.args, dataset)])
-
-        elif '_' in prepare_type:
-            set_list = prepare_type.split('_')
-            for index, dataset in enumerate(set_list):
-                self.log('Preparing {}/{}...'.format(index+1, len(set_list)))
-                self.prepare_train_files([DatasetManager(self.args, dataset)])
-        else:
-            pass
 
     @property
     def args(self) -> arg_type:
         return self._args
 
-    def prepare_train_files(self, dataset_managers: List[DatasetManager],
-                            mode='test',
-                            train_percent: str = '1') -> List[PredictionAgent]:
+    def load_fromManagers(self, dataset_managers: List[DatasetManager],
+                          mode='test',
+                          train_percent: str = '1') -> List[PredictionAgent]:
         """
         Make or load train files to get train agents.
         (a list of agent managers, type = `PredictionAgent`)

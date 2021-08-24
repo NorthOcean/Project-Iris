@@ -2,13 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-04-13 12:03:47
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-23 18:05:37
+@LastEditTime: 2021-08-24 15:16:35
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from ...helpmethods import dir_check
 from ..agent import Agent
@@ -82,73 +82,45 @@ class DatasetsManager(BaseObject):
         super().__init__()
 
         self._args = args
-        self._dataset_info = DatasetsInfo.get(args.test_set)
+        self.dataset_info = DatasetsInfo(args.test_set)
 
     @property
     def args(self) -> arg_type:
         return self._args
 
-    @property
-    def dataset_info(self) -> DatasetsInfo:
-        return self._dataset_info
-
-    def get_train_and_test_agents(self, train_sets: List[str],
-                                  test_sets: List[str],
-                                  val_sets: List[str]) \
-        -> Tuple[List[agent_type],
-                 List[agent_type],
-                 int,
-                 int]:
-        """
-        Get training data
-        """
-
-        # Prepare train agents
-        data_managers_train = []
-        sample_number_original = 0
-        sample_time = 1
-        for dataset in train_sets:
-            dm = self.datasetManager_type(self.args, dataset)
-            data_managers_train.append(dm)
-            dm.load_data()
-            sample_number_original += dm.agent_count
-
-        # Prepare test agents
-        data_managers_test = []
-        for dataset in test_sets:
-            data_managers_test.append(
-                self.datasetManager_type(self.args, dataset))
-
-        # Prepare test and train data
-        test_agents = self.prepare_train_files(data_managers_test,
-                                               mode='test')
-        train_agents = self.prepare_train_files(data_managers_train,
-                                                mode='train',
-                                                train_percent=self.args.train_percent)
-        
-        sample_time = len(train_agents) // sample_number_original
-
-        return (train_agents,
-                test_agents,
-                len(train_agents),
-                sample_time)
-
-    def prepare_train_files(self, dataset_managers: List[datasetManager_type],
-                            mode='test',
-                            train_percent: str = '1') -> List[agent_type]:
+    def load_fromManagers(self, dataset_managers: List[datasetManager_type],
+                            mode='test', train_percent: str = '1') -> List[agent_type]:
 
         raise NotImplementedError('Please rewrite this method.')
 
     @classmethod
-    def load_dataset_files(
-        cls,
-        args: arg_type,
-        dataset: str
-    ) -> List[agent_type]:
+    def load(cls, args: arg_type, dataset: Union[str, List[str]], mode: str, train_percent: str = '1'):
+        """
+        Load train samples in sub-dataset(s).
 
+        :param args: args used
+        :param dataset: dataset to load. Set it to `'auto'` to load train agents
+        :param mode: load mode, canbe `'test'` or `'train'`
+        :param train_percent: percent of samples used when training. Only works when `mode` is `'train'`.
+        :return agents: loaded agents. It returns a list of `[train_agents, test_agents]` when `mode` is `'train'`.
+        """
         dir_check('./dataset_npz')
-        dm = cls(args, prepare_type='noprepare')
-        return dm.prepare_train_files(
-            dataset_managers=[cls.datasetManager_type(
-                args, dataset_name=dataset)],
-            mode='test')
+        Dm = cls(args)
+
+        if dataset == 'auto':
+            train_sets = Dm.dataset_info.train_sets
+            test_sets = Dm.dataset_info.test_sets
+
+            train_agents = cls.load(args, train_sets,
+                                    mode='train',
+                                    train_percent=args.train_percent)
+            test_agents = cls.load(args, test_sets, mode='test')
+
+            return train_agents, test_agents
+
+        else:
+            if type(dataset) == str:
+                dataset = [dataset]
+
+            dms = [cls.datasetManager_type(args, d) for d in dataset]
+            return Dm.load_fromManagers(dms, mode=mode, train_percent=train_percent)
