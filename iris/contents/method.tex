@@ -2,7 +2,7 @@
 %% Author: Conghao Wong
 %% Date: 2021-07-19 19:16:52
 %% LastEditors: Conghao Wong
-%% LastEditTime: 2021-08-30 19:42:05
+%% LastEditTime: 2021-08-30 20:26:55
 %% Description: file content
 %% Github: https://github.com/conghaowoooong
 %% Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -23,8 +23,8 @@ The prediction task is to find as many as possible future predictions $\{\hat{y}
 Formally, it aims at finding a network $f$, such that $\{\hat{y}\} = f(x, V)$.
 
 \subsection{Method Overview}
-\subfile{_fig_intro.tex}
-\subfile{_tab_method.tex}
+
+\subfile{_fig_overview.tex}
 
 This paper proposes the \MODEL, an encoder-decoder structure-based prediction network, to give agents multiple acceptable predictions in crowd spaces.
 Unlike most previous methods, we employ the Discrete Fourier Transform (DFT) when encoding agents' trajectories.
@@ -33,6 +33,8 @@ It helps the network learn agents' behavior patterns that are hard to show in th
 \FIG{fig_overview} shows the \MODEL~main structure.
 It contains two main designs, the \ALPHAMODEL~and \BETAMODEL.
 Both of these two sub-networks have the encoder-decoder structure.
+
+\subfile{_tab_method.tex}
 
 \subsection{Keypoints Prediction}
 
