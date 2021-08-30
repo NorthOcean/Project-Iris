@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:17:59
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 15:50:03
+@LastEditTime: 2021-08-30 09:46:59
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -148,7 +148,7 @@ class TrajEncoding(keras.layers.Layer):
         :return features: features, shape = `(batch, N, units)`
         """
         if self.useFFT:
-            t_r, t_i = self.fft(trajs)
+            t_r, t_i = self.fft.call(trajs)
             concat = self.concat([t_r, t_i])
             trajs = self.fc2(concat)
 

@@ -1,0 +1,60 @@
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Author: Conghao Wong
+%% Date: 2021-08-30 09:23:30
+%% LastEditors: Conghao Wong
+%% LastEditTime: 2021-08-30 16:54:15
+%% Description: file content
+%% Github: https://github.com/conghaowoooong
+%% Copyright 2021 Conghao Wong, All Rights Reserved.
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[../paper.tex]{subfiles}
+
+\begin{document}
+
+\begin{table}[tbp]
+    \renewcommand{\arraystretch}{1.3}
+    \caption{
+        Architecture details of the proposed \MODEL.
+    }
+    \label{tab_method}
+    \centering
+    \begin{tabular}{c|c|l}
+        \hline
+        Layers & Sym. & Structure \\
+        
+        \hline
+        Trajectory Embedding & TE & $64 \to \mbox{ReLU} \to 64 \to \tanh$ \\
+
+        \hline
+        Context Embedding & CE & \makecell[l]{
+            MaxPooling $(5 \times 5) \to$ Flatten \\
+            $\to 64t_h \to \tanh$ \\
+            $\to$ Reshape ($t_h \times 64$)
+        }\\
+
+        \hline
+        Encoder & EN & \makecell[l]{
+            TransformerEncoder ($128$) $\to$ \\
+            TransformerDecoder ($128$) $\to$ \\
+            GraphConv ($128$)
+        }\\
+
+        \hline
+        Keypoints Decoder & KD & \makecell[l]{
+            $128 \to \mbox{ReLU} \to 128 \to \mbox{ReLU}$ \\
+            $\to 4N_k \to \mbox{Reshape}~(N_k \times 4)$
+        }\\
+
+        \hline
+        Interpolation & IP & \makecell[l]{
+            TransformerEncoder ($128$) $\to$ \\
+            TransformerDecoder ($4$)
+        }\\
+        
+        
+        \hline
+    \end{tabular}
+\end{table}
+
+\end{document}
