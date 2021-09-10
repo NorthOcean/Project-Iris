@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-24 15:10:00
+@LastEditTime: 2021-09-10 09:45:33
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -266,7 +266,7 @@ class Structure(base.Structure):
 
         self.args = PredictionArgs(Args)
 
-        self.important_args += ['dataset', 'test_set']
+        self.important_args += ['test_set']
 
         self.model_inputs = ['TRAJ']
         self.model_groundtruths = ['GT']
