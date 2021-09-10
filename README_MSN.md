@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-09-10 10:19:23
+ * @LastEditTime: 2021-09-10 10:27:12
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -18,12 +18,12 @@ It is essential to predict future trajectories of various agents in complex scen
 
 ## Training
 
-The `MSN` contains two main sub-networks, the `MSNAlpha` and the `MSNBeta`. It predict agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient densest separately according to their loss functions. Please train each of them together to evaluate the `MSN` performence. But don't worry, you can use it as a regular end-to-end model after training.
+The `MSN` contains two main sub-networks, the `MSNAlpha` and the `MSNBeta`. It predicts agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient densest separately according to their loss functions. Please train each of them together to evaluate the `MSN` performance. But don't worry, you can use it as a regular end-to-end model after training.
 
 ### `MSNAlpha`
 
 `MSNAlpha` contains layers in the `style hypothesis` stage.
-To train the `MSNAlpha` model, you can pass the `--model msna` argument to run the `main.py`. You should also specific the number of `hidden behavior category` by the argument `--K_train` before training the `MSNAlpha`. See section `Args Used` to learn how other args work when training and evaluating. Attention that do not pass anything the argument `--load` when training, or it will start *evaluating* the loaded model.
+To train the `MSNAlpha` model, you can pass the `--model msna` argument to run the `main.py`. You should also specify the number of `hidden behavior category` by the argument `--K_train` before training the `MSNAlpha`. See section `Args Used` to learn how other args work when training and evaluating. Attention that does not pass anything the argument `--load` when training, or it will start *evaluating* the loaded model.
 
 For example, you can train the `MSNAlpha` via the following arguments:
 
@@ -32,7 +32,7 @@ cd ~/Project-Iris
 python main.py --model msna --K_train 20 --model_name MyAlphaModel --test_set zara1
 ```
 
-You can change the `--test_set` argument to train your model on other datasets like `eth`, `hotel`, `univ`, `zara1`, `zara2`, and `sdd`. Model weights will be saved at `./logs/` after training. Please see the terminal outputs or the log file `./test.log` to confirm the output messages.
+You can change the `--test_set` argument to train your model on other datasets like `eth`, `hotel`, `univ`, `zara1`, `zara2`, and `sdd`. It will save model weights at `./logs/` after training. Please see the terminal outputs or the log file `./test.log` to confirm the output messages.
 
 You can evaluate the separate `MSNAlpha` by:
 
@@ -40,7 +40,7 @@ You can evaluate the separate `MSNAlpha` by:
 python main.py --load YOUR_MODEL_FOLDER
 ```
 
-When evaluating models, you can add the argument `--test_mode` to specific the test dataset(s). See details in Section `Args Used`.
+You can add the argument `--test_mode` to specify the test dataset(s) when evaluating models. See details in Section `Args Used`.
 Default dataset splits are list in `plist` files in `./datasets/`. You can change them to specific your training/test/validation splits.
 
 ### `MSNBeta`
@@ -60,13 +60,13 @@ python main.py --load YOUR_OUTPUT_FOLDER
 
 ## Evaluation
 
-You can use the following command to evaluate the `MSN` performence end-to-end:
+You can use the following command to evaluate the `MSN` performance end-to-end:
 
 ```bash
 python main.py --model msn --loada ALPHA_MODEL_PATH --loadb BETA_MODEL_PATH
 ```
 
-The test dataset is the same as the `MSNAlpha` (which is pass by the `--loada` when training). You can change the test dataset via the `--force_set` argument. See details in `Args Used` section.
+The test dataset is the same as the `MSNAlpha` (which is passed by the `--loada` when training). You can change the test dataset via the `--force_set` argument. See details in `Args Used` section.
 For example, you can start a simple evaluation with the command:
 
 ```bash
@@ -78,7 +78,7 @@ python main.py \
 
 ## Pre-Trained Models
 
-We have provided our pre-trained models to help you evaluate the `MSN` performance quickly. Click [here](drive.google.com) to download the zipped weights file. Please unzip it to the project's root folder. It contains model weights that trained on `ETH-UCY` by the `leave-one-out` stragety, and on `SDD` via the dataset split method from SimAug.
+We have provided our pre-trained models to help you evaluate the `MSN` performance quickly. Click [here](drive.google.com) to download the zipped weights file. Please unzip it to the project's root folder. It contains model weights trained on `ETH-UCY` by the `leave-one-out` stragety, and on `SDD` via the dataset split method from SimAug.
 
 You can use the following command to evaluate the `MSN` on `hotel` dataset in `ETH-UCY`:
 
@@ -147,7 +147,7 @@ where `ARG_KEY` is the name of args, and `ARG_VALUE` is the corresponding value.
 
 - `--K_train`, type=`int`, changeable=`False`. The number of hidden behavior categories in `AlphaModel`, or the number of multiple generations when training in `BetaModel`.  Default value is `10`.
 - `--check`, type=`int`, changeable=`True`. Controls whether apply the results choosing strategy  Default value is `0`.
-- `--loada`, type=`str`, changeable=`True`. Path for the first stage Destination Transformer  Default value is `'null'`.
-- `--loadb`, type=`str`, changeable=`True`. Path for the second stage Interaction Transformer  Default value is `'null'`.
-- `--loadc`, type=`str`, changeable=`True`. Path for the third stage model (Preserved)  Default value is `'null'`.
+- `--loada`, type=`str`, changeable=`True`. Path for the first stage style hypothesis networks.  Default value is `'null'`.
+- `--loadb`, type=`str`, changeable=`True`. Path for the second stage stylized prediction networks.  Default value is `'null'`.
+- `--loadc`, type=`str`, changeable=`True`. Path for the third stage model (Preserved).  Default value is `'null'`.
 <!-- DO NOT CHANGE THIS LINE -->
