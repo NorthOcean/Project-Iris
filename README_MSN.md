@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-08-06 09:32:23
+ * @LastEditTime: 2021-09-10 10:19:23
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,30 +10,38 @@
 
 # Codes for Multi-Style Network for Trajectory Prediction
 
-## Introduction
+## Abstract
+
+It is essential to predict future trajectories of various agents in complex scenes. Whether it is internal personality factors of agents, interactive behavior of the neighborhood, or the influence of surroundings, it will have an impact on their future plannings. It means that even for the same physical type of agents, there are huge differences in their behavior styles. We concentrate on the problem of modeling agents' multi-style characteristics when predicting their trajectories. We propose the Multi-Style Network (MSN) to focus on this problem by dividing agents' behaviors into several hidden behavior categories adaptively, and then train each category's prediction network jointly, thus giving agents multiple styles of predictions simultaneously. Experiments show that MSN outperforms current state-of-the-art methods with 10\% - 20\% performance improvement on two widely used datasets, and presents better multi-style characteristics in predictions.
+
+![Overview](./figs/msnoverview.png)
 
 ## Training
 
-The `MSN` contains two main sub-networks, the `MSNAlpha` and the `MSNBeta`. Please train each of them to evaluate the `MSN` performence.
+The `MSN` contains two main sub-networks, the `MSNAlpha` and the `MSNBeta`. It predict agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient densest separately according to their loss functions. Please train each of them together to evaluate the `MSN` performence. But don't worry, you can use it as a regular end-to-end model after training.
 
 ### `MSNAlpha`
 
-To train the `MSNAlpha` model, you can pass the `--model msna` argument to run the `main.py`. Attention that please leave the argument `--load` default when training, or it will start evaluating the loaded model. You should also specific the number of `hidden behavior category` by the argument `--K_train` before training the `MSNAlpha`. See section `Args Used` to learn how other args work when training and evaluating.
-For example, you can train the `MSNAlpha` via the following commands:
+`MSNAlpha` contains layers in the `style hypothesis` stage.
+To train the `MSNAlpha` model, you can pass the `--model msna` argument to run the `main.py`. You should also specific the number of `hidden behavior category` by the argument `--K_train` before training the `MSNAlpha`. See section `Args Used` to learn how other args work when training and evaluating. Attention that do not pass anything the argument `--load` when training, or it will start *evaluating* the loaded model.
+
+For example, you can train the `MSNAlpha` via the following arguments:
 
 ```bash
 cd ~/Project-Iris
 python main.py --model msna --K_train 20 --model_name MyAlphaModel --test_set zara1
 ```
 
-Note that when training on the `Stanford Drone Dataset` (SDD), you should pass the argument `--dataset sdd` instead of `--test_set zara1`.
-Model weights will be saved at `./logs/TIME+MODELNAME+msna+DATASET` after training. Please see the terminal outputs or the log file `./test.log` to confirm the output folder. You can evaluate the separate `MSNAlpha` by:
+You can change the `--test_set` argument to train your model on other datasets like `eth`, `hotel`, `univ`, `zara1`, `zara2`, and `sdd`. Model weights will be saved at `./logs/` after training. Please see the terminal outputs or the log file `./test.log` to confirm the output messages.
+
+You can evaluate the separate `MSNAlpha` by:
 
 ```bash
-python main.py --load YOUR_OUTPUT_FOLDER
+python main.py --load YOUR_MODEL_FOLDER
 ```
 
-When evaluating models that was trained on `SDD`, you should also add the argument `--dataset sdd`, and then specific the test mode via `--test_mode xxx`. See details in Section `Args Used`.
+When evaluating models, you can add the argument `--test_mode` to specific the test dataset(s). See details in Section `Args Used`.
+Default dataset splits are list in `plist` files in `./datasets/`. You can change them to specific your training/test/validation splits.
 
 ### `MSNBeta`
 
@@ -52,42 +60,32 @@ python main.py --load YOUR_OUTPUT_FOLDER
 
 ## Evaluation
 
-You can use the following command to evaluate the `MSN` performence:
+You can use the following command to evaluate the `MSN` performence end-to-end:
 
 ```bash
 python main.py --model msn --loada ALPHA_MODEL_PATH --loadb BETA_MODEL_PATH
 ```
 
-The test dataset is the same as the `MSNAlpha` (which is pass by the `--loada`).
-When evaluating on `SDD`, you should also add the `--dataset sdd`, and specific the test mode. For example,
+The test dataset is the same as the `MSNAlpha` (which is pass by the `--loada` when training). You can change the test dataset via the `--force_set` argument. See details in `Args Used` section.
+For example, you can start a simple evaluation with the command:
 
 ```bash
 python main.py \
     --model msn \
     --loada ALPHA_MODEL_PATH \
-    --loadb BETA_MODEL_PATH \
-    --dataset sdd --test_mode mix
+    --loadb BETA_MODEL_PATH
 ```
 
 ## Pre-Trained Models
 
-We have provided our pre-trained models to help you evaluate the `MSN` performance quickly. Click [here](pan.baidu.com) to download the zipped weights file, and unzip it to the project's root folder. It contains model weights that trained on `ETH-UCY` by the `leave-one-out` stragety, and on `SDD` via the dataset split method from SimAug.
+We have provided our pre-trained models to help you evaluate the `MSN` performance quickly. Click [here](drive.google.com) to download the zipped weights file. Please unzip it to the project's root folder. It contains model weights that trained on `ETH-UCY` by the `leave-one-out` stragety, and on `SDD` via the dataset split method from SimAug.
 
-For example, you can use the following command to evaluate the `MSN` on `hotel` dataset in `ETH-UCY`:
+You can use the following command to evaluate the `MSN` on `hotel` dataset in `ETH-UCY`:
 
 ```bash
 python main.py --model msn \
     --loada ./pretrained_models/msn/a_K20_hotel \
     --loadb ./pretrained_models/msn/b_hotel
-```
-
-Or evaluate it on `SDD`:
-
-```bash
-python main.py --model msn \
-    --loada ./pretrained_models/msn/a_K20_sdd \
-    --loadb ./pretrained_models/msn/b_sdd \
-    --dataset sdd --test_mode mix
 ```
 
 ## Args Used
@@ -135,11 +133,10 @@ where `ARG_KEY` is the name of args, and `ARG_VALUE` is the corresponding value.
 - `--max_batch_size`, type=`int`, changeable=`True`. Maximun batch size.  Default value is `20000`.
 - `--obs_frames`, type=`int`, changeable=`False`. Observation frames for prediction.  Default value is `8`.
 - `--pred_frames`, type=`int`, changeable=`False`. Prediction frames.  Default value is `12`.
-- `--prepare_type`, type=`str`, changeable=`True`. Prepare argument. ***Do Not Change it***.  Default value is `'test'`.
 - `--rotate`, type=`int`, changeable=`False`. Rotate dataset to obtain more available training data. This arg is the time of rotation, for example set to 1 will rotatetraining data 180 degree once; set to 2 will rotate them 120 degreeand 240 degree. *This arg is not used in the current training structure.*  Default value is `0`.
 - `--sigma`, type=`float`, changeable=`True`. Sigma of noise. This arg only works for `Generative Models`.  Default value is `1.0`.
 - `--step`, type=`int`, changeable=`True`. Frame interval for sampling training data.  Default value is `1`.
-- `--test_mode`, type=`str`, changeable=`True`. Test settings, canbe `'one'` or `'all'` or `'mix'`. When set it to `one`, it will test the model on the `args.force_set` only; When set it to `all`, it will test on each of the test dataset in `args.test_set`; When set it to `mix`, it will test on all test dataset in `args.test_set` together.  Default value is `'one'`.
+- `--test_mode`, type=`str`, changeable=`True`. Test settings, canbe `'one'` or `'all'` or `'mix'`. When set it to `one`, it will test the model on the `args.force_set` only; When set it to `all`, it will test on each of the test dataset in `args.test_set`; When set it to `mix`, it will test on all test dataset in `args.test_set` together.  Default value is `'mix'`.
 - `--train_percent`, type=`str`, changeable=`False`. Percent of training samples used in each training dataset when training. Split with `_` if you want to specify the train percent on each dataset, for example `0.5_0.9_0.1`.  Default value is `'1.0_'`.
 - `--use_extra_maps`, type=`int`, changeable=`True`. Controls if uses the calculated trajectory maps or the given trajectory maps. The model will load maps from `./dataset_npz/.../agent1_maps/trajMap.png` if set it to `0`, and load from `./dataset_npz/.../agent1_maps/trajMap_load.png` if set this item to `1`.  Default value is `0`.
 - `--use_maps`, type=`int`, changeable=`False`. Controls if uses the trajectory maps or the social maps in the model.  Default value is `1`.
