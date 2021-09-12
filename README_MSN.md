@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-09-10 10:27:12
+ * @LastEditTime: 2021-09-12 10:10:02
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -18,12 +18,12 @@ It is essential to predict future trajectories of various agents in complex scen
 
 ## Training
 
-The `MSN` contains two main sub-networks, the `MSNAlpha` and the `MSNBeta`. It predicts agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient densest separately according to their loss functions. Please train each of them together to evaluate the `MSN` performance. But don't worry, you can use it as a regular end-to-end model after training.
+The `MSN` contains two main sub-networks, the style hypothesis sub-network and the stylized prediction sub-network. `MSN` predicts agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient densest separately according to their loss functions. Please train each one together to evaluate the performance of `MSN'. But don't worry, you can use it as a normal end-to-end model after training.
 
 ### `MSNAlpha`
 
 `MSNAlpha` contains layers in the `style hypothesis` stage.
-To train the `MSNAlpha` model, you can pass the `--model msna` argument to run the `main.py`. You should also specify the number of `hidden behavior category` by the argument `--K_train` before training the `MSNAlpha`. See section `Args Used` to learn how other args work when training and evaluating. Attention that does not pass anything the argument `--load` when training, or it will start *evaluating* the loaded model.
+To train the `MSNAlpha` model, you can pass the `--model msna` argument to run the `main.py`. You should also specify the number of `hidden behavior category` by the argument `--K_train` before training the `MSNAlpha`. See section `Args Used` to learn how other args work when training and evaluating. Note that do not pass any value to `--load` when training, or it will start *evaluating* the loaded model.
 
 For example, you can train the `MSNAlpha` via the following arguments:
 
@@ -45,6 +45,7 @@ Default dataset splits are list in `plist` files in `./datasets/`. You can chang
 
 ### `MSNBeta`
 
+`MSNBeta` contains layers in the `stylized prediction` stage.
 Similar to the above `MSNAlpha`, you can pass the `--model msnb` argument to train the `MSNBeta` model. You should also leave the `--load` argument original when training. Please see section `Args Used` to learn how other args work when training and evaluating.
 You can start training by the simple command:
 
