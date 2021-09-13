@@ -2,13 +2,17 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-09-12 10:10:02
+ * @LastEditTime: 2021-09-13 11:45:17
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
 -->
 
 # Codes for Multi-Style Network for Trajectory Prediction
+
+![MSN](./figs/msn.gif)
+
+---
 
 ## Abstract
 
