@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-23 18:02:02
+@LastEditTime: 2021-09-16 20:07:24
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -211,6 +211,9 @@ class BaseTrainArgs(BaseArgs):
             value = default
 
         return value
+
+    def _set(self, name: str, value):
+        setattr(self._args, name, value)
 
     def _print(self, log_function=print):
         dic = {}

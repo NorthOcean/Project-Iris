@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-02 11:17:17
+@LastEditTime: 2021-09-16 20:25:36
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -17,10 +17,13 @@ import modules as M
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-def train_or_test(args: M.models.base.Args):
+def train_or_test(args: M.models.base.Args, force_args=None):
     model = args.model
 
-    if model == 'msn':
+    if model == 'test':
+        s = M.Linear.LinearStructure
+
+    elif model == 'msn':
         s = M.MSN.MSN_D
 
     elif model == 'msng':
@@ -57,7 +60,13 @@ def train_or_test(args: M.models.base.Args):
         raise NotImplementedError(
             'model type `{}` is not supported.'.format(model))
 
-    s(sys.argv).run_train_or_test()
+    if not force_args:
+        _args = sys.argv
+    else:
+        _args = force_args
+
+    s(_args).run_train_or_test()
+    
 
 
 if __name__ == "__main__":
