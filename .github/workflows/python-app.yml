@@ -34,8 +34,7 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
-    
-    - uses: actions/upload-artifact@v2
-      with:
-        name: log
-        path: test.log
+
+    - name: Check output files
+      run: |
+        tree ./.test
