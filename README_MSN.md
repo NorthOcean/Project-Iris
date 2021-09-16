@@ -2,13 +2,17 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-09-12 10:10:02
+ * @LastEditTime: 2021-09-13 19:39:35
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
 -->
 
 # Codes for Multi-Style Network for Trajectory Prediction
+
+![MSN](./figs/msn.gif)
+
+---
 
 ## Abstract
 
@@ -152,3 +156,19 @@ where `ARG_KEY` is the name of args, and `ARG_VALUE` is the corresponding value.
 - `--loadb`, type=`str`, changeable=`True`. Path for the second stage stylized prediction networks.  Default value is `'null'`.
 - `--loadc`, type=`str`, changeable=`True`. Path for the third stage model (Preserved).  Default value is `'null'`.
 <!-- DO NOT CHANGE THIS LINE -->
+
+## Thanks
+
+Part of codes of Transformer layers (`tf.keras.layers.Layer`) or models (`tf.keras.Model`) come from [理解语言的 Transformer 模型](https://tensorflow.google.cn/tutorials/text/transformer).
+
+If you find this work useful, welcome to cite us with the following format:
+
+> @article{wong2021msn,  
+> &nbsp;&nbsp;&nbsp;&nbsp;author = {Wong, Conghao and Xia, Beihao and Peng, Qinmu and You, Xinge},  
+> &nbsp;&nbsp;&nbsp;&nbsp;journal = {arXiv preprint arXiv:2107.00932},  
+> &nbsp;&nbsp;&nbsp;&nbsp;title = {MSN: Multi-Style Network for Trajectory Prediction},  
+> &nbsp;&nbsp;&nbsp;&nbsp;year = {2021},  
+> }
+
+Code Version: 2bb8eeca3488e19a13f3037bb0f43b773ddf1ac3  
+Contact me with conghao_wong@iCloud.com
