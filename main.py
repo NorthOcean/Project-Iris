@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-09-16 20:25:36
+@LastEditTime: 2021-09-16 21:03:38
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -17,7 +17,9 @@ import modules as M
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-def train_or_test(args: M.models.base.Args, force_args=None):
+def train_or_test(args: M.models.base.Args, 
+                  force_args=None):
+                  
     model = args.model
 
     if model == 'test':
