@@ -1,0 +1,6 @@
+tqdm==4.60.0
+biplist==1.0.3
+pytest==6.2.5
+numpy==1.18.5
+matplotlib==3.4.1
+tensorflow==2.6.0
