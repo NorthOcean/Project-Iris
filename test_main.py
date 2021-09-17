@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-09-16 20:00:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-09-17 09:46:17
+@LastEditTime: 2021-09-17 14:51:22
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,16 +10,24 @@
 
 import os
 import shutil
-import sys
 from typing import List
 
-import pytest
 
 from main import train_or_test
 from modules import models as M
 
 
 class TestClass():
+    """
+    TestClass
+    ---
+
+    This class contains several test methods.
+    They run the minimul training or evaluating on the key models
+    to validate if codes in models or training structures run in
+    the correct way.
+    Note that it is not the class to validate (test) model performences.
+    """
 
     def setup_class(self):
         if os.path.exists(p := './.test'):
@@ -45,6 +53,11 @@ class TestClass():
     def test_evaluate_msn(self):
         self.run_with_args(['--model', 'msn',
                             '--loada', './.github/workflows/test_weights/msna_zara1',
+                            '--loadb', 'l'])
+
+    def test_evaluate_v(self):
+        self.run_with_args(['--model', 'viris',
+                            '--loada', './.github/workflows/test_weights/va_zara1',
                             '--loadb', 'l'])
 
     def run_with_args(self, args: List[str]):
