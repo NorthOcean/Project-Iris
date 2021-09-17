@@ -30,7 +30,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest
+        pytest --capture=no
 
     - name: Check output files
       run: |
