@@ -1,0 +1,2 @@
+model_checkpoint_path: "sa_K20_zara1_step1_fromZero.tf"
+all_model_checkpoint_paths: "sa_K20_zara1_step1_fromZero.tf"
