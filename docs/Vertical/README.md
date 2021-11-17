@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-08-05 15:51:15
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-11-17 11:01:09
+ * @LastEditTime: 2021-11-17 11:27:35
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -167,8 +167,8 @@ You can start the quick evaluation via the following commands:
 for dataset in eth hotel univ zara1 zara2 sdd
   python main.py \
     --model vertical \
-    --loada ./pretrained_models/a_${dataset} \
-    --loadb ./pretrained_models/b_${dataset}
+    --loada ./pretrained_models/vertical/a_${dataset} \
+    --loadb ./pretrained_models/vertical/b_${dataset}
 ```
 
 ## Args Used
