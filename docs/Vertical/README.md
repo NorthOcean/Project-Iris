@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-08-05 15:51:15
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-11-17 10:43:55
+ * @LastEditTime: 2021-11-17 10:50:18
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -26,12 +26,6 @@ Experimental results show that $V^2$-Net improves the state-of-the-art performan
 
 ## Requirements
 
-Before training or evaluating `V^2-Net`, please run the following command to install the required packages:
-
-```bash
-pip install -r requirements.txt
-```
-
 The packages and versions used in our experiments include:
 
 - tqdm==4.60.0
@@ -42,7 +36,13 @@ The packages and versions used in our experiments include:
 - tensorflow==2.5.0
 - opencv_python
 
-We recommend you to install the above version of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
+We recommend you to install the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
+
+Please run the following command to install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Training On Your Datasets
 
@@ -104,7 +104,7 @@ You can also try any other keypoints settings or combinations to train and obtai
 Please refer to section `Args Used` to learn how other args work when training and evaluating.
 Note that do not pass any value to `--load` when training, or it will start *evaluating* the loaded model.
 
-For example, you can train the `MSNAlpha` via the following minimum arguments:
+For example, you can train the `V^2-Net-a` via the following minimum arguments:
 
 ```bash
 cd REPO_ROOT_DIR

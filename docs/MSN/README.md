@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-11-17 10:45:18
+ * @LastEditTime: 2021-11-17 10:49:48
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -22,12 +22,6 @@ It is essential to predict future trajectories of various agents in complex scen
 
 ## Requirements
 
-Before training or evaluating `MSN`, please run the following command to install the required packages:
-
-```bash
-pip install -r requirements.txt
-```
-
 The packages and versions used in our experiments include:
 
 - tqdm==4.60.0
@@ -38,7 +32,13 @@ The packages and versions used in our experiments include:
 - tensorflow==2.5.0
 - opencv_python
 
-We recommend you to install the above version of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
+We recommend you to install the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
+
+Please run the following command to install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Training On Your Datasets
 
