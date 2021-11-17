@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-11-17 10:49:48
+ * @LastEditTime: 2021-11-17 11:04:07
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,15 +10,22 @@
 
 # Codes for Multi-Style Network for Trajectory Prediction
 
-![MSN](./figs/msn.gif)
+![MSN](../../figs/msn.gif)
 
 ---
 
 ## Abstract
 
-It is essential to predict future trajectories of various agents in complex scenes. Whether it is internal personality factors of agents, interactive behavior of the neighborhood, or the influence of surroundings, it will have an impact on their future plannings. It means that even for the same physical type of agents, there are huge differences in their behavior styles. We concentrate on the problem of modeling agents' multi-style characteristics when predicting their trajectories. We propose the Multi-Style Network (MSN) to focus on this problem by dividing agents' behaviors into several hidden behavior categories adaptively, and then train each category's prediction network jointly, thus giving agents multiple styles of predictions simultaneously. Experiments show that MSN outperforms current state-of-the-art methods with 10\% - 20\% performance improvement on two widely used datasets, and presents better multi-style characteristics in predictions.
+Trajectory prediction aims at forecasting agents' possible future locations considering their observations along with the video context.
+It is strongly required by a lot of autonomous platforms like tracking, detection, robot navigation, self-driving cars, and many other computer vision applications.
+Whether it is agents' internal personality factors, interactive behaviors with the neighborhood, or the influence of surroundings, all of them might represent impacts on agents' future plannings.
+However, many previous methods model and predict agents' behaviors with the same strategy or the ``single'' feature distribution, making them challenging to give predictions with sufficient style differences.
+This manuscript proposes the Multi-Style Network (MSN), which utilizes style hypothesis and stylized prediction two sub-networks, to give agents multi-style predictions in a novel categorical way adaptively.
+We use agents' end-point plannings and their interaction context as the basis for the behavior classification, so as to adaptively learn multiple diverse behavior styles through a series of style channels in the network.
+Then, we assume one by one that the target agents will plan their future behaviors according to each of these categorized styles, thus utilizing different style channels to give a series of predictions with significant style differences in parallel.
+Experiments show that the proposed MSN outperforms current state-of-the-art methods up to 10\% - 20\% quantitatively on two widely used datasets, and presents better multi-style characteristics qualitatively.
 
-![Overview](./figs/msnoverview.png)
+![Overview](../../figs/msnoverview.png)
 
 ## Requirements
 

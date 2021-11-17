@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-08-05 15:51:15
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-11-17 10:50:18
+ * @LastEditTime: 2021-11-17 11:01:09
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -36,7 +36,7 @@ The packages and versions used in our experiments include:
 - tensorflow==2.5.0
 - opencv_python
 
-We recommend you to install the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
+We recommend you install the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
 
 Please run the following command to install the required packages:
 
@@ -48,7 +48,7 @@ pip install -r requirements.txt
 
 The `V^2-Net` contains two main sub-networks, the coarse-level keypoints estimation sub-network and the fine-level spectrum interpolation sub-network.
 `V^2-Net` forecast agents' multiple stochastic trajectories end-to-end.
-Considering that most of the loss function terms used to optimize the model work within one sub-network alone, we divide `V^2-Net` into `V^2-Net-a` and `V^2-Net-b`, and apply gradient descent separately for a easier training.
+Considering that most of the loss function terms used to optimize the model work within one sub-network alone, we divide `V^2-Net` into `V^2-Net-a` and `V^2-Net-b`, and apply gradient descent separately for easier training.
 You can train your own `V^2-Net` weights on your datasets by training each of these two sub-networks.
 But don't worry, you can use it as a normal end-to-end model after training.
 
@@ -85,7 +85,7 @@ Before training `V^2-Net` on your own dataset, you can add your dataset informat
   }
   ```
 
-  Besides, all trajectories should be saved as the following `true_pos_.csv` format:
+  Besides, all trajectories should be saved in the following `true_pos_.csv` format:
 
   - Size of the matrix is 4 x numTrajectoryPoints
   - The first row contains all the frame numbers
@@ -99,7 +99,7 @@ It is actually the coarse-level keypoints estimation sub-network.
 To train the `V^2-Net-a`, you can pass the `--model va` argument to run the `main.py`.
 You should also specify the indexes of the temporal keypoints in the predicted period.
 For example, when you want to train a model that predicts future 12 frames of trajectories, and you would like to set $N_{key} = 3$ (which is the same as the basic settings in our paper), you can pass the `--p_index 3_7_11` argument when training.
-Please not that indexes are starts with `0`.
+Please note that indexes are start with `0`.
 You can also try any other keypoints settings or combinations to train and obtain the `V^2-Net-a` that best fits your datasets.
 Please refer to section `Args Used` to learn how other args work when training and evaluating.
 Note that do not pass any value to `--load` when training, or it will start *evaluating* the loaded model.
@@ -140,7 +140,8 @@ Where `A_MODEL_PATH` and `B_MODEL_PATH` are two sub-networks' weights.
 
 We have provided our pre-trained model weights to help you quickly evaluate the `V^2-Net` performance.
 Click [here](drive.google.com) to download the zipped weights file.
-Please unzip it to the project's root folder. It contains model weights trained on `ETH-UCY` by the `leave-one-out` stragety, and on `SDD` via the dataset split method from SimAug.
+Please unzip it to the project's root folder.
+It contains model weights trained on `ETH-UCY` by the `leave-one-out` stragety, and on `SDD` via the dataset split method from SimAug.
 
 ```null
 REPO_ROOT_DIR
@@ -172,13 +173,14 @@ for dataset in eth hotel univ zara1 zara2 sdd
 
 ## Args Used
 
-Please specific your customized args when training or test your model through the following way:
+Please specific your customized args when training or testing your model through the following way:
 
 ```bash
 python main.py --ARG_KEY1 ARG_VALUE2 --ARG_KEY2 ARG_VALUE2 --ARG_KEY3 ARG_VALUE3 ...
 ```
 
-where `ARG_KEY` is the name of args, and `ARG_VALUE` is the corresponding value. All args and their usages when training and test `MSN` are listed below. Args with `changable=True` means that their values can be changed after training.
+where `ARG_KEY` is the name of args, and `ARG_VALUE` is the corresponding value.
+All args and their usages when training and testing are listed below. Args with `changable=True` means that their values can be changed after training.
 
 <!-- DO NOT CHANGE THIS LINE -->
 ### Basic args
