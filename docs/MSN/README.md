@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-09-13 19:39:35
+ * @LastEditTime: 2021-11-17 10:45:18
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -20,9 +20,70 @@ It is essential to predict future trajectories of various agents in complex scen
 
 ![Overview](./figs/msnoverview.png)
 
-## Training
+## Requirements
 
-The `MSN` contains two main sub-networks, the style hypothesis sub-network and the stylized prediction sub-network. `MSN` predicts agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient densest separately according to their loss functions. Please train each one together to evaluate the performance of `MSN'. But don't worry, you can use it as a normal end-to-end model after training.
+Before training or evaluating `MSN`, please run the following command to install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+The packages and versions used in our experiments include:
+
+- tqdm==4.60.0
+- biplist==1.0.3
+- pytest==6.2.5
+- numpy==1.19.3
+- matplotlib==3.4.1
+- tensorflow==2.5.0
+- opencv_python
+
+We recommend you to install the above version of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
+
+## Training On Your Datasets
+
+The `MSN` contains two main sub-networks, the style hypothesis sub-network and the stylized prediction sub-network. `MSN` predicts agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient descent separately according to their loss functions. Please train each one together to evaluate the performance of `MSN'. But don't worry, you can use it as a normal end-to-end model after training.
+
+### Dataset
+
+Before training `MSN` on your own dataset, you can add your dataset information to the `datasets` directory.
+
+- Dataset Splits File:
+
+  It contains the dataset splits used for training and evaluation.
+  For example, you can save the following python `dict` object as the `MyDataset.plist` (Maybe a python package like `biplist` is needed):
+
+  ```python
+  my_dataset = {
+    'test': ['test_subset1'],
+    'train': ['train_subset1', 'train_subset2', 'train_subset3'],
+    'val': ['val_subset1', 'val_subset2'],
+  }
+  ```
+
+- Sub-Dataset File:
+
+  You should edit and put information about all sub-dataset, which you have written into the dataset splits file, into the `/datasets/subsets` directory.
+  For example, you can save the following python `dict` object as the `test_subset1.plist`:
+
+  ```python
+  test_subset1 = {
+    'dataset': 'test_subset1',    # name of that sub-dataset
+    'dataset_dir': '....',        # root dir for your dataset csv file
+    'order': [1, 0],              # x-y order in your csv file
+    'paras': [1, 30],             # [your data fps, your video fps]
+    'scale': 1,                   # scale when save visualization figs
+    'video_path': '....',         # path for the corresponding video file 
+  }
+  ```
+
+  Besides, all trajectories should be saved as the following `true_pos_.csv` format:
+
+  - Size of the matrix is 4 x numTrajectoryPoints
+  - The first row contains all the frame numbers
+  - The second row contains all the pedestrian IDs
+  - The third row contains all the y-coordinates
+  - The fourth row contains all the x-coordinates
 
 ### `MSNAlpha`
 

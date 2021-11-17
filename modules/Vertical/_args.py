@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 10:50:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 16:21:26
+@LastEditTime: 2021-11-17 09:46:24
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -35,7 +35,7 @@ class VArgs(M.prediction.PredictionArgs):
         """
         Number of hidden categories used in alpha model.
         """
-        return self._get('Kc', 10, changeable=False)
+        return self._get('Kc', 20, changeable=False)
         
     @property
     def loada(self) -> str:
