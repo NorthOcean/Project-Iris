@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:48:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-22 19:32:23
+@LastEditTime: 2021-11-23 19:44:43
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -13,10 +13,12 @@ from typing import List, Union
 
 import modules.models as M
 
-class SArgs(M.prediction.PredictionArgs):
+
+class AgentArgs(M.prediction.PredictionArgs):
+
     def __init__(self, args: Union[Namespace, List[str]],
                  default_args: Union[Namespace, dict] = None):
-                 
+
         super().__init__(args, default_args=default_args)
 
     @property
@@ -43,8 +45,74 @@ class SArgs(M.prediction.PredictionArgs):
         return self._get('key_points', '0_6_11', changeable=False)
 
     @property
+    def depth(self) -> int:
+        """
+        Depth of the random contract id
+        """
+        return self._get('depth', 16, changeable=False)
+
+    @property
     def use_maps(self) -> int:
         """
         Controls if uses the trajectory maps or the social maps in the model.
         """
         return self._get('use_maps', 0, changeable=False)
+
+
+class HandlerArgs(M.prediction.PredictionArgs):
+
+    def __init__(self, args: Union[Namespace, List[str]],
+                 default_args: Union[Namespace, dict] = None):
+
+        super().__init__(args, default_args=default_args)
+
+    @property
+    def use_maps(self) -> int:
+        """
+        Controls if uses the trajectory maps or the social maps in the model.
+        """
+        return self._get('use_maps', 1, changeable=False)
+
+    @property
+    def points(self) -> int:
+        """
+        Controls number of points (representative time steps) input to the beta model.
+        """
+        return self._get('points', 1, changeable=False)
+
+
+class SilverballersArgs(M.prediction.PredictionArgs):
+
+    def __init__(self, args: Union[Namespace, List[str]],
+                 default_args: Union[Namespace, dict] = None):
+
+        super().__init__(args, default_args=default_args)
+
+    @property
+    def use_maps(self) -> int:
+        """
+        Controls if uses the trajectory maps or the social maps in the model.
+        """
+        return self._get('use_maps', 1, changeable=False)
+
+    @property
+    def loada(self) -> str:
+        """
+        Path for alpha model.
+        """
+        return self._get('loada', 'null', changeable=True)
+
+    @property
+    def loadb(self) -> str:
+        """
+        Path for beta model.
+        """
+        return self._get('loadb', 'null', changeable=True)
+
+    @property
+    def K(self) -> int:
+        """
+        Number of multiple generations when test.
+        This arg only works for `Generative Models`.
+        """
+        return self._get('K', 1, changeable=True)
