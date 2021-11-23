@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-08-05 15:26:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 16:28:05
+@LastEditTime: 2021-11-17 10:33:56
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -14,7 +14,7 @@ from typing import List
 from read_comments import read_comments
 
 FLAG = '<!-- DO NOT CHANGE THIS LINE -->'
-TARGET_FILE = './README_{}.md'
+TARGET_FILE = './docs/{}/README.md'
 
 
 def update(md_file, files: List[str], titles: List[str]):

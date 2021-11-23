@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-09-13 19:39:35
+ * @LastEditTime: 2021-11-17 11:04:07
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,19 +10,87 @@
 
 # Codes for Multi-Style Network for Trajectory Prediction
 
-![MSN](./figs/msn.gif)
+![MSN](../../figs/msn.gif)
 
 ---
 
 ## Abstract
 
-It is essential to predict future trajectories of various agents in complex scenes. Whether it is internal personality factors of agents, interactive behavior of the neighborhood, or the influence of surroundings, it will have an impact on their future plannings. It means that even for the same physical type of agents, there are huge differences in their behavior styles. We concentrate on the problem of modeling agents' multi-style characteristics when predicting their trajectories. We propose the Multi-Style Network (MSN) to focus on this problem by dividing agents' behaviors into several hidden behavior categories adaptively, and then train each category's prediction network jointly, thus giving agents multiple styles of predictions simultaneously. Experiments show that MSN outperforms current state-of-the-art methods with 10\% - 20\% performance improvement on two widely used datasets, and presents better multi-style characteristics in predictions.
+Trajectory prediction aims at forecasting agents' possible future locations considering their observations along with the video context.
+It is strongly required by a lot of autonomous platforms like tracking, detection, robot navigation, self-driving cars, and many other computer vision applications.
+Whether it is agents' internal personality factors, interactive behaviors with the neighborhood, or the influence of surroundings, all of them might represent impacts on agents' future plannings.
+However, many previous methods model and predict agents' behaviors with the same strategy or the ``single'' feature distribution, making them challenging to give predictions with sufficient style differences.
+This manuscript proposes the Multi-Style Network (MSN), which utilizes style hypothesis and stylized prediction two sub-networks, to give agents multi-style predictions in a novel categorical way adaptively.
+We use agents' end-point plannings and their interaction context as the basis for the behavior classification, so as to adaptively learn multiple diverse behavior styles through a series of style channels in the network.
+Then, we assume one by one that the target agents will plan their future behaviors according to each of these categorized styles, thus utilizing different style channels to give a series of predictions with significant style differences in parallel.
+Experiments show that the proposed MSN outperforms current state-of-the-art methods up to 10\% - 20\% quantitatively on two widely used datasets, and presents better multi-style characteristics qualitatively.
 
-![Overview](./figs/msnoverview.png)
+![Overview](../../figs/msnoverview.png)
 
-## Training
+## Requirements
 
-The `MSN` contains two main sub-networks, the style hypothesis sub-network and the stylized prediction sub-network. `MSN` predicts agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient densest separately according to their loss functions. Please train each one together to evaluate the performance of `MSN'. But don't worry, you can use it as a normal end-to-end model after training.
+The packages and versions used in our experiments include:
+
+- tqdm==4.60.0
+- biplist==1.0.3
+- pytest==6.2.5
+- numpy==1.19.3
+- matplotlib==3.4.1
+- tensorflow==2.5.0
+- opencv_python
+
+We recommend you to install the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
+
+Please run the following command to install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Training On Your Datasets
+
+The `MSN` contains two main sub-networks, the style hypothesis sub-network and the stylized prediction sub-network. `MSN` predicts agents' multi-style future predictions end-to-end. For easier training, we divide it into `MSNAlpha` and `MSNBeta`, and apply gradient descent separately according to their loss functions. Please train each one together to evaluate the performance of `MSN'. But don't worry, you can use it as a normal end-to-end model after training.
+
+### Dataset
+
+Before training `MSN` on your own dataset, you can add your dataset information to the `datasets` directory.
+
+- Dataset Splits File:
+
+  It contains the dataset splits used for training and evaluation.
+  For example, you can save the following python `dict` object as the `MyDataset.plist` (Maybe a python package like `biplist` is needed):
+
+  ```python
+  my_dataset = {
+    'test': ['test_subset1'],
+    'train': ['train_subset1', 'train_subset2', 'train_subset3'],
+    'val': ['val_subset1', 'val_subset2'],
+  }
+  ```
+
+- Sub-Dataset File:
+
+  You should edit and put information about all sub-dataset, which you have written into the dataset splits file, into the `/datasets/subsets` directory.
+  For example, you can save the following python `dict` object as the `test_subset1.plist`:
+
+  ```python
+  test_subset1 = {
+    'dataset': 'test_subset1',    # name of that sub-dataset
+    'dataset_dir': '....',        # root dir for your dataset csv file
+    'order': [1, 0],              # x-y order in your csv file
+    'paras': [1, 30],             # [your data fps, your video fps]
+    'scale': 1,                   # scale when save visualization figs
+    'video_path': '....',         # path for the corresponding video file 
+  }
+  ```
+
+  Besides, all trajectories should be saved as the following `true_pos_.csv` format:
+
+  - Size of the matrix is 4 x numTrajectoryPoints
+  - The first row contains all the frame numbers
+  - The second row contains all the pedestrian IDs
+  - The third row contains all the y-coordinates
+  - The fourth row contains all the x-coordinates
 
 ### `MSNAlpha`
 
