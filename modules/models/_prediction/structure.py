@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-09-10 09:45:33
+@LastEditTime: 2021-11-22 20:18:38
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -350,7 +350,26 @@ class Structure(base.Structure):
         Run test of trajectory prediction on ETH-UCY or SDD dataset.
         """
         if True:
-            info = base.DatasetsInfo(self.args.test_set)
+            if self.args.force_set == 'null':
+                test_set = self.args.test_set
+            else:
+                test_set = self.args.force_set
+            
+            if self.args.test_mode == 'one':
+                try:
+                    agents = self.DM_type.load(self.args, 
+                                               self.args.force_set,
+                                               mode='test')
+                    ds = self.args.force_set
+                except:
+                    info = base.DatasetsInfo(test_set)
+                    ds = info.test_sets[0]
+                    agents = self.DM_type.load(self.args, ds, mode='test')
+
+                self.test(agents=agents, dataset_name=ds)
+                return
+
+            info = base.DatasetsInfo(test_set)
             
             if self.args.test_mode == 'all':
                 for dataset in info.test_sets:
@@ -363,11 +382,6 @@ class Structure(base.Structure):
                     agents += self.DM_type.load(self.args, dataset_c, mode='test')
 
                 self.test(agents=agents, dataset_name=self.args.test_set)
-
-            elif self.args.test_mode == 'one':
-                ds = self.args.force_set
-                agents = self.DM_type.load(self.args, ds, mode='test')
-                self.test(agents=agents, dataset_name=ds)
 
     def get_inputs_from_agents(self, input_agents: List[agent_type]) -> Tuple[List[tf.Tensor], tf.Tensor]:
         """

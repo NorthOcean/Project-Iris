@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-12-24 18:20:20
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 16:53:32
+@LastEditTime: 2021-11-22 19:30:51
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -91,7 +91,7 @@ class Model(keras.Model):
         model_inputs_processed = self.pre_process(model_inputs, training)
 
         # use `self.call()` to debug
-        output = self(model_inputs_processed)
+        output = self(model_inputs_processed, training=training)
 
         # make sure the output is a list or a tuple
         if not type(output) in [list, tuple]:

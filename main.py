@@ -58,6 +58,9 @@ def train_or_test(args: M.models.base.Args,
     elif model == 'virisg':
         s = M.Vertical.VIrisG
 
+    elif model == 'agent':
+        s = M.Silverballers.Agent
+
     else:
         raise NotImplementedError(
             'model type `{}` is not supported.'.format(model))
