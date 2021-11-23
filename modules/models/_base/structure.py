@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-12-24 18:20:20
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-22 19:30:51
+@LastEditTime: 2021-11-23 11:11:42
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -229,7 +229,7 @@ class Structure(BaseObject):
         self.args = ArgType(Args)
         self.gpu_config()
 
-        self.important_args = []
+        self.important_args = ['lr']
 
     def gpu_config(self):
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
