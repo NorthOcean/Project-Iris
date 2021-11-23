@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:38:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-23 09:24:02
+@LastEditTime: 2021-11-23 19:26:09
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -15,7 +15,7 @@ from tensorflow import keras
 
 from .. import applications as A
 from .. import models as M
-from ._args import SArgs
+from ._args import AgentArgs
 from ._layers import FFTlayer, GraphConv, IFFTlayer, TrajEncoding
 
 
@@ -24,9 +24,9 @@ class AgentModel(M.prediction.Model):
     The first stage `Agent` model from `Silverballers`
     """
 
-    def __init__(self, Args: SArgs,
+    def __init__(self, Args: AgentArgs,
                  feature_dim: int = 128,
-                 id_depth: int = 12,
+                 id_depth: int = 64,
                  keypoints_number: int = 3,
                  training_structure=None,
                  *args, **kwargs):
@@ -45,9 +45,13 @@ class AgentModel(M.prediction.Model):
         self.set_preprocess_parameters(move=0)
 
         # Layers
-        self.te = TrajEncoding(units=self.d//2, activation=tf.nn.tanh)
+        self.te = TrajEncoding(
+            units=self.d//2, activation=tf.nn.tanh, useFFT=True)
         self.ie = TrajEncoding(units=self.d//2, activation=tf.nn.tanh)
         self.concat = keras.layers.Concatenate(axis=-1)
+
+        self.fft = FFTlayer()
+        self.ifft = IFFTlayer()
 
         # Transformer is used as a feature extractor
         self.T = A.Transformer(num_layers=4,
@@ -66,9 +70,9 @@ class AgentModel(M.prediction.Model):
 
         # Decoder layers
         self.decoder_fc1 = keras.layers.Dense(self.d, tf.nn.tanh)
-        self.decoder_fc2 = keras.layers.Dense(2 * self.n_key)
+        self.decoder_fc2 = keras.layers.Dense(4 * self.n_key)
         self.decoder_reshape = keras.layers.Reshape(
-            [self.args.Kc, self.n_key, 2])
+            [self.args.Kc, self.n_key, 4])
 
     def call(self, inputs: List[tf.Tensor],
              training=None, mask=None):
@@ -89,7 +93,7 @@ class AgentModel(M.prediction.Model):
 
             # transformer inputs
             t_inputs = self.concat([spec_features, id_features])
-            t_outputs = trajs
+            t_outputs = self.concat(self.fft.call(trajs))
 
             # transformer -> (batch, obs, d)
             behavior_features, _ = self.T.call(inputs=t_inputs,
@@ -104,6 +108,8 @@ class AgentModel(M.prediction.Model):
             y = self.decoder_fc1(m_features)
             y = self.decoder_fc2(y)
             y = self.decoder_reshape(y)
+
+            y = self.ifft.call(real=y[:, :, :, :2], imag=y[:, :, :, 2:])
             all_predictions.append(y)
 
         return tf.concat(all_predictions, axis=1)
@@ -111,11 +117,16 @@ class AgentModel(M.prediction.Model):
 
 class Agent(M.prediction.Structure):
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    model_type = AgentModel
+
+    def __init__(self, Args: List[str],
+                 association: M.prediction.Structure = None,
+                 *args, **kwargs):
+
         super().__init__(Args, *args, **kwargs)
 
-        self.args = SArgs(Args)
-        self.important_args += ['Kc', 'key_points']
+        self.args = AgentArgs(Args)
+        self.important_args += ['Kc', 'key_points', 'depth']
 
         self.set_model_inputs('traj')
         self.set_model_groundtruths('gt')
@@ -125,6 +136,8 @@ class Agent(M.prediction.Structure):
 
         self.set_metrics(self.min_FDE)
         self.set_metrics_weights(1.0)
+
+        self.association = association
 
     @property
     def p_index(self) -> tf.Tensor:
@@ -141,12 +154,16 @@ class Agent(M.prediction.Structure):
         """
         return len(self.p_index)
 
+    def set_model_type(self, new_type=AgentModel):
+        self.model_type = new_type
+
     def create_model(self, *args, **kwargs):
-        model = AgentModel(self.args,
-                           feature_dim=128,
-                           keypoints_number=self.p_len,
-                           training_structure=self,
-                           *args, **kwargs)
+        model = self.model_type(self.args,
+                                feature_dim=128,
+                                id_depth=self.args.depth,
+                                keypoints_number=self.p_len,
+                                training_structure=self,
+                                *args, **kwargs)
 
         opt = keras.optimizers.Adam(self.args.lr)
         return model, opt
