@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:48:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-10-28 20:39:59
+@LastEditTime: 2021-11-22 19:32:23
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -18,6 +18,14 @@ class SArgs(M.prediction.PredictionArgs):
                  default_args: Union[Namespace, dict] = None):
                  
         super().__init__(args, default_args=default_args)
+
+    @property
+    def K(self) -> int:
+        """
+        Number of multiple generations when test.
+        This arg only works for `Generative Models`.
+        """
+        return self._get('K', 1, changeable=True)
 
     @property
     def Kc(self) -> int:
