@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-09-16 20:07:24
+@LastEditTime: 2021-11-24 09:49:16
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -95,8 +95,6 @@ class BaseTrainArgs(BaseArgs):
         Only works when evaluating when `test_mode` is `one`.
         """
         fs = self._get('force_set', 'null', changeable=True)
-        if fs == 'null':
-            fs = self.test_set
         return fs
 
     @property
