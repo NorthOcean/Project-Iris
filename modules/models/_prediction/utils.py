@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 15:08:07
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 14:50:15
+@LastEditTime: 2021-11-24 20:32:23
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -210,7 +210,7 @@ class Process():
         if use_new_para_dict:
             ref_point = trajs[:, ref, :] if len(trajs.shape) == 3\
                 else trajs[ref, :]
-            
+
             # shape is [batch, 1, 2] or [1, 2]
             ref_point = tf.expand_dims(ref_point, -2)
             para_dict['MOVE'] = ref_point
@@ -233,7 +233,7 @@ class Process():
 
         :param trajs: trajectories moved to (0, 0) with reference point, shape = `[(batch,) (K,) pred, 2]`
         :param para_dict: a dict of used parameters, which contains `'ref_point': tf.Tensor`
-        
+
         :return traj_moved: moved trajectories
         """
         try:
@@ -280,6 +280,7 @@ class Process():
         ])  # shape = [2, 2, batch] or [2, 2]
 
         if len(trajs.shape) == 3:
+            # reshape to (batch, 2, 2)
             rotate_matrix = tf.transpose(rotate_matrix, [2, 0, 1])
 
         traj_rotated = trajs @ rotate_matrix
@@ -294,18 +295,31 @@ class Process():
 
         :param trajs: trajectories, shape = `[(batch, ) pred, 2]`
         :param para_dict: a dict of used parameters, `'rotate_matrix': tf.Tensor`
-        
+
         :return traj_rotated: rotated trajectories
         """
         angle = -1 * para_dict['ROTATE']
-        rotate_matrix = tf.stack([
-            [tf.cos(angle), tf.sin(angle)],
-            [-tf.sin(angle), tf.cos(angle)]
-        ])
-        if len(trajs.shape) == 3:
+
+        # shape = (2, 2, batch)
+        rotate_matrix = tf.stack([[tf.cos(angle), tf.sin(angle)],
+                                  [-tf.sin(angle), tf.cos(angle)]])
+        
+        S = tf.cast(trajs.shape, tf.int32)
+
+        if len(S) >= 3:
+            # traj shape = (batch, pred, 2)
             rotate_matrix = tf.transpose(rotate_matrix, [2, 0, 1])
 
+        if len(S) == 4:
+            # traj shape = (batch, K, pred, 2)
+            trajs = tf.reshape(trajs, (S[0]*S[1], S[2], S[3]))
+            rotate_matrix = tf.repeat(rotate_matrix, S[1], axis=0)
+
         traj_rotated = trajs @ rotate_matrix
+
+        if len(S) == 4:
+            traj_rotated = tf.reshape(traj_rotated, S)
+
         return traj_rotated
 
     @staticmethod
