@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-22 20:18:38
+@LastEditTime: 2021-11-24 20:42:43
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -89,9 +89,13 @@ class Model(base.Model):
 
         args: pre-process methods.
             - Move positions on the observation step to (0, 0):
-                args in `['MOVE', 'move']`
+                args in `['Move', ...]`
+            
+            - Re-scale observations:
+                args in `['Scale', ...]`
 
-            - TODO
+            - Rotate observations:
+                args in `['Rotate', ...]`
         """
         self._preprocess_list = []
         for item in args:
