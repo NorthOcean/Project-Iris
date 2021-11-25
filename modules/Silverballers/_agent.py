@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:38:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-23 19:26:09
+@LastEditTime: 2021-11-24 19:15:38
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -41,7 +41,7 @@ class AgentModel(M.prediction.Model):
         self.d_id = id_depth
 
         # Preprocess
-        self.set_preprocess('move')
+        self.set_preprocess('Move', 'Scale', 'Rotate')
         self.set_preprocess_parameters(move=0)
 
         # Layers
