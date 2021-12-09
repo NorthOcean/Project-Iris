@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-12-24 18:20:20
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-23 11:11:42
+@LastEditTime: 2021-12-09 10:58:22
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -576,6 +576,11 @@ class Structure(BaseObject):
                 gt=train_data[-1],
                 loss_move_average=loss_move_average,
                 epoch=epoch)
+
+            # chech if `nan` in loss dictionary
+            if  tf.math.is_nan(tf.reduce_sum(list(loss_dict.values()))):
+                self.log(e := 'Find `nan` values in the loss dictionary, stop training...', level='error')
+                raise ValueError(e)
 
             # Run eval
             if ((epoch >= self.args.start_test_percent * self.args.epochs)
