@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-11-23 16:15:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-23 19:46:51
+@LastEditTime: 2021-12-14 15:53:57
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -105,7 +105,7 @@ class Silverballers(M.prediction.Structure):
 
         # assign models
         self.agent = self.agent_structure(Args, association=self)
-        self.agent.set_model_type(_AgentModelPlus)
+        self.agent.set_model_type(self.agent_model)
         self.handler = self.handler_structure(Args, association=self)
         self.linear_predict = False
 
