@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-14 09:34:58
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-14 16:10:28
+@LastEditTime: 2021-12-15 09:47:01
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -39,7 +39,12 @@ class Agent47Model(M.prediction.Model):
         self.d_id = id_depth
 
         # Preprocess
-        self.set_preprocess('Move', 'Scale', 'Rotate')
+        preprocess_list = ()
+        for index, operation in enumerate(['Move', 'Scale', 'Rotate']):
+            if self.args.preprocess[index] == '1':
+                preprocess_list += (operation,)
+        
+        self.set_preprocess(*preprocess_list)
         self.set_preprocess_parameters(move=0)
 
         # Layers

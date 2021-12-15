@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:38:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-24 19:15:38
+@LastEditTime: 2021-12-15 09:51:16
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -126,7 +126,7 @@ class Agent(M.prediction.Structure):
         super().__init__(Args, *args, **kwargs)
 
         self.args = AgentArgs(Args)
-        self.important_args += ['Kc', 'key_points', 'depth']
+        self.important_args += ['Kc', 'key_points', 'depth', 'preprocess']
 
         self.set_model_inputs('traj')
         self.set_model_groundtruths('gt')

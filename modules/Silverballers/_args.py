@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:48:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-23 19:44:43
+@LastEditTime: 2021-12-15 09:29:33
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -57,6 +57,17 @@ class AgentArgs(M.prediction.PredictionArgs):
         Controls if uses the trajectory maps or the social maps in the model.
         """
         return self._get('use_maps', 0, changeable=False)
+
+    @property
+    def preprocess(self) -> str:
+        """
+        Controls if run any preprocess before model inference.
+        Accept a 3-bit-like string value (like `'111'`):
+        - the first bit indicates if `MOVE` trajectories to (0, 0);
+        - the second bit indicates if re-`SCALE` trajectories;
+        - the third bit indicates if `ROTATE` trajectories.
+        """
+        return self._get('preprocess', '111', changeable=False)
 
 
 class HandlerArgs(M.prediction.PredictionArgs):
