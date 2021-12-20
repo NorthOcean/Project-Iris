@@ -1,8 +1,8 @@
 """
 @Author: Conghao Wong
-@Date: 2021-12-14 14:46:55
+@Date: 2021-12-20 09:6:55
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-20 09:49:10
+@LastEditTime: 2021-12-20 09:50:06
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -13,12 +13,12 @@ from typing import List
 import tensorflow as tf
 
 from ..Vertical._utils import Utils as U
-from ._agent47 import Agent47, Agent47Model
-from ._args import AgentArgs, SilverballersArgs
+from ._agent6 import Agent6Model
+from ._args import SilverballersArgs
 from ._silverballers import Silverballers
 
 
-class _Agent47ModelPlus(Agent47Model):
+class _Agent6ModelPlus(Agent6Model):
     def __init__(self, Args: SilverballersArgs,
                  feature_dim: int = 128,
                  id_depth: int = 16,
@@ -48,7 +48,7 @@ class _Agent47ModelPlus(Agent47Model):
                      *args, **kwargs) -> List[tf.Tensor]:
 
         # shape = ((batch, Kc, n, 2))
-        outputs = Agent47Model.post_process(
+        outputs = Agent6Model.post_process(
             self, outputs, training, **kwargs)
 
         if training:
@@ -80,9 +80,9 @@ class _Agent47ModelPlus(Agent47Model):
         return (final_results,)
 
 
-class Silverballers47(Silverballers):
+class Silverballers6(Silverballers):
 
-    agent_model = _Agent47ModelPlus
+    agent_model = _Agent6ModelPlus
 
     def __init__(self, Args: List[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)

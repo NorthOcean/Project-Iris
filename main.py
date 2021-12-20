@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-14 15:01:22
+@LastEditTime: 2021-12-20 09:54:27
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -61,6 +61,9 @@ def train_or_test(args: M.models.base.Args,
     elif model == 'agent':
         s = M.Silverballers.Agent
 
+    elif model == 'agent6':
+        s = M.Silverballers.Agent6
+
     elif model == 'agent47':
         s = M.Silverballers.Agent47
 
@@ -69,6 +72,9 @@ def train_or_test(args: M.models.base.Args,
 
     elif model == 'sb47':
         s = M.Silverballers.Silverballers47
+    
+    elif model == 'sb6':
+        s = M.Silverballers.Silverballers6
 
     else:
         raise NotImplementedError(

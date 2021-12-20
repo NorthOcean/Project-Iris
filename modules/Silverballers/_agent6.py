@@ -1,8 +1,8 @@
 """
 @Author: Conghao Wong
-@Date: 2021-12-14 09:34:58
+@Date: 2021-12-15 16:06:16
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-15 16:07:26
+@LastEditTime: 2021-12-15 20:33:40
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -20,7 +20,7 @@ from ._args import AgentArgs
 from ._layers import FFTlayer, GraphConv, IFFTlayer, OuterLayer, TrajEncoding
 
 
-class Agent47Model(M.prediction.Model):
+class Agent6Model(M.prediction.Model):
 
     def __init__(self, Args: AgentArgs,
                  feature_dim: int = 128,
@@ -48,10 +48,8 @@ class Agent47Model(M.prediction.Model):
         self.set_preprocess_parameters(move=0)
 
         # Layers
-        self.te = TrajEncoding(
-            units=self.d//2, activation=tf.nn.relu, useFFT=True)
-        self.outer = OuterLayer(self.d//2, self.d//2, reshape=True)
-        self.outer_fc = keras.layers.Dense(self.d//2, tf.nn.tanh)
+        self.te1 = TrajEncoding(self.d//2, activation=tf.nn.relu, useFFT=True)
+        self.te2 = TrajEncoding(self.d//2, activation=tf.nn.relu, useFFT=True)
         self.ie = TrajEncoding(units=self.d//2, activation=tf.nn.tanh)
         self.concat = keras.layers.Concatenate(axis=-1)
 
@@ -68,6 +66,10 @@ class Agent47Model(M.prediction.Model):
                                pe_input=Args.obs_frames,
                                pe_target=Args.obs_frames,
                                include_top=False)
+
+        # Outer product
+        self.outer = OuterLayer(self.d//2, self.d//2, reshape=True)
+        self.outer_fc = keras.layers.Dense(self.d//2, tf.nn.tanh)
 
         # Trainable adj matrix and gcn layer
         self.adj_fc = keras.layers.Dense(self.args.Kc, tf.nn.tanh)
@@ -87,9 +89,10 @@ class Agent47Model(M.prediction.Model):
         bs = trajs.shape[0]
 
         # feature embedding and encoding -> (batch, obs, d/2)
-        spec_features = self.te.call(trajs)
-        spec_features = self.outer.call(spec_features, spec_features)
-        spec_features = self.outer_fc(spec_features)
+        f1 = self.te1.call(trajs)
+        f2 = self.te2.call(trajs)
+        f = self.outer.call(f1, f2)
+        spec_features = self.outer_fc(f)
 
         all_predictions = []
         rep_time = 1 if training else self.args.K
@@ -122,9 +125,9 @@ class Agent47Model(M.prediction.Model):
         return tf.concat(all_predictions, axis=1)
 
 
-class Agent47(Agent):
+class Agent6(Agent):
 
     def __init__(self, Args: List[str], association: M.prediction.Structure = None, *args, **kwargs):
         super().__init__(Args, association=association, *args, **kwargs)
 
-        self.set_model_type(new_type=Agent47Model)
+        self.set_model_type(new_type=Agent6Model)
