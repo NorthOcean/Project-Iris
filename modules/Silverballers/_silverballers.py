@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-11-23 16:15:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-14 15:53:57
+@LastEditTime: 2021-12-17 10:45:50
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -103,26 +103,29 @@ class Silverballers(M.prediction.Structure):
         self.set_metrics('ade', 'fde')
         self.set_metrics_weights(1.0, 0.0)
 
-        # assign models
-        self.agent = self.agent_structure(Args, association=self)
-        self.agent.set_model_type(self.agent_model)
-        self.handler = self.handler_structure(Args, association=self)
-        self.linear_predict = False
-
-        # load weights
+        # check weights
         if 'null' in [self.args.loada, self.args.loadb]:
             raise ('`Agent` or `Handler` not found!' +
                    ' Please specific their paths via `--loada` or `--loadb`.')
 
-        self.agent.args = AgentArgs(self.agent.load_args(Args, self.args.loada),
-                                    default_args=self.args._args)
+        # load args
+        agent_args_list = self.load_args(Args, self.args.loada)
+        agent_args = AgentArgs(agent_args_list, default_args=self.args)._args
+
+        # assign models
+        self.agent = self.agent_structure(agent_args, association=self)
+        self.agent.set_model_type(self.agent_model)
 
         if self.args.loadb.startswith('l'):
             self.linear_predict = True
 
         else:
-            self.handler.args = HandlerArgs(self.handler.load_args(Args, self.args.loadb),
-                                            default_args=self.args)
+            self.linear_predict = False
+
+            handler_args_list = self.load_args(Args, self.args.loadb)
+            handler_args = HandlerArgs(handler_args_list, default_args=self.args)._args
+
+            self.handler = self.handler_structure(handler_args, association=self)
             self.handler.model = self.handler.load_from_checkpoint(
                 self.args.loadb,
                 asSecondStage=True,
@@ -134,6 +137,8 @@ class Silverballers(M.prediction.Structure):
         )
 
         self.model = self.agent.model
+        self.args._set('batch_size', self.agent.args.batch_size)
+        self.args._set('test_set', self.agent.args.test_set)
 
     def run_train_or_test(self):
         self.run_test()
