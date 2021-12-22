@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:17:59
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-30 09:46:59
+@LastEditTime: 2021-12-22 19:44:23
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -153,59 +153,6 @@ class TrajEncoding(keras.layers.Layer):
             trajs = self.fc2(concat)
 
         return self.fc1(trajs)
-
-
-class LinearPrediction(keras.layers.Layer):
-    """
-    Linear prediction from start points (not contain) to end points.
-    """
-
-    def __init__(self, useFFT=None, include_obs=None, *args, **kwargs):
-        """
-        Init a linear prediction layer
-
-        :param useFFT: controls if applys `DFT` on outputs
-        :param include_obs: controls if includes observations in outputs
-        """
-        super().__init__(*args, **kwargs)
-
-        self.useFFT = useFFT
-        self.include_obs = include_obs
-
-        if self.useFFT:
-            self.fft = FFTlayer()
-
-        self.concat = keras.layers.Concatenate(axis=-2)
-        self.concat1 = keras.layers.Concatenate(axis=-1)
-
-    def call(self, start, end, n, obs=None, *args, **kwargs) -> tf.Tensor:
-        """
-        Run the linear prediction operation
-        
-        :param start: start points, shape = (batch, 1, 2)
-        :param end: end points, shape == (batch, 1, 2)
-        :param n: number of prediction points, DOES NOT contain the start point
-
-        :return pred: linear predictions, DOES NOT contain the start point
-        """
-        results = []
-        for i in range(1, n):
-            p = i / n
-            results.append((end - start) * p + start)
-
-        results.append(end)
-        pred = self.concat(results)  # (batch, n, 2)
-
-        # output shape = (batch, obs+n, 2)
-        if self.include_obs:
-            pred = self.concat([obs, pred])
-
-        # output shape = (batch, obs+n, 4)
-        if self.useFFT:
-            pred_r, pred_i = self.fft(pred)
-            pred = self.concat1([pred_r, pred_i])
-
-        return pred
 
 
 class GraphConv(keras.layers.Layer):
