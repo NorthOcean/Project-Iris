@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-20 09:54:27
+@LastEditTime: 2021-12-22 20:01:24
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -58,17 +58,17 @@ def train_or_test(args: M.models.base.Args,
     elif model == 'virisg':
         s = M.Vertical.VIrisG
 
-    elif model == 'agent':
-        s = M.Silverballers.Agent
-
     elif model == 'agent6':
-        s = M.Silverballers.Agent6
+        s = M.Silverballers.agents.Agent6
 
     elif model == 'agent47':
-        s = M.Silverballers.Agent47
+        s = M.Silverballers.agents.Agent47
 
-    elif model == 'sb':
-        s = M.Silverballers.Silverballers
+    elif model == 'burnwood':
+        s = M.Silverballers.handlers.Burnwood
+
+    elif model == 'burnwoodC':
+        s = M.Silverballers.handlers.BurnwoodC
 
     elif model == 'sb47':
         s = M.Silverballers.Silverballers47
