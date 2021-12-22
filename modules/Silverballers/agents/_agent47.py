@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-14 09:34:58
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-15 16:07:26
+@LastEditTime: 2021-12-22 19:26:08
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -13,11 +13,11 @@ from typing import List
 import tensorflow as tf
 from tensorflow import keras
 
-from .. import applications as A
-from .. import models as M
-from ._agent import Agent
-from ._args import AgentArgs
-from ._layers import FFTlayer, GraphConv, IFFTlayer, OuterLayer, TrajEncoding
+from ... import applications as A
+from ... import models as M
+from .._args import AgentArgs
+from .._baseAgent import BaseAgentStructure
+from .._layers import FFTlayer, GraphConv, IFFTlayer, OuterLayer, TrajEncoding
 
 
 class Agent47Model(M.prediction.Model):
@@ -43,7 +43,7 @@ class Agent47Model(M.prediction.Model):
         for index, operation in enumerate(['Move', 'Scale', 'Rotate']):
             if self.args.preprocess[index] == '1':
                 preprocess_list += (operation,)
-        
+
         self.set_preprocess(*preprocess_list)
         self.set_preprocess_parameters(move=0)
 
@@ -122,9 +122,12 @@ class Agent47Model(M.prediction.Model):
         return tf.concat(all_predictions, axis=1)
 
 
-class Agent47(Agent):
+class Agent47(BaseAgentStructure):
 
-    def __init__(self, Args: List[str], association: M.prediction.Structure = None, *args, **kwargs):
+    def __init__(self, Args: List[str], 
+                 association: M.prediction.Structure = None, 
+                 *args, **kwargs):
+
         super().__init__(Args, association=association, *args, **kwargs)
 
         self.set_model_type(new_type=Agent47Model)
