@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-30 14:58:21
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 14:54:34
+@LastEditTime: 2021-12-22 19:48:44
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,11 +10,12 @@
 """
 
 from typing import Tuple
+
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras as keras
 
-from ._utils import (MultiHeadAttention, create_masks,
+from ._utils import (MultiHeadAttention, create_encoder_mask, create_masks,
                      point_wise_feed_forward_network, positional_encoding)
 
 
@@ -331,3 +332,50 @@ class Transformer(tf.keras.Model):
             dec_output) if self.include_top else dec_output
 
         return final_output, attention_weights
+
+
+class TransformerEncoder(keras.Model):
+    """
+    Transformer Encoder
+    """
+
+    def __init__(self, num_layers: int,
+                 num_heads: int,
+                 dim_model: int,
+                 dim_forward: int,
+                 steps: int,
+                 dim_input: int = None,
+                 dim_output: int = None,
+                 dropout=0.1,
+                 include_top=True,
+                 *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.include_top = include_top
+
+        # Transformer Encoder
+        self.TE = Encoder(num_layers=num_layers,
+                          d_model=dim_model,
+                          num_heads=num_heads,
+                          dff=dim_forward,
+                          input_vocab_size=dim_input,
+                          maximum_position_encoding=steps,
+                          rate=dropout)
+
+        if self.include_top:
+            self.final_layer = keras.layers.Dense(dim_output)
+
+    def call(self, inputs: tf.Tensor, training=None, *args, **kwargs):
+
+        # Create masks
+        enc_mask = create_encoder_mask(inputs)
+
+        # Transformer Encoder -> (batch, steps, dim_input)
+        output = self.TE(inputs, training, enc_mask)
+
+        # Top layer -> (batch, steps, dim_output)
+        if self.include_top:
+            output = self.final_layer(output)
+
+        return output

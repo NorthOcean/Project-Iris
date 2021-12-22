@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-30 15:09:20
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-05-06 16:11:24
+@LastEditTime: 2021-12-21 15:58:52
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -82,6 +82,10 @@ def create_look_ahead_mask(size):
     """
     mask = 1 - tf.linalg.band_part(tf.ones((size, size)), -1, 0)
     return mask  # (seq_len, seq_len)
+
+
+def create_encoder_mask(inp):
+    return create_padding_mask(inp)[:, :, :, :, 0]
 
 
 def create_masks(inp, tar):
