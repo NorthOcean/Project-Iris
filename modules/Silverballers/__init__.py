@@ -2,16 +2,12 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:38:21
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-20 10:01:08
+@LastEditTime: 2021-12-22 19:57:09
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from ._agent import Agent
-from ._agent6 import Agent6
-from ._agent47 import Agent47
-from ._handler import Handler
-from ._silverballers import Silverballers
-from ._silverballers6 import Silverballers6
-from ._silverballers47 import Silverballers47
+from . import agents as agents
+from . import handlers as handlers
+from ._silverballers import Silverballers6, Silverballers47

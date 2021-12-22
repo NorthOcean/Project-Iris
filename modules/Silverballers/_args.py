@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:48:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-15 09:29:33
+@LastEditTime: 2021-12-21 19:35:02
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -90,6 +90,14 @@ class HandlerArgs(M.prediction.PredictionArgs):
         Controls number of points (representative time steps) input to the beta model.
         """
         return self._get('points', 1, changeable=False)
+
+    @property
+    def key_points(self) -> str:
+        """
+        A list of keypoints' index to be predicted in `Agent` model.
+        For example, `'0_6_11'`.
+        """
+        return self._get('key_points', 'null', changeable=False)
 
 
 class SilverballersArgs(M.prediction.PredictionArgs):
