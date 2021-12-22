@@ -1,8 +1,8 @@
 """
 @Author: Conghao Wong
-@Date: 2021-09-16 19:44:00
+@Date: 2021-12-21 15:19:11
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-09-16 20:10:05
+@LastEditTime: 2021-12-22 19:44:41
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,6 +10,7 @@
 
 import tensorflow as tf
 from tensorflow import keras
+
 
 class LinearLayer(keras.layers.Layer):
     def __init__(self, obs_frames, pred_frames, diff=0.95, *args, **kwargs):
@@ -22,7 +23,8 @@ class LinearLayer(keras.layers.Layer):
         if self.diff == 0:
             P = tf.linalg.diag(tf.ones(self.h))
         else:
-            P = tf.linalg.diag(tf.nn.softmax([(i+1)**self.diff for i in range(self.h)]))
+            P = tf.linalg.diag(tf.nn.softmax(
+                [(i+1)**self.diff for i in range(self.h)]))
 
         self.x = tf.range(self.h, dtype=tf.float32)
         self.x_p = tf.range(self.f, dtype=tf.float32) + self.h
@@ -45,7 +47,7 @@ class LinearLayer(keras.layers.Layer):
         """
         x = inputs[:, :, 0:1]
         y = inputs[:, :, 1:2]
-        
+
         Bx = self.W @ x
         By = self.W @ y
 
@@ -56,3 +58,43 @@ class LinearLayer(keras.layers.Layer):
 
         results = tf.transpose(results[:, :, :, 0], [1, 2, 0])
         return results[:, -self.f:, :]
+
+
+class LinearInterpolation(keras.layers.Layer):
+    def __init__(self, *args, **kwargs):
+        """
+        Piecewise linear interpolation
+        (Results do not contain the start point)
+        """
+
+        super().__init__(*args, **kwargs)
+
+    def call(self, index, value):
+        """
+        Piecewise linear interpolation
+        (Results do not contain the start point)
+
+        :param index: index, shape = `(n)`, where `m = index[-1] - index[0]`
+        :param value: values, shape = `(..., n, 2)`
+        :return yp: linear interpolations, shape = `(..., m, 2)`
+        """
+
+        x = index
+        y = value
+
+        linear_results = []
+        for output_index in range(x.shape[0] - 1):
+            p_start = x[output_index]
+            p_end = x[output_index+1]
+
+            # shape = (..., 2)
+            start = tf.gather(y, output_index, axis=-2)
+            end = tf.gather(y, output_index+1, axis=-2)
+
+            for p in tf.range(p_start+1, p_end+1):
+                linear_results.append(tf.expand_dims(
+                    (end - start) * (p - p_start) / (p_end - p_start)
+                    + start, axis=-2))   # (..., 1, 2)
+
+        # shape = (..., n, 2)
+        return tf.concat(linear_results, axis=-2)
