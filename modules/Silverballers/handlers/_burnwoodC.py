@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 15:20:37
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 19:27:05
+@LastEditTime: 2021-12-22 20:35:18
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -57,7 +57,9 @@ class BurnwoodCModel(BaseHandlerModel):
 
         self.outer = OuterLayer(self.d//2, self.d//2, reshape=False)
         self.pooling = keras.layers.MaxPooling2D(
-            (2, 2), data_format='channels_first')
+            pool_size=(2, 2),
+            data_format='channels_first')
+            
         self.outer_fc = keras.layers.Dense(self.d, tf.nn.tanh)
 
         self.T = A.TransformerEncoder(num_layers=4, num_heads=8,

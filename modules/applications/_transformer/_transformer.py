@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-30 14:58:21
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 19:48:44
+@LastEditTime: 2021-12-23 09:49:30
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -366,7 +366,7 @@ class TransformerEncoder(keras.Model):
         if self.include_top:
             self.final_layer = keras.layers.Dense(dim_output)
 
-    def call(self, inputs: tf.Tensor, training=None, *args, **kwargs):
+    def call(self, inputs: tf.Tensor, training=None, *args, **kwargs) -> tf.Tensor:
 
         # Create masks
         enc_mask = create_encoder_mask(inputs)
