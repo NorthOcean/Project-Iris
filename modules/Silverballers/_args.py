@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:48:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-21 19:35:02
+@LastEditTime: 2021-12-24 16:15:08
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -68,6 +68,14 @@ class AgentArgs(M.prediction.PredictionArgs):
         - the third bit indicates if `ROTATE` trajectories.
         """
         return self._get('preprocess', '111', changeable=False)
+
+    @property
+    def metric(self) -> str:
+        """
+        Controls the metric used to save best models when training.
+        Accept either `'ade'` or `'fde'`.
+        """
+        return self._get('metric', 'fde', changeable=False)
 
 
 class HandlerArgs(M.prediction.PredictionArgs):

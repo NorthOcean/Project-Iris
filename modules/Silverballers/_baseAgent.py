@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 19:20:26
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 19:24:44
+@LastEditTime: 2021-12-24 16:22:52
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -36,7 +36,13 @@ class BaseAgentStructure(M.prediction.Structure):
         self.set_loss(self.l2_loss)
         self.set_loss_weights(1.0)
 
-        self.set_metrics(self.min_FDE)
+        if self.args.metric == 'fde':
+            self.set_metrics(self.min_FDE)
+        elif self.args.metric == 'ade':
+            self.set_metrics(self.l2_loss)
+        else:
+            raise ValueError(self.log('Metric error!', level='error'))
+
         self.set_metrics_weights(1.0)
 
         self.association = association
