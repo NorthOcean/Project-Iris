@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 09:52:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-24 15:15:30
+@LastEditTime: 2021-12-29 15:51:57
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -350,8 +350,7 @@ class DatasetsManager(base.DatasetsManager):
         return self._args
 
     def load_fromManagers(self, dataset_managers: List[DatasetManager],
-                          mode='test',
-                          train_percent: str = '1') -> List[PredictionAgent]:
+                          mode='test') -> List[PredictionAgent]:
         """
         Make or load train files to get train agents.
         (a list of agent managers, type = `PredictionAgent`)
@@ -363,17 +362,7 @@ class DatasetsManager(base.DatasetsManager):
         count = 1
         dir_check('./dataset_npz/')
 
-        percents = [item for item in train_percent.split('_') if len(item)]
-        if len(percents) == 1:
-            percent = min(max(0.0, float(percents[0])), 1.0)
-            percents = [percent] * len(dataset_managers)
-
-        else:
-            percents = [min(max(0.0, float(p)), 1.0) for p in percents]
-            while len(percents) < len(dataset_managers):
-                percents.append(1.0)
-
-        for dm, p in zip(dataset_managers, percents):
+        for dm in dataset_managers:
             print('({}/{})  Prepare test data in `{}`...'.format(
                 count, len(dataset_managers), dm.dataset_name))
 
@@ -429,12 +418,6 @@ class DatasetsManager(base.DatasetsManager):
                                             centers_file='centers.txt')
 
                 self.log('Successfully load maps from `{}`.'.format(map_path))
-
-            if mode == 'train':
-                if p < 1.0:
-                    agents = random.sample(
-                        agents,
-                        int(train_percent * len(agents)))
 
             all_agents += agents
             count += 1

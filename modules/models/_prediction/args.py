@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-24 17:35:10
+@LastEditTime: 2021-12-29 15:49:28
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -48,15 +48,6 @@ class PredictionArgs(base.Args):
         according to the specific name way.
         """
         return self._get('draw_results', 0, changeable=True)
-
-    @property
-    def train_percent(self) -> str:
-        """
-        Percent of training samples used in each training dataset when training.
-        Split with `_` if you want to specify the train percent on each dataset,
-        for example `0.5_0.9_0.1`.
-        """
-        return self._get('train_percent', '1.0_', changeable=False)
 
     @property
     def step(self) -> int:

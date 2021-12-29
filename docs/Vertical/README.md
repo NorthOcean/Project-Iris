@@ -221,7 +221,6 @@ All args and their usages when training and testing are listed below. Args with 
 - `--sigma`, type=`float`, changeable=`True`. Sigma of noise. This arg only works for `Generative Models`.  Default value is `1.0`.
 - `--step`, type=`int`, changeable=`True`. Frame interval for sampling training data.  Default value is `1`.
 - `--test_mode`, type=`str`, changeable=`True`. Test settings, canbe `'one'` or `'all'` or `'mix'`. When set it to `one`, it will test the model on the `args.force_set` only; When set it to `all`, it will test on each of the test dataset in `args.test_set`; When set it to `mix`, it will test on all test dataset in `args.test_set` together.  Default value is `'mix'`.
-- `--train_percent`, type=`str`, changeable=`False`. Percent of training samples used in each training dataset when training. Split with `_` if you want to specify the train percent on each dataset, for example `0.5_0.9_0.1`.  Default value is `'1.0_'`.
 - `--use_extra_maps`, type=`int`, changeable=`True`. Controls if uses the calculated trajectory maps or the given trajectory maps. The model will load maps from `./dataset_npz/.../agent1_maps/trajMap.png` if set it to `0`, and load from `./dataset_npz/.../agent1_maps/trajMap_load.png` if set this item to `1`.  Default value is `0`.
 - `--use_maps`, type=`int`, changeable=`False`. Controls if uses the trajectory maps or the social maps in the model.  Default value is `1`.
 - `--window_size_expand_meter`, type=`float`, changeable=`False`. ***DO NOT CHANGE THIS***.  Default value is `10.0`.

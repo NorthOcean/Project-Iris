@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-04-13 12:03:47
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-24 15:16:35
+@LastEditTime: 2021-12-29 15:53:17
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -89,19 +89,18 @@ class DatasetsManager(BaseObject):
         return self._args
 
     def load_fromManagers(self, dataset_managers: List[datasetManager_type],
-                            mode='test', train_percent: str = '1') -> List[agent_type]:
+                          mode='test') -> List[agent_type]:
 
         raise NotImplementedError('Please rewrite this method.')
 
     @classmethod
-    def load(cls, args: arg_type, dataset: Union[str, List[str]], mode: str, train_percent: str = '1'):
+    def load(cls, args: arg_type, dataset: Union[str, List[str]], mode: str):
         """
         Load train samples in sub-dataset(s).
 
         :param args: args used
         :param dataset: dataset to load. Set it to `'auto'` to load train agents
         :param mode: load mode, canbe `'test'` or `'train'`
-        :param train_percent: percent of samples used when training. Only works when `mode` is `'train'`.
         :return agents: loaded agents. It returns a list of `[train_agents, test_agents]` when `mode` is `'train'`.
         """
         dir_check('./dataset_npz')
@@ -111,9 +110,7 @@ class DatasetsManager(BaseObject):
             train_sets = Dm.dataset_info.train_sets
             test_sets = Dm.dataset_info.test_sets
 
-            train_agents = cls.load(args, train_sets,
-                                    mode='train',
-                                    train_percent=args.train_percent)
+            train_agents = cls.load(args, train_sets, mode='train')
             test_agents = cls.load(args, test_sets, mode='test')
 
             return train_agents, test_agents
@@ -123,4 +120,4 @@ class DatasetsManager(BaseObject):
                 dataset = [dataset]
 
             dms = [cls.datasetManager_type(args, d) for d in dataset]
-            return Dm.load_fromManagers(dms, mode=mode, train_percent=train_percent)
+            return Dm.load_fromManagers(dms, mode=mode)
