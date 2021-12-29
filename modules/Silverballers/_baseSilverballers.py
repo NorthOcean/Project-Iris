@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 11:20:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 19:27:31
+@LastEditTime: 2021-12-27 09:59:04
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -132,6 +132,8 @@ class Silverballers(M.prediction.Structure):
         if self.args.batch_size > self.agent.args.batch_size:
             self.args._set('batch_size', self.agent.args.batch_size)
         self.args._set('test_set', self.agent.args.test_set)
+        
+        self.agent.args._set('K', self.args.K)
 
     def set_models(self, agentModel,
                    handlerModel,

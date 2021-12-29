@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 15:05:29
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 19:18:08
+@LastEditTime: 2021-12-29 09:33:02
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -128,8 +128,17 @@ class BaseHandlerStructure(M.prediction.Structure):
         self.set_loss('ade', 'diff')
         self.set_loss_weights(0.8, 0.2)
 
-        self.set_metrics('ade', 'fde')
-        self.set_metrics_weights(1.0, 0.0)
+        if self.args.key_points == 'null':
+            self.set_metrics('ade', 'fde')
+            self.set_metrics_weights(1.0, 0.0)
+
+        else:
+            key_points = self.args.key_points
+            pi = [int(i) for i in key_points.split('_')]
+            self.keypoints_index = tf.cast(pi, tf.int32)
+
+            self.set_metrics('ade', 'fde', self.l2_keypoints)
+            self.set_metrics_weights(1.0, 0.0, 0.0)
 
         self.association = association
 
@@ -159,3 +168,15 @@ class BaseHandlerStructure(M.prediction.Structure):
         self.log('Results: {}, {}, {}.'.format(self.args.load,
                                                dataset_name,
                                                loss_dict))
+
+    def l2_keypoints(self, outputs: List[tf.Tensor],
+                     labels: tf.Tensor,
+                     *args, **kwargs) -> tf.Tensor:
+        """
+        l2 loss on the keypoints
+        """
+        # shapes of pickled tensors are (batch, n_key, 2)
+        labels_pickled = tf.gather(labels, self.keypoints_index, axis=1)
+        pred_pickled = tf.gather(outputs[0], self.keypoints_index, axis=1)
+
+        return M.prediction.Loss.ADE(pred_pickled, labels_pickled)
