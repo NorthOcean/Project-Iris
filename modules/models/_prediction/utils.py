@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 15:08:07
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-24 20:32:23
+@LastEditTime: 2021-12-28 15:21:34
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -341,10 +341,10 @@ class Process():
             trajs = tf.expand_dims(trajs, 0)    # change into [batch, obs, 2]
             change_flag = True
 
-        if use_new_para_dict:
-            x = trajs[:, :, 0]  # shape = [batch, obs]
-            y = trajs[:, :, 1]
+        x = trajs[:, :, 0]  # shape = [batch, obs]
+        y = trajs[:, :, 1]
 
+        if use_new_para_dict:
             scale = tf.linalg.norm(
                 trajs[:, -1, :] - trajs[:, 0, :], axis=-1)  # [batch]
             scale = tf.maximum(0.05, scale)
