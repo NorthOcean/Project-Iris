@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 15:20:37
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 20:35:18
+@LastEditTime: 2021-12-29 09:33:32
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -40,7 +40,7 @@ class BurnwoodCModel(BaseHandlerModel):
         self.d = feature_dim
         self.points = points
         self.key_points = key_points
-        self.steps = self.args.obs_frames + self.args.pred_frames
+        self.steps = self.args.pred_frames
 
         # Layers
 
@@ -99,7 +99,7 @@ class BurnwoodCModel(BaseHandlerModel):
         # Calculate linear interpolation and concat -> (batch, obs+pred, 2)
         # linear shape = (batch, pred, 2)
         linear = self.linear.call(keypoints_index, keypoints)
-        trajs = tf.concat([trajs, linear], axis=-2)
+        trajs = linear
 
         # Encode trajectory features and context features
         traj_feature = self.te.call(trajs)      # (batch, obs+pred, d/4)
@@ -117,11 +117,22 @@ class BurnwoodCModel(BaseHandlerModel):
         p_fft = self.T.call(inputs=f, training=training)
         p = self.ifft.call(real=p_fft[:, :, :2], imag=p_fft[:, :, 2:])
 
-        return p[:, self.args.obs_frames:, :]
+        return p
 
 
 class BurnwoodC(BaseHandlerStructure):
 
-    def __init__(self, Args: List[str], association: M.prediction.Structure = None, *args, **kwargs):
+    def __init__(self, Args: List[str],
+                 association: M.prediction.Structure = None,
+                 *args, **kwargs):
+
         super().__init__(Args, association=association, *args, **kwargs)
         self.set_model_type(new_type=BurnwoodCModel)
+        
+        if self.args.key_points == 'null':
+            self.set_loss('ade', 'diff')
+            self.set_loss_weights(0.8, 0.2)
+        
+        else:
+            self.set_loss('ade', self.l2_keypoints, 'diff')
+            self.set_loss_weights(0.8, 1.0, 0.2)
