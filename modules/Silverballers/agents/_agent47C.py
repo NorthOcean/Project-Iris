@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 20:27:46
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 20:36:56
+@LastEditTime: 2021-12-30 10:08:58
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -86,6 +86,15 @@ class Agent47CModel(M.prediction.Model):
 
     def call(self, inputs: List[tf.Tensor],
              training=None, mask=None):
+        """
+        Run the first stage `agent47` model.
+
+        :param inputs: a list of tensors, including `trajs`
+            - a batch of observed trajs, shape is `(batch, obs, 2)`
+
+        :param training: set to `True` when training, or leave it `None`
+        :return predictions: predicted keypoints, shape = `(batch, Kc, N_key, 2)`
+        """
 
         # unpack inputs
         trajs = inputs[0]   # (batch, obs, 2)
@@ -130,6 +139,13 @@ class Agent47CModel(M.prediction.Model):
 
 
 class Agent47C(BaseAgentStructure):
+    
+    """
+    Training structure for the `Agent47C` model.
+    Note that it is only used to train the single model.
+    Please use the `Silverballers` structure if you want to test any
+    agent-handler based silverballers models.
+    """
 
     def __init__(self, Args: List[str],
                  association: M.prediction.Structure = None,

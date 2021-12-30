@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 11:20:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-27 09:59:04
+@LastEditTime: 2021-12-30 10:12:40
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -72,6 +72,13 @@ class BaseSilverballersModel(M.prediction.Model):
 
 
 class Silverballers(M.prediction.Structure):
+
+    """
+    Basic structure to run the `agent-handler` based silverballers model.
+    Please set agent model and handler model used in this silverballers by
+    subclassing this class, and call the `set_models` method *before*
+    the `super().__init__()` method.
+    """
 
     # Structures
     agent_structure = BaseAgentStructure
