@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-12-24 18:20:20
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-09 14:55:36
+@LastEditTime: 2021-12-30 15:42:42
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -278,19 +278,10 @@ class Structure(BaseObject):
             return self.model
 
         dir_list = os.listdir(model_path)
-        save_format = '.' + self.args.save_format
+        save_format = '.tf'
         try:
             name_list = [item.split(save_format)[0].split(
                 '_epoch')[0] for item in dir_list if save_format in item]
-            if not len(name_list):
-                raise IndexError
-
-        except IndexError as e:
-            save_format = '.h5' if save_format == '.tf' else '.tf'
-            name_list = [item.split(save_format)[0].split(
-                '_epoch')[0] for item in dir_list if item.endswith(save_format)]
-
-        try:
             model_name = max(name_list, key=name_list.count)
             base_path = os.path.join(model_path, model_name + '{}')
 
@@ -568,7 +559,7 @@ class Structure(BaseObject):
         time_bar = self.log_timebar(dataset_train,
                                     text='Training...',
                                     return_enumerate=False)
-                                    
+
         for batch_id, train_data in enumerate(time_bar):
             # Run training
             epoch = (batch_id * self.args.batch_size) // self.train_number
@@ -614,10 +605,10 @@ class Structure(BaseObject):
                     best_epoch = epoch
 
                     if self.args.save_best:
-                        self.save_model(os.path.join(self.args.log_dir, '{}_epoch{}.{}'.format(
-                            self.args.model_name,
-                            epoch,
-                            self.args.save_format)))
+                        self.save_model(os.path.join(
+                            self.args.log_dir, '{}_epoch{}.tf'.format(
+                                self.args.model_name,
+                                epoch)))
 
                         np.savetxt(os.path.join(self.args.log_dir, 'best_ade_epoch.txt'),
                                    np.array([best_metric, best_epoch]))
@@ -645,9 +636,8 @@ class Structure(BaseObject):
                                  best_metric=best_metric)
 
         if self.args.save_model and not self.args.save_best:
-            model_save_path = os.path.join(
-                self.args.log_dir,
-                '{}.{}'.format(self.args.model_name, self.args.save_format))
+            model_save_path = os.path.join(self.args.log_dir,
+                                           '{}.tf'.format(self.args.model_name))
             self.save_model(model_save_path)
 
     def run_test(self):

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-08-05 15:26:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-17 10:33:56
+@LastEditTime: 2021-12-30 14:54:51
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -44,7 +44,7 @@ def update(md_file, files: List[str], titles: List[str]):
 
 
 if __name__ == '__main__':
-    for model in ['MSN', 'Vertical']:
+    for model in ['MSN', 'Vertical', 'Silverballers']:
         files = ['./modules/models/_base/args/args.py',
                  './modules/models/_prediction/args.py',
                  './modules/{}/_args.py'.format(model)]

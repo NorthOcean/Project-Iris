@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-24 09:49:16
+@LastEditTime: 2021-12-30 15:43:40
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -121,14 +121,6 @@ class BaseTrainArgs(BaseArgs):
         return self._get('save_best', 1, changeable=False)
 
     @property
-    def save_format(self) -> str:
-        """
-        Model save format, canbe `tf` or `h5`.
-        *This arg is now useless.*
-        """
-        return self._get('save_format', 'tf', changeable=False)
-
-    @property
     def save_model(self) -> int:
         """
         Controls if save the final model at the end of training.
@@ -178,7 +170,7 @@ class BaseTrainArgs(BaseArgs):
     def restore(self) -> str:
         """
         Path to restore the pre-trained weights before training.
-        It will not restore any weights if `args.restore == 'null'`
+        It will not restore any weights if `args.restore == 'null'`.
         """
         return self._get('restore', 'null', changeable=True)
 

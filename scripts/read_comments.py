@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-08-05 14:56:26
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 15:38:16
+@LastEditTime: 2021-12-30 15:31:04
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -37,8 +37,11 @@ def read_comments(file) -> List[str]:
             comments = comments.replace('  ', ' ')
         
         comments = re.findall('( *)(.*)( *)', comments)[0][1]
+
+        if comments.endswith('. '):
+            comments = comments[:-1]
         
-        s = '- `--{}`, type=`{}`, changeable=`{}`. {} Default value is `{}`.'.format(name, dtype, changable, comments, default)
+        s = '- `--{}`, type=`{}`, changeable=`{}`.\n  {}\n  The default value is `{}`.'.format(name, dtype, changable, comments, default)
         results.append(s + '\n')
         print(s)
     
