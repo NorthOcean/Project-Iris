@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-29 15:49:28
+@LastEditTime: 2021-12-30 09:38:24
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -55,25 +55,6 @@ class PredictionArgs(base.Args):
         Frame interval for sampling training data.
         """
         return self._get('step', 1, changeable=True)
-
-    @property
-    def add_noise(self) -> int:
-        """
-        Controls if add noise to training data.
-        *This arg is not used in the current training structure.*
-        """
-        return self._get('add_noise', 0, changeable=False)
-
-    @property
-    def rotate(self) -> int:
-        """
-        Rotate dataset to obtain more available training data.
-        This arg is the time of rotation, for example set to 1 will 
-        rotatetraining data 180 degree once; 
-        set to 2 will rotate them 120 degreeand 240 degree.
-        *This arg is not used in the current training structure.*
-        """
-        return self._get('rotate', 0, changeable=False)
 
     @property
     def test_mode(self) -> str:

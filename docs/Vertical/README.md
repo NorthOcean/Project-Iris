@@ -206,7 +206,6 @@ All args and their usages when training and testing are listed below. Args with 
 
 - `--K_train`, type=`int`, changeable=`False`. Number of multiple generations when training. This arg only works for `Generative Models`.  Default value is `10`.
 - `--K`, type=`int`, changeable=`True`. Number of multiple generations when test. This arg only works for `Generative Models`.  Default value is `20`.
-- `--add_noise`, type=`int`, changeable=`False`. Controls if add noise to training data. *This arg is not used in the current training structure.*  Default value is `0`.
 - `--avoid_size`, type=`int`, changeable=`False`. Avoid size in grid cells when modeling social interaction.  Default value is `15`.
 - `--draw_distribution`, type=`int`, changeable=`True`. Conrtols if draw distributions of predictions instead of points.  Default value is `0`.
 - `--draw_results`, type=`int`, changeable=`True`. Controls if draw visualized results on video frames. Make sure that you have put video files into `./videos` according to the specific name way.  Default value is `0`.
@@ -217,7 +216,6 @@ All args and their usages when training and testing are listed below. Args with 
 - `--max_batch_size`, type=`int`, changeable=`True`. Maximun batch size.  Default value is `20000`.
 - `--obs_frames`, type=`int`, changeable=`False`. Observation frames for prediction.  Default value is `8`.
 - `--pred_frames`, type=`int`, changeable=`False`. Prediction frames.  Default value is `12`.
-- `--rotate`, type=`int`, changeable=`False`. Rotate dataset to obtain more available training data. This arg is the time of rotation, for example set to 1 will rotatetraining data 180 degree once; set to 2 will rotate them 120 degreeand 240 degree. *This arg is not used in the current training structure.*  Default value is `0`.
 - `--sigma`, type=`float`, changeable=`True`. Sigma of noise. This arg only works for `Generative Models`.  Default value is `1.0`.
 - `--step`, type=`int`, changeable=`True`. Frame interval for sampling training data.  Default value is `1`.
 - `--test_mode`, type=`str`, changeable=`True`. Test settings, canbe `'one'` or `'all'` or `'mix'`. When set it to `one`, it will test the model on the `args.force_set` only; When set it to `all`, it will test on each of the test dataset in `args.test_set`; When set it to `mix`, it will test on all test dataset in `args.test_set` together.  Default value is `'mix'`.

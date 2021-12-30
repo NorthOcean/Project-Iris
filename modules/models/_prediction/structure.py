@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-24 20:42:43
+@LastEditTime: 2021-12-30 09:38:10
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -483,9 +483,7 @@ class Structure(base.Structure):
                           mode='m')
 
     def print_dataset_info(self):
-        self.print_parameters(title='dataset options',
-                              rotate_times=self.args.rotate,
-                              add_noise=self.args.add_noise)
+        self.print_parameters(title='dataset options')
 
     def write_test_results(self, model_outputs: List[tf.Tensor],
                            agents: Dict[str, List[agent_type]],
