@@ -8,9 +8,9 @@
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from ._alpha import MSNAlpha
-from ._args import MSNArgs
-from ._beta_D import MSNBeta_D
-from ._beta_G import MSNBeta_G
-from ._MSN_D import MSN_D
-from ._MSN_G import MSN_G
+from .__alpha import MSNAlpha
+from .__args import MSNArgs
+from .__beta_D import MSNBeta_D
+from .__beta_G import MSNBeta_G
+from .__MSN_D import MSN_D
+from .__MSN_G import MSN_G

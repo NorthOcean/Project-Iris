@@ -5,7 +5,7 @@ Models
 @Author: Conghao Wong
 @Date: 2021-03-15 10:49:31
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-23 18:03:26
+@LastEditTime: 2021-12-31 10:28:18
 @Description: Description: A framework for training, eval, and test on models based on `tensorflow 2`.
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -153,6 +153,4 @@ prediction.Process      # basic process methods for trajectory data
 
 """
 
-from . import _base as base
-from . import _prediction as prediction
-from . import helpmethods
+from . import base, helpmethods, prediction

@@ -8,5 +8,5 @@
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from ._burnwood import Burnwood, BurnwoodModel
-from ._burnwoodC import BurnwoodC, BurnwoodCModel
+from .__burnwood import Burnwood, BurnwoodModel
+from .__burnwoodC import BurnwoodC, BurnwoodCModel

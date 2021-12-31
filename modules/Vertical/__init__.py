@@ -8,8 +8,8 @@
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from ._Viris import VIris
-from ._VirisAlpha import VIrisAlpha, VIrisAlphaModel
-from ._VirisAlphaG import VIrisAlphaG
-from ._VirisBeta import VIrisBeta, VIrisBetaModel
-from ._VirisG import VIrisG
+from .__Viris import VIris
+from .__VirisAlpha import VIrisAlpha, VIrisAlphaModel
+from .__VirisAlphaG import VIrisAlphaG
+from .__VirisBeta import VIrisBeta, VIrisBetaModel
+from .__VirisG import VIrisG

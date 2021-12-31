@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:38:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-30 14:40:14
+@LastEditTime: 2021-12-31 10:39:52
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -17,9 +17,9 @@ import modules as M
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-def train_or_test(args: M.models.base.Args, 
+def train_or_test(args: M.models.base.Args,
                   force_args=None):
-                  
+
     model = args.model
 
     if model == 'test':
@@ -60,7 +60,7 @@ def train_or_test(args: M.models.base.Args,
 
     elif model == 'agent47':
         s = M.silverballers.agents.Agent47
-    
+
     elif model == 'agent47C':
         s = M.silverballers.agents.Agent47C
 
@@ -86,7 +86,6 @@ def train_or_test(args: M.models.base.Args,
         _args = force_args
 
     s(_args).run_train_or_test()
-    
 
 
 if __name__ == "__main__":

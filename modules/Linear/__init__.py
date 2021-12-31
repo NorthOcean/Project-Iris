@@ -8,4 +8,4 @@
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from ._linear import LinearModel, LinearStructure
+from .__linear import LinearModel, LinearStructure
