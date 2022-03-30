@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-30 20:56:23
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:01:24
+@LastEditTime: 2022-01-13 11:19:42
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -176,10 +176,8 @@ def scale(trajs: tf.Tensor,
         scale = para_dict['SCALE']
 
     # shape = [batch, obs]
-    new_x = (x - tf.expand_dims(x[:, -1], -1)) / \
-        scale + tf.expand_dims(x[:, -1], -1)
-    new_y = (y - tf.expand_dims(y[:, -1], -1)) / \
-        scale + tf.expand_dims(y[:, -1], -1)
+    new_x = (x - x[:, -1:]) / scale + x[:, -1:]
+    new_y = (y - y[:, -1:]) / scale + y[:, -1:]
 
     traj_scaled = tf.stack([new_x, new_y])  # shape = [2, batch, obs]
     traj_scaled = tf.transpose(traj_scaled, [1, 2, 0])

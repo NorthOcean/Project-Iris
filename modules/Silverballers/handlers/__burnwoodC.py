@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 15:20:37
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-29 09:33:32
+@LastEditTime: 2022-01-11 10:08:00
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -130,9 +130,9 @@ class BurnwoodC(BaseHandlerStructure):
         self.set_model_type(new_type=BurnwoodCModel)
         
         if self.args.key_points == 'null':
-            self.set_loss('ade', 'diff')
-            self.set_loss_weights(0.8, 0.2)
+            self.set_loss('ade')
+            self.set_loss_weights(0.8)
         
         else:
-            self.set_loss('ade', self.l2_keypoints, 'diff')
-            self.set_loss_weights(0.8, 1.0, 0.2)
+            self.set_loss('ade', self.l2_keypoints)
+            self.set_loss_weights(0.8, 1.0)
