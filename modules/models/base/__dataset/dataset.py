@@ -2,16 +2,39 @@
 @Author: Conghao Wong
 @Date: 2020-11-10 09:31:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-24 14:14:26
+@LastEditTime: 2022-03-30 19:26:12
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import os
+
 from typing import Dict, List, Tuple
 
-import biplist
+
+def load_from_plist(path: str) -> dict:
+    """
+    Load plist files into python `dict` object.
+    It is used to fix error when loading plist files through
+    `biplist.readPlist()` in python 3.9 or newer.
+
+    :param path: path of the plist file
+    :return dat: a `dict` object loaded from the file
+    """
+
+    import plistlib
+    import sys
+    import biplist
+
+    v = sys.version
+    if int(v.split('.')[1]) >= 9:
+        with open(path, 'rb') as f:
+            dat = plistlib.load(f)
+    else:
+        dat = biplist.readPlist(path)
+
+    return dat
 
 
 class Dataset():
@@ -53,7 +76,7 @@ class Dataset():
     def get(dataset: str, root_dir='./datasets/subsets'):
         plist_path = os.path.join(root_dir, '{}.plist'.format(dataset))
         try:
-            dic = biplist.readPlist(plist_path)
+            dic = load_from_plist(plist_path)
         except:
             raise FileNotFoundError(
                 'Dataset file `{}`.plist NOT FOUND.'.format(dataset))
@@ -102,7 +125,7 @@ class DatasetsInfo():
     def __init__(self, dataset: str, root_dir='./datasets'):
         plist_path = os.path.join(root_dir, '{}.plist'.format(dataset))
         try:
-            dic = biplist.readPlist(plist_path)
+            dic = load_from_plist(plist_path)
         except:
             raise FileNotFoundError(
                 'Dataset file `{}`.plist NOT FOUND.'.format(dataset))
