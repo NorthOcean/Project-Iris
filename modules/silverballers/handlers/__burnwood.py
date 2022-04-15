@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-21 15:03:58
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:36:06
+@LastEditTime: 2022-04-13 20:51:19
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -16,8 +16,8 @@ from tensorflow import keras
 from ... import applications as A
 from ... import models as M
 from ..__args import HandlerArgs
-from ..__baseHandler import BaseHandlerModel, BaseHandlerStructure
 from ..__layers import OuterLayer
+from .__baseHandler import BaseHandlerModel, BaseHandlerStructure
 
 
 class BurnwoodModel(BaseHandlerModel):
@@ -120,8 +120,7 @@ class BurnwoodModel(BaseHandlerModel):
 class Burnwood(BaseHandlerStructure):
 
     def __init__(self, Args: List[str],
-                 association: M.prediction.Structure = None,
                  *args, **kwargs):
 
-        super().__init__(Args, association=association, *args, **kwargs)
+        super().__init__(Args, *args, **kwargs)
         self.set_model_type(new_type=BurnwoodModel)

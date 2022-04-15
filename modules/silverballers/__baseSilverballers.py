@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 11:20:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-30 10:12:40
+@LastEditTime: 2022-04-13 20:50:39
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -16,8 +16,8 @@ from tensorflow import keras
 from .. import applications as A
 from .. import models as M
 from .__args import AgentArgs, HandlerArgs, SilverballersArgs
-from .__baseAgent import BaseAgentStructure
-from .__baseHandler import BaseHandlerStructure
+from .agents.__baseAgent import BaseAgentStructure
+from .handlers.__baseHandler import BaseHandlerStructure
 
 
 class BaseSilverballersModel(M.prediction.Model):
@@ -114,7 +114,7 @@ class Silverballers(M.prediction.Structure):
         agent_args = AgentArgs(agent_args_list, default_args=self.args)._args
 
         # assign models
-        self.agent = self.agent_structure(agent_args, association=self)
+        self.agent = self.agent_structure(agent_args)
         self.agent.set_model_type(self.agent_model)
 
         if self.args.loadb.startswith('l'):
@@ -127,8 +127,7 @@ class Silverballers(M.prediction.Structure):
             handler_args = HandlerArgs(
                 handler_args_list, default_args=self.args)._args
 
-            self.handler = self.handler_structure(
-                handler_args, association=self)
+            self.handler = self.handler_structure(handler_args)
             self.handler.set_model_type(self.handler_model)
             self.handler.model = self.handler.load_from_checkpoint(
                 self.args.loadb,

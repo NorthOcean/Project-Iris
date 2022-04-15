@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 15:05:29
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-30 17:05:52
+@LastEditTime: 2022-04-13 20:50:28
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -15,8 +15,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tqdm import tqdm
 
-from .. import models as M
-from .__args import HandlerArgs
+from ... import models as M
+from ..__args import HandlerArgs
 
 
 class BaseHandlerModel(M.prediction.Model):
@@ -113,7 +113,6 @@ class BaseHandlerStructure(M.prediction.Structure):
     model_type = None
 
     def __init__(self, Args: List[str],
-                 association: M.prediction.Structure = None,
                  *args, **kwargs):
 
         super().__init__(Args, *args, **kwargs)
@@ -139,8 +138,6 @@ class BaseHandlerStructure(M.prediction.Structure):
 
             self.set_metrics('ade', 'fde', self.l2_keypoints)
             self.set_metrics_weights(1.0, 0.0, 0.0)
-
-        self.association = association
 
     def set_model_type(self, new_type):
         self.model_type = new_type

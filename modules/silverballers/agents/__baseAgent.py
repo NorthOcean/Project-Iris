@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 19:20:26
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-30 17:05:41
+@LastEditTime: 2022-04-15 09:15:39
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -13,8 +13,8 @@ from typing import List
 import tensorflow as tf
 from tensorflow import keras
 
-from .. import models as M
-from .__args import AgentArgs
+from ... import models as M
+from ..__args import AgentArgs
 
 
 class BaseAgentStructure(M.prediction.Structure):
@@ -22,7 +22,6 @@ class BaseAgentStructure(M.prediction.Structure):
     model_type = None
 
     def __init__(self, Args: List[str],
-                 association: M.prediction.Structure = None,
                  *args, **kwargs):
 
         super().__init__(Args, *args, **kwargs)
@@ -44,8 +43,6 @@ class BaseAgentStructure(M.prediction.Structure):
             raise ValueError(self.log('Metric error!', level='error'))
 
         self.set_metrics_weights(1.0)
-
-        self.association = association
 
     @property
     def p_index(self) -> tf.Tensor:

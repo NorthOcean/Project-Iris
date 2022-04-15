@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 20:27:46
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-30 10:08:58
+@LastEditTime: 2022-04-13 20:51:09
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -16,8 +16,8 @@ from tensorflow import keras
 from ... import applications as A
 from ... import models as M
 from ..__args import AgentArgs
-from ..__baseAgent import BaseAgentStructure
 from ..__layers import FFTlayer, GraphConv, IFFTlayer, OuterLayer, TrajEncoding
+from .__baseAgent import BaseAgentStructure
 
 
 class Agent47CModel(M.prediction.Model):
@@ -148,9 +148,8 @@ class Agent47C(BaseAgentStructure):
     """
 
     def __init__(self, Args: List[str],
-                 association: M.prediction.Structure = None,
                  *args, **kwargs):
 
-        super().__init__(Args, association=association, *args, **kwargs)
+        super().__init__(Args, *args, **kwargs)
 
         self.set_model_type(new_type=Agent47CModel)
