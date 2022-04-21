@@ -2,19 +2,15 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 15:20:37
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-04-13 20:51:27
+@LastEditTime: 2022-04-21 11:02:17
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
-
 import tensorflow as tf
-from tensorflow import keras
 
 from ... import applications as A
-from ... import models as M
 from ..__args import HandlerArgs
 from ..__layers import OuterLayer
 from .__baseHandler import BaseHandlerModel, BaseHandlerStructure
@@ -56,11 +52,11 @@ class BurnwoodCModel(BaseHandlerModel):
                                            activation=tf.nn.tanh)
 
         self.outer = OuterLayer(self.d//2, self.d//2, reshape=False)
-        self.pooling = keras.layers.MaxPooling2D(
+        self.pooling = tf.keras.layers.MaxPooling2D(
             pool_size=(2, 2),
             data_format='channels_first')
             
-        self.outer_fc = keras.layers.Dense(self.d, tf.nn.tanh)
+        self.outer_fc = tf.keras.layers.Dense(self.d, tf.nn.tanh)
 
         self.T = A.TransformerEncoder(num_layers=4, num_heads=8,
                                       dim_model=self.d, dim_forward=512,
@@ -70,7 +66,7 @@ class BurnwoodCModel(BaseHandlerModel):
 
         self.ifft = A.layers.IFFTlayer()
 
-    def call(self, inputs: List[tf.Tensor],
+    def call(self, inputs: list[tf.Tensor],
              keypoints: tf.Tensor,
              keypoints_index: tf.Tensor,
              training=None, mask=None,
@@ -122,7 +118,7 @@ class BurnwoodCModel(BaseHandlerModel):
 
 class BurnwoodC(BaseHandlerStructure):
 
-    def __init__(self, Args: List[str],
+    def __init__(self, Args: list[str],
                  *args, **kwargs):
 
         super().__init__(Args, *args, **kwargs)

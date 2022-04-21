@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-12-30 14:44:38
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-12-30 14:55:30
+ * @LastEditTime: 2022-04-21 11:31:45
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -14,16 +14,7 @@
 
 ## Requirements
 
-These versions of packages may be required:
-
-- tqdm==4.60.0
-- biplist==1.0.3
-- pytest==6.2.5
-- numpy==1.19.3
-- matplotlib==3.4.1
-- tensorflow==2.5.0
-- opencv_python
-
+The packages and versions used in our experiments are included in the [requirements.txt](../../requirements.txt) file.
 We recommend you install the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
 
 Please run the following command to install these required packages:
@@ -161,6 +152,9 @@ Args with `changable=False` means that their values can not be changed once the 
 
 ### Silverballers args
 
+- `--K_train`, type=`int`, changeable=`False`.
+  Number of multiple generations when training.
+  The default value is `1`.
 - `--K`, type=`int`, changeable=`True`.
   Number of multiple generations when evaluating. The number of trajectories outputed for one agent is calculated by `N = args.K * Kc`, where `Kc` is the number of style channels (given by args in the agent model).
   The default value is `1`.

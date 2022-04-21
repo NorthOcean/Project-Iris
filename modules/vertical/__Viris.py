@@ -2,13 +2,11 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 09:50:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:40:32
+@LastEditTime: 2022-04-21 11:02:46
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
-
-from typing import List, Tuple
 
 import tensorflow as tf
 from modules.msn.__MSN_G import angle_check
@@ -40,9 +38,9 @@ class _VIrisAlphaModelPlus(VIrisAlphaModel):
             raise ValueError('Structure object (id {}) has no `model` item.'.format(
                 id(self.training_structure)))
 
-    def post_process(self, outputs: List[tf.Tensor],
+    def post_process(self, outputs: list[tf.Tensor],
                      training=None,
-                     *args, **kwargs) -> List[tf.Tensor]:
+                     *args, **kwargs) -> list[tf.Tensor]:
 
         # shape = ((batch, Kc, n, 2))
         outputs = VIrisAlphaModel.post_process(
@@ -91,7 +89,7 @@ class VIris(VIrisAlpha):
     alpha_model = _VIrisAlphaModelPlus
     beta_structure = VIrisBeta
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         # set metrics

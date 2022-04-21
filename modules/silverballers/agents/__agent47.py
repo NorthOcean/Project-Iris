@@ -2,16 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-12-14 09:34:58
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-04-15 09:16:24
+@LastEditTime: 2022-04-21 11:01:55
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
-
 import tensorflow as tf
-from tensorflow import keras
 
 from ... import applications as A
 from ... import models as M
@@ -48,12 +45,11 @@ class Agent47Model(M.prediction.Model):
         self.set_preprocess_parameters(move=0)
 
         # Layers
-        self.te = TrajEncoding(
-            units=self.d//2, activation=tf.nn.relu, useFFT=True)
+        self.te = TrajEncoding(self.d//2, tf.nn.relu, useFFT=True)
         self.outer = OuterLayer(self.d//2, self.d//2, reshape=True)
-        self.outer_fc = keras.layers.Dense(self.d//2, tf.nn.tanh)
+        self.outer_fc = tf.keras.layers.Dense(self.d//2, tf.nn.tanh)
         self.ie = TrajEncoding(units=self.d//2, activation=tf.nn.tanh)
-        self.concat = keras.layers.Concatenate(axis=-1)
+        self.concat = tf.keras.layers.Concatenate(axis=-1)
 
         self.fft = FFTlayer()
         self.ifft = IFFTlayer()
@@ -70,16 +66,16 @@ class Agent47Model(M.prediction.Model):
                                include_top=False)
 
         # Trainable adj matrix and gcn layer
-        self.adj_fc = keras.layers.Dense(self.args.Kc, tf.nn.tanh)
+        self.adj_fc = tf.keras.layers.Dense(self.args.Kc, tf.nn.tanh)
         self.gcn = GraphConv(units=self.d)
 
         # Decoder layers
-        self.decoder_fc1 = keras.layers.Dense(self.d, tf.nn.tanh)
-        self.decoder_fc2 = keras.layers.Dense(4 * self.n_key)
-        self.decoder_reshape = keras.layers.Reshape(
+        self.decoder_fc1 = tf.keras.layers.Dense(self.d, tf.nn.tanh)
+        self.decoder_fc2 = tf.keras.layers.Dense(4 * self.n_key)
+        self.decoder_reshape = tf.keras.layers.Reshape(
             [self.args.Kc, self.n_key, 4])
 
-    def call(self, inputs: List[tf.Tensor],
+    def call(self, inputs: list[tf.Tensor],
              training=None, mask=None):
 
         # unpack inputs
@@ -124,7 +120,7 @@ class Agent47Model(M.prediction.Model):
 
 class Agent47(BaseAgentStructure):
 
-    def __init__(self, Args: List[str],
+    def __init__(self, Args: list[str],
                  *args, **kwargs):
 
         super().__init__(Args, *args, **kwargs)

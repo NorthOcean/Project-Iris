@@ -2,16 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 19:20:26
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-04-15 09:15:39
+@LastEditTime: 2022-04-21 11:02:04
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
-
 import tensorflow as tf
-from tensorflow import keras
 
 from ... import models as M
 from ..__args import AgentArgs
@@ -21,7 +18,7 @@ class BaseAgentStructure(M.prediction.Structure):
 
     model_type = None
 
-    def __init__(self, Args: List[str],
+    def __init__(self, Args: list[str],
                  *args, **kwargs):
 
         super().__init__(Args, *args, **kwargs)
@@ -70,10 +67,10 @@ class BaseAgentStructure(M.prediction.Structure):
                                 training_structure=self,
                                 *args, **kwargs)
 
-        opt = keras.optimizers.Adam(self.args.lr)
+        opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def l2_loss(self, outputs: List[tf.Tensor],
+    def l2_loss(self, outputs: list[tf.Tensor],
                 labels: tf.Tensor,
                 *args, **kwargs) -> tf.Tensor:
         """
@@ -82,7 +79,7 @@ class BaseAgentStructure(M.prediction.Structure):
         labels_pickled = tf.gather(labels, self.p_index, axis=1)
         return M.prediction.loss.ADE(outputs[0], labels_pickled)
 
-    def min_FDE(self, outputs: List[tf.Tensor],
+    def min_FDE(self, outputs: list[tf.Tensor],
                 labels: tf.Tensor,
                 *args, **kwargs) -> tf.Tensor:
         """

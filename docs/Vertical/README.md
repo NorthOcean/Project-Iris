@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-08-05 15:51:15
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-11-17 11:27:35
+ * @LastEditTime: 2022-04-21 11:33:31
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,7 +10,7 @@
 
 # Codes for View Vertically: A Hierarchical Network for Trajectory Prediction via Fourier Spectrums
 
-![$V^2$-Net](../../figs/vmethod.png)
+![$V^2$-Net](./vmethod.png)
 
 ## Abstract
 
@@ -26,16 +26,7 @@ Experimental results show that $V^2$-Net improves the state-of-the-art performan
 
 ## Requirements
 
-The packages and versions used in our experiments include:
-
-- tqdm==4.60.0
-- biplist==1.0.3
-- pytest==6.2.5
-- numpy==1.19.3
-- matplotlib==3.4.1
-- tensorflow==2.5.0
-- opencv_python
-
+The packages and versions used in our experiments are included in the [requirements.txt](../../requirements.txt) file.
 We recommend you install the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
 
 Please run the following command to install the required packages:

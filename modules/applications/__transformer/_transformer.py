@@ -2,18 +2,14 @@
 @Author: Conghao Wong
 @Date: 2021-04-30 14:58:21
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-23 09:49:30
+@LastEditTime: 2022-04-21 10:59:11
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 @Part of modules come from https://tensorflow.google.cn/tutorials/text/transformer.
 """
 
-from typing import Tuple
-
-import numpy as np
 import tensorflow as tf
-from tensorflow import keras as keras
 
 from ._utils import (MultiHeadAttention, create_encoder_mask, create_masks,
                      point_wise_feed_forward_network, positional_encoding)
@@ -127,7 +123,7 @@ class DecoderLayer(tf.keras.layers.Layer):
         return out3, attn_weights_block1, attn_weights_block2
 
 
-class Encoder(keras.layers.Layer):
+class Encoder(tf.keras.layers.Layer):
     """
     This module comes from https://tensorflow.google.cn/tutorials/text/transformer.
 
@@ -300,7 +296,7 @@ class Transformer(tf.keras.Model):
 
     def call(self, inputs: tf.Tensor,
              targets: tf.Tensor,
-             training=None) -> Tuple[tf.Tensor, tf.Tensor]:
+             training=None) -> tuple[tf.Tensor, tf.Tensor]:
         """
         Transformer forward implementation
 
@@ -334,7 +330,7 @@ class Transformer(tf.keras.Model):
         return final_output, attention_weights
 
 
-class TransformerEncoder(keras.Model):
+class TransformerEncoder(tf.keras.Model):
     """
     Transformer Encoder
     """
@@ -364,7 +360,7 @@ class TransformerEncoder(keras.Model):
                           rate=dropout)
 
         if self.include_top:
-            self.final_layer = keras.layers.Dense(dim_output)
+            self.final_layer = tf.keras.layers.Dense(dim_output)
 
     def call(self, inputs: tf.Tensor, training=None, *args, **kwargs) -> tf.Tensor:
 

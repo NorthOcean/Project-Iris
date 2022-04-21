@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-12-24 18:20:20
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:17:09
+@LastEditTime: 2022-04-21 10:54:07
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,11 +10,10 @@
 
 import os
 from argparse import Namespace
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 
 from ..helpmethods import dir_check
 from .__agent import Agent
@@ -23,11 +22,11 @@ from .__args.args import BaseTrainArgs as ArgType
 from .__baseObject import BaseObject
 
 
-class Model(keras.Model):
+class Model(tf.keras.Model):
     """
     Base Model
     ----------
-    An expanded class for `keras.Model`.
+    An expanded class for `tf.keras.Model`.
 
     Usage
     -----
@@ -38,8 +37,8 @@ class Model(keras.Model):
         def __init__(self, Args, training_structure, *args, **kwargs):
             super().__init__(Args, training_structure, *args, **kwargs)
 
-            self.fc = keras.layers.Dense(64, tf.nn.relu)
-            self.fc1 = keras.layers.Dense(2)
+            self.fc = tf.keras.layers.Dense(64, tf.nn.relu)
+            self.fc1 = tf.keras.layers.Dense(2)
     ```
 
     Then define your model's pipeline in `call` method:
@@ -53,11 +52,11 @@ class Model(keras.Model):
     --------------
     ```python
     # forward model with pre-process and post-process
-    (method) forward: (self: Model, model_inputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
+    (method) forward: (self: Model, model_inputs: list[Tensor], training=None, *args, **kwargs) -> list[Tensor]
 
     # Pre/Post-processes
-    (method) pre_process: (self: Model, model_inputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
-    (method) post_process: (self: Model, outputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
+    (method) pre_process: (self: Model, model_inputs: list[Tensor], training=None, *args, **kwargs) -> list[Tensor]
+    (method) post_process: (self: Model, outputs: list[Tensor], training=None, *args, **kwargs) -> list[Tensor]
     ```
     """
 
@@ -78,15 +77,15 @@ class Model(keras.Model):
         raise NotImplementedError
 
     # @tf.function
-    def forward(self, model_inputs: List[tf.Tensor],
+    def forward(self, model_inputs: list[tf.Tensor],
                 training=None,
-                *args, **kwargs) -> List[tf.Tensor]:
+                *args, **kwargs) -> list[tf.Tensor]:
         """
         Run a forward implementation.
 
         :param model_inputs: input tensor (or a `list` of tensors)
         :param training: config training or test mode
-        :return output: model's output. type=`List[tf.Tensor]`
+        :return output: model's output. type=`list[tf.Tensor]`
         """
         model_inputs_processed = self.pre_process(model_inputs, training)
 
@@ -100,17 +99,17 @@ class Model(keras.Model):
         return self.post_process(output, training,
                                  model_inputs=model_inputs)
 
-    def pre_process(self, model_inputs: List[tf.Tensor],
+    def pre_process(self, model_inputs: list[tf.Tensor],
                     training=None,
-                    *args, **kwargs) -> List[tf.Tensor]:
+                    *args, **kwargs) -> list[tf.Tensor]:
         """
         Pre-processing before inputting to the model
         """
         return model_inputs
 
-    def post_process(self, outputs: List[tf.Tensor],
+    def post_process(self, outputs: list[tf.Tensor],
                      training=None,
-                     *args, **kwargs) -> List[tf.Tensor]:
+                     *args, **kwargs) -> list[tf.Tensor]:
         """
         Post-processing of model's output when model's inferencing.
         """
@@ -130,7 +129,7 @@ class Structure(BaseObject):
     in the structure. You can do like:
     ```python
     class MyTrainingStructure(Structure):
-        def __init__(self, Args: List[str], *args, **kwargs):
+        def __init__(self, Args: list[str], *args, **kwargs):
             super().__init__(Args, *args, **kwargs)
 
             self.args = PredictionArgs(Args)
@@ -138,7 +137,7 @@ class Structure(BaseObject):
     Then, please specify loss functions and metrics:
     ```python
         def loss(self, outputs, labels, 
-                loss_name_list: List[str] = ['L2'],
+                loss_name_list: list[str] = ['L2'],
                 *args, **kwargs):
             ...
 
@@ -151,11 +150,11 @@ class Structure(BaseObject):
     These methods must be rewritten before training:
     ```python
     # create new model
-    def create_model(self, *args, **kwargs) -> Tuple[Model, keras.optimizers.Optimizer]:
+    def create_model(self, *args, **kwargs) -> tuple[Model, tf.keras.optimizers.Optimizer]:
         ...
 
     # load training and val dataset from original dataset files
-    def load_dataset(self, *args, **kwargs) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+    def load_dataset(self, *args, **kwargs) -> tuple[tf.data.Dataset, tf.data.Dataset]:
         ...
 
     # load test dataset from original dataset files
@@ -171,7 +170,7 @@ class Structure(BaseObject):
     --------------
     ```python
     # Load args
-    (method) load_args: (self: Structure, current_args: List[str], load_path: str) -> (Namespace | List[str])
+    (method) load_args: (self: Structure, current_args: list[str], load_path: str) -> (Namespace | list[str])
 
     # ----Models----
     # Load model
@@ -181,24 +180,24 @@ class Structure(BaseObject):
     (method) save_model: (self: Structure, save_path: str) -> None
 
     # Create model
-    (method) create_model: (self: Structure, *args, **kwargs) -> Tuple[Model, OptimizerV2]
+    (method) create_model: (self: Structure, *args, **kwargs) -> tuple[Model, OptimizerV2]
 
     # Forward process
-    (method) model_forward: (self: Structure, model_inputs: Tuple[Tensor], training=None, *args, **kwargs) -> Tuple[Tensor]
+    (method) model_forward: (self: Structure, model_inputs: tuple[Tensor], training=None, *args, **kwargs) -> tuple[Tensor]
 
     # ----Datasets----
     # Load train/test/forward dataset
-    (method) load_dataset: (self: Structure, *args, **kwargs) -> Tuple[DatasetV2, DatasetV2]
+    (method) load_dataset: (self: Structure, *args, **kwargs) -> tuple[DatasetV2, DatasetV2]
     (method) load_test_dataset: (self: Structure, *args, **kwargs) -> DatasetV2
     (method) load_forward_dataset: (self: Structure, *args, **kwargs) -> DatasetV2
 
     # ----Training and Test----
     # Loss Functions and Metrics
-    (method) loss: (self: Structure, outputs, labels, loss_name_list: List[str] = ['L2'], *args, **kwargs) -> Tuple[Tensor, Dict[str, Tensor]]
-    (method) metrics: (self: Structure, outputs, labels, loss_name_list=['L2_val'], *args, **kwargs) -> Tuple[Tensor, Dict[str, Tensor]]
+    (method) loss: (self: Structure, outputs, labels, loss_name_list: list[str] = ['L2'], *args, **kwargs) -> tuple[Tensor, dict[str, Tensor]]
+    (method) metrics: (self: Structure, outputs, labels, loss_name_list=['L2_val'], *args, **kwargs) -> tuple[Tensor, dict[str, Tensor]]
 
     # Gradient densest operation
-    (method) gradient_operations: (self: Structure, model_inputs, gt, loss_move_average: Variable, **kwargs) -> Tuple[Tensor, Dict[str, Tensor], Tensor]
+    (method) gradient_operations: (self: Structure, model_inputs, gt, loss_move_average: Variable, **kwargs) -> tuple[Tensor, dict[str, Tensor], Tensor]
 
     # Entrance of train or test
     (method) run_train_or_test: (self: Structure) -> None
@@ -213,11 +212,11 @@ class Structure(BaseObject):
     (method) forward: (self: Structure, dataset: DatasetV2, return_numpy=True, **kwargs) -> ndarray
 
     # Call
-    (method) __call__: (self: Structure, model_inputs, return_numpy=True) -> Tuple[ndarray, list]
+    (method) __call__: (self: Structure, model_inputs, return_numpy=True) -> tuple[ndarray, list]
     ```
     """
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         """
         Init the training structure
 
@@ -238,8 +237,8 @@ class Structure(BaseObject):
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
 
-    def load_args(self, current_args: List[str],
-                  load_path: str) -> Union[Namespace, List[str]]:
+    def load_args(self, current_args: list[str],
+                  load_path: str) -> Union[Namespace, list[str]]:
         """
         Parse args from `load_path`.
 
@@ -310,7 +309,7 @@ class Structure(BaseObject):
         """
         self.model.save_weights(save_path)
 
-    def create_model(self, *args, **kwargs) -> Tuple[Model, keras.optimizers.Optimizer]:
+    def create_model(self, *args, **kwargs) -> tuple[Model, tf.keras.optimizers.Optimizer]:
         """
         Create models.
         Please *rewrite* this when training new models.
@@ -320,7 +319,7 @@ class Structure(BaseObject):
         """
         raise NotImplementedError('MODEL is not defined!')
 
-    def model_forward(self, model_inputs: List[tf.Tensor], training=None, *args, **kwargs) -> Tuple[tf.Tensor]:
+    def model_forward(self, model_inputs: list[tf.Tensor], training=None, *args, **kwargs) -> tuple[tf.Tensor]:
         """
         Entire forward process of this model.
 
@@ -330,7 +329,7 @@ class Structure(BaseObject):
         """
         return self.model.forward(model_inputs, training, **kwargs)
 
-    def loss(self, outputs, labels, loss_name_list: List[str] = ['L2'], *args, **kwargs) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+    def loss(self, outputs, labels, loss_name_list: list[str] = ['L2'], *args, **kwargs) -> tuple[tf.Tensor, dict[str, tf.Tensor]]:
         """
         Train loss, using L2 loss by default.
 
@@ -345,7 +344,7 @@ class Structure(BaseObject):
         loss_dict = dict(zip(loss_name_list, [loss]))
         return loss, loss_dict
 
-    def metrics(self, outputs, labels, loss_name_list=['L2_val'], *args, **kwargs) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+    def metrics(self, outputs, labels, loss_name_list=['L2_val'], *args, **kwargs) -> tuple[tf.Tensor, dict[str, tf.Tensor]]:
         """
         Metrics, using L2 loss by default.
 
@@ -362,7 +361,7 @@ class Structure(BaseObject):
             self,
             model_inputs,
             gt,
-            training=None) -> Tuple[List[tf.Tensor], tf.Tensor, Dict[str, tf.Tensor]]:
+            training=None) -> tuple[list[tf.Tensor], tf.Tensor, dict[str, tf.Tensor]]:
         """
         Run one step of forward and calculate loss.
 
@@ -381,7 +380,7 @@ class Structure(BaseObject):
     def gradient_operations(self, model_inputs,
                             gt,
                             loss_move_average: tf.Variable,
-                            **kwargs) -> Tuple[tf.Tensor, Dict[str, tf.Tensor], tf.Tensor]:
+                            **kwargs) -> tuple[tf.Tensor, dict[str, tf.Tensor], tf.Tensor]:
         """
         Run gradient dencent once during training.
 
@@ -409,10 +408,10 @@ class Structure(BaseObject):
 
         return loss, loss_dict, loss_move_average
 
-    def get_inputs_from_agents(self, input_agents: List[Agent]) -> Tuple[tf.Tensor, tf.Tensor]:
+    def get_inputs_from_agents(self, input_agents: list[Agent]) -> tuple[tf.Tensor, tf.Tensor]:
         raise NotImplementedError
 
-    def load_dataset(self, *args, **kwargs) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+    def load_dataset(self, *args, **kwargs) -> tuple[tf.data.Dataset, tf.data.Dataset]:
         """
         Load training and val dataset.
 
@@ -693,7 +692,7 @@ class Structure(BaseObject):
                                 labels=label_all,
                                 **kwargs)
 
-    def write_test_results(self, model_outputs: List[tf.Tensor], **kwargs):
+    def write_test_results(self, model_outputs: list[tf.Tensor], **kwargs):
         pass
 
     def forward(self, dataset: tf.data.Dataset, return_numpy=True, **kwargs) -> np.ndarray:
@@ -723,20 +722,20 @@ class Structure(BaseObject):
         else:
             return [tf.concat(model_outputs, axis=0) for model_outputs in model_outputs_all]
 
-    def __call__(self, model_inputs, return_numpy=True) -> Tuple[np.ndarray, list]:
+    def __call__(self, model_inputs, return_numpy=True) -> tuple[np.ndarray, list]:
         test_dataset = self.load_forward_dataset(model_inputs=model_inputs)
         results = self.forward(test_dataset, return_numpy)
         return results
 
 
-def append_results_to_list(results: List[tf.Tensor], target: list):
+def append_results_to_list(results: list[tf.Tensor], target: list):
     if not len(target):
         [target.append([]) for _ in range(len(results))]
     [target[index].append(results[index]) for index in range(len(results))]
     return target
 
 
-def stack_results(results: List[tf.Tensor]):
+def stack_results(results: list[tf.Tensor]):
     for index, tensor in enumerate(results):
         results[index] = tf.concat(tensor, axis=0)
     return results

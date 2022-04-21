@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-30 15:43:40
+@LastEditTime: 2022-04-21 10:59:56
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -11,7 +11,7 @@
 import os
 import time
 from argparse import Namespace
-from typing import Any, List, Union
+from typing import Any, Union
 
 from ...helpmethods import dir_check
 from . import argParse as ArgParse
@@ -27,7 +27,7 @@ class BaseTrainArgs(BaseArgs):
     The arg class that contains basic args for training universal models.
     """
 
-    def __init__(self, args: Union[Namespace, List[str]],
+    def __init__(self, args: Union[Namespace, list[str]],
                  default_args: Union[Namespace, dict] = None):
 
         super().__init__()

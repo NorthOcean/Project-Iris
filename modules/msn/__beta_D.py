@@ -2,19 +2,15 @@
 @Author: Conghao Wong
 @Date: 2021-05-07 09:12:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 11:11:26
+@LastEditTime: 2022-04-21 11:01:12
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import Dict, List, Tuple
-
 import modules.applications as A
 import modules.models as M
-import numpy as np
 import tensorflow as tf
-from tensorflow import keras as keras
 
 from .__args import MSNArgs
 
@@ -34,15 +30,15 @@ class MSNBeta_DModel(M.prediction.Model):
         self.set_preprocess_parameters(move=0)
 
         # context feature
-        self.average_pooling = keras.layers.AveragePooling2D([5, 5],
+        self.average_pooling = tf.keras.layers.AveragePooling2D([5, 5],
                                                              input_shape=[100, 100, 1])
-        self.flatten = keras.layers.Flatten()
-        self.context_dense1 = keras.layers.Dense((self.args.obs_frames+1) * 64,
+        self.flatten = tf.keras.layers.Flatten()
+        self.context_dense1 = tf.keras.layers.Dense((self.args.obs_frames+1) * 64,
                                                  activation=tf.nn.tanh)
 
         # traj embedding
-        self.pos_embedding = keras.layers.Dense(64, tf.nn.tanh)
-        self.concat = keras.layers.Concatenate()
+        self.pos_embedding = tf.keras.layers.Dense(64, tf.nn.tanh)
+        self.concat = tf.keras.layers.Concatenate()
 
         # trajectory transformer
         self.transformer = A.Transformer(num_layers=4,
@@ -54,7 +50,7 @@ class MSNBeta_DModel(M.prediction.Model):
                                          pe_input=Args.obs_frames + 1,
                                          pe_target=Args.pred_frames)
 
-    def call(self, inputs: List[tf.Tensor],
+    def call(self, inputs: list[tf.Tensor],
              training=None, mask=None):
 
         positions_ = inputs[0]
@@ -90,7 +86,7 @@ class MSNBeta_DModel(M.prediction.Model):
         return predictions
 
     # @tf.function
-    def forward(self, model_inputs: List[tf.Tensor],
+    def forward(self, model_inputs: list[tf.Tensor],
                 training=None,
                 *args, **kwargs):
         """
@@ -98,7 +94,7 @@ class MSNBeta_DModel(M.prediction.Model):
 
         :param model_inputs: input tensor (or a list of tensors)
         :param mode: choose forward type, can be `'test'` or `'train'`
-        :return output: model's output. type=`List[tf.Tensor]`
+        :return output: model's output. type=`list[tf.Tensor]`
         """
         model_inputs_processed = self.pre_process(model_inputs, training)
         destination_processed = self.pre_process([model_inputs[-1]],
@@ -124,7 +120,7 @@ class MSNBeta_D(M.prediction.Structure):
     Structure for the second stage deterministic Interaction Transformer
     """
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = MSNArgs(Args)
@@ -140,10 +136,10 @@ class MSNBeta_D(M.prediction.Structure):
 
     def create_model(self, model_type=MSNBeta_DModel):
         model = model_type(self.args, training_structure=self)
-        opt = keras.optimizers.Adam(self.args.lr)
+        opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def load_forward_dataset(self, model_inputs: List[tf.Tensor], **kwargs):
+    def load_forward_dataset(self, model_inputs: list[tf.Tensor], **kwargs):
         trajs = model_inputs[0]
         maps = model_inputs[1]
         paras = model_inputs[2]

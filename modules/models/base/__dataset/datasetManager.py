@@ -2,13 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-04-13 12:03:47
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:17:00
+@LastEditTime: 2022-04-21 11:00:07
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List, Tuple, Union
+from typing import Union
 
 from ...helpmethods import dir_check
 from ..__agent import Agent
@@ -35,7 +35,7 @@ class DatasetManager(BaseObject):
     --------------
     ```python
     # Sample train data from dataset
-    (method) sample_train_data: (self: DatasetManager) -> List[agent_type]
+    (method) sample_train_data: (self: DatasetManager) -> list[agent_type]
 
     # Load dataset files
     (method) load_data: (self: DatasetManager) -> Any
@@ -68,7 +68,7 @@ class DatasetManager(BaseObject):
     def load_data(self):
         raise NotImplementedError('Please rewrite this method.')
 
-    def sample_train_data(self) -> List[agent_type]:
+    def sample_train_data(self) -> list[agent_type]:
         raise NotImplementedError('Please rewrite this method.')
 
 
@@ -88,13 +88,13 @@ class DatasetsManager(BaseObject):
     def args(self) -> arg_type:
         return self._args
 
-    def load_fromManagers(self, dataset_managers: List[datasetManager_type],
-                          mode='test') -> List[agent_type]:
+    def load_fromManagers(self, dataset_managers: list[datasetManager_type],
+                          mode='test') -> list[agent_type]:
 
         raise NotImplementedError('Please rewrite this method.')
 
     @classmethod
-    def load(cls, args: arg_type, dataset: Union[str, List[str]], mode: str):
+    def load(cls, args: arg_type, dataset: Union[str, list[str]], mode: str):
         """
         Load train samples in sub-dataset(s).
 

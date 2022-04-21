@@ -2,13 +2,11 @@
 @Author: Conghao Wong
 @Date: 2021-04-12 11:18:35
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 14:52:09
+@LastEditTime: 2022-04-21 11:00:33
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
-
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -32,9 +30,9 @@ class EntireTrajectory():
     """
 
     def __init__(self, agent_index: int,
-                 video_neighbor_list: List[int],
+                 video_neighbor_list: list[int],
                  video_matrix: np.ndarray,
-                 frame_list: List[int],
+                 frame_list: list[int],
                  init_position: float):
 
         self._agent_index = agent_index

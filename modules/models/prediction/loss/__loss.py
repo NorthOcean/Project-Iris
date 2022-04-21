@@ -2,24 +2,24 @@
 @Author: Conghao Wong
 @Date: 2021-12-30 16:52:13
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:01:06
+@LastEditTime: 2022-04-21 11:00:53
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import re
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Union
 
 import tensorflow as tf
 
 
-def apply(loss_list: List[Union[str, Any]],
-          model_outputs: List[tf.Tensor],
+def apply(loss_list: list[Union[str, Any]],
+          model_outputs: list[tf.Tensor],
           labels: tf.Tensor,
-          loss_weights: List[float] = None,
+          loss_weights: list[float] = None,
           mode='loss',
-          *args, **kwargs) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+          *args, **kwargs) -> tuple[tf.Tensor, dict[str, tf.Tensor]]:
 
     loss_dict = {}
     for loss in loss_list:
@@ -149,7 +149,7 @@ def context(pred, maps, paras, pred_bias=None) -> tf.Tensor:
     return context_loss_mean
 
 
-def diff(pred, GT, ordd=2) -> List[tf.Tensor]:
+def diff(pred, GT, ordd=2) -> list[tf.Tensor]:
     """
     loss_functions with diference limit
 
@@ -170,7 +170,7 @@ def diff(pred, GT, ordd=2) -> List[tf.Tensor]:
     return loss
 
 
-def difference(trajs: tf.Tensor, direction='back', ordd=1) -> List[tf.Tensor]:
+def difference(trajs: tf.Tensor, direction='back', ordd=1) -> list[tf.Tensor]:
     """
     :param trajs: trajectories, shape = `[(K,) batch, pred, 2]`
     :param direction: string, canbe `'back'` or `'forward'`

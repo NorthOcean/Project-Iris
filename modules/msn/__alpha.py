@@ -2,19 +2,16 @@
 @Author: Conghao Wong
 @Date: 2021-06-21 15:01:50
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:10:05
+@LastEditTime: 2022-04-21 11:01:03
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import Dict, List, Tuple
-
 import modules.applications as A
 import modules.models as M
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras as keras
 
 from .__args import MSNArgs
 
@@ -33,15 +30,15 @@ class MSNAlphaModel(M.prediction.Model):
         self.set_preprocess_parameters(move=0)
 
         # context feature
-        self.average_pooling = keras.layers.AveragePooling2D([5, 5],
+        self.average_pooling = tf.keras.layers.AveragePooling2D([5, 5],
                                                              input_shape=[100, 100, 1])
-        self.flatten = keras.layers.Flatten()
-        self.context_dense1 = keras.layers.Dense(self.args.obs_frames * 64,
+        self.flatten = tf.keras.layers.Flatten()
+        self.context_dense1 = tf.keras.layers.Dense(self.args.obs_frames * 64,
                                                  activation=tf.nn.tanh)
 
         # traj embedding
-        self.pos_embedding = keras.layers.Dense(64, tf.nn.tanh)
-        self.concat = keras.layers.Concatenate()
+        self.pos_embedding = tf.keras.layers.Dense(64, tf.nn.tanh)
+        self.concat = tf.keras.layers.Concatenate()
 
         # trajectory transformer
         self.T1 = A.Transformer(num_layers=4,
@@ -55,14 +52,14 @@ class MSNAlphaModel(M.prediction.Model):
                                 include_top=False)
 
         # transfer GCN
-        self.adj_dense2 = keras.layers.Dense(self.args.K_train,
+        self.adj_dense2 = tf.keras.layers.Dense(self.args.K_train,
                                              activation=tf.nn.tanh)
         self.gcn_transfer = M.helpmethods.GraphConv_layer(128, tf.nn.tanh)
 
         # decoder
-        self.decoder = keras.layers.Dense(2)
+        self.decoder = tf.keras.layers.Dense(2)
 
-    def call(self, inputs: List[tf.Tensor], training=None, mask=None):
+    def call(self, inputs: list[tf.Tensor], training=None, mask=None):
         positions = inputs[0]
         maps = inputs[1]
 
@@ -105,7 +102,7 @@ class MSNAlpha(M.prediction.Structure):
     """
     Structure for the first stage Destination Transformer.
     """
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = MSNArgs(Args)
@@ -123,7 +120,7 @@ class MSNAlpha(M.prediction.Structure):
         model = model_type(self.args, 
                            training_structure=self,
                            *args, **kwargs)
-        opt = keras.optimizers.Adam(self.args.lr)
+        opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
 
     def min_FDE(self, outputs, labels) -> tf.Tensor:

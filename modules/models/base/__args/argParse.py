@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-06-11 10:01:50
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-16 10:52:49
+@LastEditTime: 2022-04-21 10:59:48
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -12,14 +12,14 @@ import argparse
 import json
 import re
 from argparse import Namespace
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 import numpy as np
 
 from .base import BaseArgs
 
 
-def load(path: Union[str, List[str]]) -> Namespace:
+def load(path: Union[str, list[str]]) -> Namespace:
     if type(path) == str:
         path = [path]
 
@@ -54,7 +54,7 @@ def save(path: str, args: Union[dict, Namespace, BaseArgs]):
         write_json(path, dict(zip(keys, values)))
 
 
-def parse(argv: List[str], names: List[str], values: List[Any]) -> Namespace:
+def parse(argv: list[str], names: list[str], values: list[Any]) -> Namespace:
     parser = argparse.ArgumentParser(description='args', )
 
     argv_current = ''

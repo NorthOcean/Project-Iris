@@ -2,13 +2,11 @@
 @Author: Conghao Wong
 @Date: 2020-08-20 23:05:05
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:20:57
+@LastEditTime: 2022-04-21 11:00:43
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
-
-from typing import Dict, List, Tuple
 
 import cv2
 import numpy as np
@@ -57,7 +55,7 @@ class TrajVisualization(base.Visualization):
                       np.array([0, 252, 255])),
         ])
 
-    def draw(self, agents: List[PredictionAgent],
+    def draw(self, agents: list[PredictionAgent],
              frame_name,
              save_path='null',
              show_img=False,

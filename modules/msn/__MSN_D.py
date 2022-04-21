@@ -2,18 +2,14 @@
 @Author: Conghao Wong
 @Date: 2021-06-22 16:45:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-20 10:05:54
+@LastEditTime: 2022-04-21 11:01:26
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import Dict, List, Tuple
-
-import numpy as np
 import tensorflow as tf
 from modules.models.helpmethods import BatchIndex
-from tensorflow import keras as keras
 from tqdm import tqdm
 
 from .__alpha import MSNAlpha, MSNAlphaModel
@@ -41,9 +37,9 @@ class _MSNAlphaModelPlus(MSNAlphaModel):
 
         self.linear = linear_prediction
 
-    def post_process(self, outputs: List[tf.Tensor],
+    def post_process(self, outputs: list[tf.Tensor],
                      training=None,
-                     *args, **kwargs) -> List[tf.Tensor]:
+                     *args, **kwargs) -> list[tf.Tensor]:
 
         # shape = [(batch, Kc, 2)]
         outputs = super().post_process(outputs, training, *args, **kwargs)
@@ -105,7 +101,7 @@ class MSN_D(MSNAlpha):
     model paths with args `--loada` and `--loadb` to use them together.
     """
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = MSNArgs(Args)

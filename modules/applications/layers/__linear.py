@@ -2,17 +2,16 @@
 @Author: Conghao Wong
 @Date: 2021-12-21 15:19:11
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 19:44:41
+@LastEditTime: 2022-04-21 10:52:12
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import tensorflow as tf
-from tensorflow import keras
 
 
-class LinearLayer(keras.layers.Layer):
+class LinearLayer(tf.keras.layers.Layer):
     def __init__(self, obs_frames, pred_frames, diff=0.95, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -60,7 +59,7 @@ class LinearLayer(keras.layers.Layer):
         return results[:, -self.f:, :]
 
 
-class LinearInterpolation(keras.layers.Layer):
+class LinearInterpolation(tf.keras.layers.Layer):
     def __init__(self, *args, **kwargs):
         """
         Piecewise linear interpolation

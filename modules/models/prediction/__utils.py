@@ -2,19 +2,17 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 15:08:07
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:20:50
+@LastEditTime: 2022-04-21 11:00:37
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
-
 import numpy as np
 import tensorflow as tf
 
 
-def difference(trajs: tf.Tensor, direction='back', ordd=1) -> List[tf.Tensor]:
+def difference(trajs: tf.Tensor, direction='back', ordd=1) -> list[tf.Tensor]:
     """
     :param trajs: trajectories, shape = `[(K,) batch, pred, 2]`
     :param direction: string, canbe `'back'` or `'forward'`

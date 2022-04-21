@@ -2,15 +2,13 @@
 @Author: Conghao Wong
 @Date: 2020-11-10 09:31:24
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-03-30 19:26:12
+@LastEditTime: 2022-04-21 11:00:01
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import os
-
-from typing import Dict, List, Tuple
 
 
 def load_from_plist(path: str) -> dict:
@@ -58,8 +56,8 @@ class Dataset():
 
     def __init__(self, dataset: str,
                  dataset_dir: str,
-                 order: List[int],
-                 paras: List[int],
+                 order: list[int],
+                 paras: list[int],
                  video_path: str,
                  weights: list,
                  scale: float):

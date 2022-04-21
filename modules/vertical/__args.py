@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-09 10:50:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:11:41
+@LastEditTime: 2022-04-21 11:02:25
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,13 +10,13 @@
 
 
 from argparse import Namespace
-from typing import List, Union
+from typing import Union
 
 import modules.models as M
 
 
 class VArgs(M.prediction.PredictionArgs):
-    def __init__(self, args: Union[Namespace, List[str]], 
+    def __init__(self, args: Union[Namespace, list[str]], 
                  default_args: Union[Namespace, dict] = None):
                  
         super().__init__(args, default_args)

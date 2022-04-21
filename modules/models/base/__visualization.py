@@ -2,13 +2,11 @@
 @Author: Conghao Wong
 @Date: 2021-04-09 09:10:39
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-04 14:51:42
+@LastEditTime: 2022-04-21 10:59:28
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
-
-from typing import List
 
 import cv2
 import numpy as np
@@ -64,7 +62,7 @@ class Visualization():
         return self._weights
 
     def set_video(self, video_capture: cv2.VideoCapture,
-                  video_paras: List[int],
+                  video_paras: list[int],
                   video_weights: list):
 
         self._vc = video_capture

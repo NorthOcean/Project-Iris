@@ -17,7 +17,7 @@ from tqdm import tqdm
 from ..__agent import PredictionAgent as Agent
 
 
-def get_inputs_by_type(input_agents: List[Agent],
+def get_inputs_by_type(input_agents: list[Agent],
                        type_name: str) -> tf.Tensor:
     """
     Get model inputs from a list of `Agent`-like objects.
@@ -40,11 +40,11 @@ def get_inputs_by_type(input_agents: List[Agent],
     return call(input_agents)
 
 
-def _get_obs_traj(input_agents: List[Agent]) -> tf.Tensor:
+def _get_obs_traj(input_agents: list[Agent]) -> tf.Tensor:
     """
     Get observed trajectories from agents.
 
-    :param input_agents: a list of input agents, type = `List[Agent]`
+    :param input_agents: a list of input agents, type = `list[Agent]`
     :return inputs: a Tensor of observed trajectories
     """
     inputs = []
@@ -53,12 +53,12 @@ def _get_obs_traj(input_agents: List[Agent]) -> tf.Tensor:
     return tf.cast(inputs, tf.float32)
 
 
-def _get_gt_traj(input_agents: List[Agent],
+def _get_gt_traj(input_agents: list[Agent],
                  destination=False) -> tf.Tensor:
     """
     Get groundtruth trajectories from agents.
 
-    :param input_agents: a list of input agents, type = `List[Agent]`
+    :param input_agents: a list of input agents, type = `list[Agent]`
     :return inputs: a Tensor of gt trajectories
     """
     inputs = []
@@ -71,15 +71,15 @@ def _get_gt_traj(input_agents: List[Agent],
     return tf.cast(inputs, tf.float32)
 
 
-def _get_dest_traj(input_agents: List[Agent]) -> tf.Tensor:
+def _get_dest_traj(input_agents: list[Agent]) -> tf.Tensor:
     return _get_gt_traj(input_agents, destination=True)
 
 
-def _get_context_map(input_agents: List[Agent]) -> tf.Tensor:
+def _get_context_map(input_agents: list[Agent]) -> tf.Tensor:
     """
     Get context map from agents.
 
-    :param input_agents: a list of input agents, type = `List[Agent]`
+    :param input_agents: a list of input agents, type = `list[Agent]`
     :return inputs: a Tensor of maps
     """
     inputs = []
@@ -88,11 +88,11 @@ def _get_context_map(input_agents: List[Agent]) -> tf.Tensor:
     return tf.cast(inputs, tf.float32)
 
 
-def _get_context_map_paras(input_agents: List[Agent]) -> tf.Tensor:
+def _get_context_map_paras(input_agents: list[Agent]) -> tf.Tensor:
     """
     Get parameters of context map from agents.
 
-    :param input_agents: a list of input agents, type = `List[Agent]`
+    :param input_agents: a list of input agents, type = `list[Agent]`
     :return inputs: a Tensor of map paras
     """
     inputs = []

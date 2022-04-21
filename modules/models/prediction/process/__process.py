@@ -2,22 +2,22 @@
 @Author: Conghao Wong
 @Date: 2021-12-30 20:56:23
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-01-13 11:19:42
+@LastEditTime: 2022-04-21 11:00:58
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 
-from typing import Dict, Tuple, Union
+from typing import Union
 
 import tensorflow as tf
 
 
 def move(trajs: tf.Tensor,
-         para_dict: Dict[str, tf.Tensor],
+         para_dict: dict[str, tf.Tensor],
          ref: int = -1,
-         use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+         use_new_para_dict=True) -> tuple[tf.Tensor, dict[str, tf.Tensor]]:
     """
     Move a specific point to (0, 0) according to the reference time step.
     Default reference time step is the last obsetvation step.
@@ -48,7 +48,7 @@ def move(trajs: tf.Tensor,
 
 
 def move_back(trajs: tf.Tensor,
-              para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
+              para_dict: dict[str, tf.Tensor]) -> tf.Tensor:
     """
     Move trajectories back to their original positions.
 
@@ -70,9 +70,9 @@ def move_back(trajs: tf.Tensor,
 
 
 def rotate(trajs: tf.Tensor,
-           para_dict: Dict[str, tf.Tensor],
+           para_dict: dict[str, tf.Tensor],
            ref: int = 0,
-           use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+           use_new_para_dict=True) -> tuple[tf.Tensor, dict[str, tf.Tensor]]:
     """
     Rotate trajectories to the referce angle.
 
@@ -110,7 +110,7 @@ def rotate(trajs: tf.Tensor,
 
 
 def rotate_back(trajs: tf.Tensor,
-                para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
+                para_dict: dict[str, tf.Tensor]) -> tf.Tensor:
     """
     Rotate trajectories back to their original angles.
 
@@ -145,9 +145,9 @@ def rotate_back(trajs: tf.Tensor,
 
 
 def scale(trajs: tf.Tensor,
-          para_dict: Dict[str, tf.Tensor],
+          para_dict: dict[str, tf.Tensor],
           ref: float = 1,
-          use_new_para_dict=True) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+          use_new_para_dict=True) -> tuple[tf.Tensor, dict[str, tf.Tensor]]:
     """
     Scale trajectories' direction vector into (x, y), where |x| <= 1, |y| <= 1.
     Reference point when scale is the `last` observation point.
@@ -189,7 +189,7 @@ def scale(trajs: tf.Tensor,
 
 
 def scale_back(trajs: tf.Tensor,
-               para_dict: Dict[str, tf.Tensor]) -> tf.Tensor:
+               para_dict: dict[str, tf.Tensor]) -> tf.Tensor:
     """
     Scale trajectories back to their original.
     Reference point is the `first` prediction point.
@@ -227,7 +227,7 @@ def scale_back(trajs: tf.Tensor,
 
 
 def upSampling(trajs: tf.Tensor,
-               para_dict: Dict[str, tf.Tensor],
+               para_dict: dict[str, tf.Tensor],
                sample_time: int,
                use_new_para_dict=True):
 
@@ -254,7 +254,7 @@ def upSampling(trajs: tf.Tensor,
 
 
 def upSampling_back(trajs: tf.Tensor,
-                    para_dict: Dict[str, tf.Tensor]):
+                    para_dict: dict[str, tf.Tensor]):
     sample_time = para_dict['UPSAMPLING']
     sample_number = trajs.shape[-2]
     original_number = sample_number // sample_time

@@ -2,19 +2,18 @@
 @Author: Conghao Wong
 @Date: 2021-12-21 15:25:47
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-21 15:26:48
+@LastEditTime: 2022-04-21 10:52:24
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import tensorflow as tf
-from tensorflow import keras
 
 from .__fftlayers import FFTlayer
 
 
-class TrajEncoding(keras.layers.Layer):
+class TrajEncoding(tf.keras.layers.Layer):
     """
     Encode trajectories into the traj feature
     """
@@ -37,10 +36,10 @@ class TrajEncoding(keras.layers.Layer):
 
         if (self.useFFT):
             self.fft = FFTlayer()
-            self.concat = keras.layers.Concatenate()
-            self.fc2 = keras.layers.Dense(units, tf.nn.relu)
+            self.concat = tf.keras.layers.Concatenate()
+            self.fc2 = tf.keras.layers.Dense(units, tf.nn.relu)
 
-        self.fc1 = keras.layers.Dense(units, activation)
+        self.fc1 = tf.keras.layers.Dense(units, activation)
 
     def call(self, trajs: tf.Tensor, **kwargs) -> tf.Tensor:
         """
@@ -57,7 +56,7 @@ class TrajEncoding(keras.layers.Layer):
         return self.fc1(trajs)
 
 
-class ContextEncoding(keras.layers.Layer):
+class ContextEncoding(tf.keras.layers.Layer):
     """
     Encode context maps into the context feature
     """
@@ -76,10 +75,10 @@ class ContextEncoding(keras.layers.Layer):
 
         super().__init__(*args, **kwargs)
 
-        self.pool = keras.layers.MaxPooling2D([5, 5])
-        self.flatten = keras.layers.Flatten()
-        self.fc = keras.layers.Dense(output_channels * units, activation)
-        self.reshape = keras.layers.Reshape((output_channels, units))
+        self.pool = tf.keras.layers.MaxPooling2D([5, 5])
+        self.flatten = tf.keras.layers.Flatten()
+        self.fc = tf.keras.layers.Dense(output_channels * units, activation)
+        self.reshape = tf.keras.layers.Reshape((output_channels, units))
 
     def call(self, context_map: tf.Tensor, **kwargs) -> tf.Tensor:
         """

@@ -5,7 +5,7 @@ Models
 @Author: Conghao Wong
 @Date: 2021-03-15 10:49:31
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:28:18
+@LastEditTime: 2022-04-21 10:16:36
 @Description: Description: A framework for training, eval, and test on models based on `tensorflow 2`.
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -18,8 +18,10 @@ You can design your new models and training it based on this module.
 
 For designing a new model, you can do as the following example.
 ```python
-import modules.models as M
+import keras
 import tensorflow as tf
+
+import modules.models as M
 
 class MyModel(M.base.Model):
     def __init__(self, Args):
@@ -49,14 +51,14 @@ class MyTrainingStructure(M.base.Structure):
         super().__init__(args, arg_type=arg_type)
     
     # rewrite #1
-    def self.create_model(self) -> Tuple[Model, keras.optimizers.Optimizer]:
+    def self.create_model(self) -> tuple[Model, tf.keras.optimizers.Optimizer]:
         # create a instance of your model
         model = MyModel(self.args)
         opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
     
     # rewrite #2
-    def self.load_dataset(self) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+    def self.load_dataset(self) -> tuple[tf.data.Dataset, tf.data.Dataset]:
         # load training and val dataset from original files
         file_path = 'SOME_DATASET_PATH_X'
         label_path = 'SOME_DATASET_PATH_Y'
@@ -120,7 +122,7 @@ Packages
 ```python
 base.Args       # Manage args
 base.Dataset    # Manage single dataset's info
-base.Model      # a subclass of `keras.Model` that contains data processing methods
+base.Model      # a subclass of `tf.keras.Model` that contains data processing methods
 base.Structure  # a base structure for training, eval, and test models
 ```
    For more details, please refer to each class's doc.

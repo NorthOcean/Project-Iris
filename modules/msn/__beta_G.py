@@ -2,25 +2,21 @@
 @Author: Conghao Wong
 @Date: 2021-06-21 15:05:18
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-07-30 11:11:35
+@LastEditTime: 2022-04-21 11:01:19
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import Dict, List, Tuple
-
 import modules.applications as A
 import modules.models as M
-import numpy as np
 import tensorflow as tf
-from tensorflow import keras as keras
 
 from .__args import MSNArgs
 from .__beta_D import MSNBeta_DModel
 
 
-class Encoder(keras.Model):
+class Encoder(tf.keras.Model):
     """
     Encoder in the CVAE structure in generative Interaction Transformer
     """
@@ -30,15 +26,15 @@ class Encoder(keras.Model):
         self.args = Args
 
         # context feature
-        self.average_pooling = keras.layers.AveragePooling2D([5, 5],
+        self.average_pooling = tf.keras.layers.AveragePooling2D([5, 5],
                                                              input_shape=[100, 100, 1])
-        self.flatten = keras.layers.Flatten()
-        self.context_dense1 = keras.layers.Dense((Args.obs_frames+1) * 64,
+        self.flatten = tf.keras.layers.Flatten()
+        self.context_dense1 = tf.keras.layers.Dense((Args.obs_frames+1) * 64,
                                                  activation=tf.nn.tanh)
 
         # traj embedding
-        self.pos_embedding = keras.layers.Dense(64, tf.nn.tanh)
-        self.concat = keras.layers.Concatenate()
+        self.pos_embedding = tf.keras.layers.Dense(64, tf.nn.tanh)
+        self.concat = tf.keras.layers.Concatenate()
 
         # trajectory transformer
         self.transformer = A.Transformer(num_layers=4,
@@ -51,7 +47,7 @@ class Encoder(keras.Model):
                                          pe_target=Args.pred_frames,
                                          include_top=False)
 
-    def call(self, inputs: List[tf.Tensor], training=None, mask=None):
+    def call(self, inputs: list[tf.Tensor], training=None, mask=None):
         """
         Encode inputs and destinations into features.
         Output shape = (batch, pred, 128)
@@ -94,7 +90,7 @@ class Encoder(keras.Model):
         return features
 
 
-class Generator(keras.Model):
+class Generator(tf.keras.Model):
     """
     Generator (Decoder) in the CVAE structure.
 
@@ -107,10 +103,10 @@ class Generator(keras.Model):
         super().__init__(*args, **kwargs)
 
         # Generator layers
-        self.g1 = keras.layers.Dense(128, activation=tf.nn.relu)
-        self.g2 = keras.layers.Dense(2)
+        self.g1 = tf.keras.layers.Dense(128, activation=tf.nn.relu)
+        self.g2 = tf.keras.layers.Dense(2)
 
-    def call(self, inputs: List[tf.Tensor], training=None, mask=None):
+    def call(self, inputs: list[tf.Tensor], training=None, mask=None):
         features = inputs[0]
         z = inputs[1]
 
@@ -137,7 +133,7 @@ class MSNBeta_GModel(M.prediction.Model):
         self.E = Encoder(Args)
         self.G = Generator()
 
-    def call(self, inputs: List[tf.Tensor],
+    def call(self, inputs: list[tf.Tensor],
              training=None, mask=None):
 
         features = self.E(inputs)
@@ -155,7 +151,7 @@ class MSNBeta_GModel(M.prediction.Model):
         return (pred, features)
 
     # @tf.function
-    def forward(self, model_inputs: Tuple[tf.Tensor],
+    def forward(self, model_inputs: tuple[tf.Tensor],
                 training=None,
                 *args, **kwargs):
 
@@ -169,7 +165,7 @@ class MSNBeta_G(M.prediction.Structure):
     Structure for the second stage generative Interaction Transformer
     """
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = MSNArgs(Args)
@@ -185,17 +181,17 @@ class MSNBeta_G(M.prediction.Structure):
 
     def create_model(self, model_type=MSNBeta_GModel):
         model = model_type(self.args, training_structure=self)
-        opt = keras.optimizers.Adam(self.args.lr)
+        opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def load_forward_dataset(self, model_inputs: List[tf.Tensor], **kwargs):
+    def load_forward_dataset(self, model_inputs: list[tf.Tensor], **kwargs):
         trajs = model_inputs[0]
         maps = model_inputs[1]
         paras = model_inputs[2]
         proposals = model_inputs[3]
         return tf.data.Dataset.from_tensor_slices((trajs, maps, paras, proposals))
 
-    def p_loss(self, model_outputs: Tuple[tf.Tensor], labels=None):
+    def p_loss(self, model_outputs: tuple[tf.Tensor], labels=None):
         features = tf.reshape(model_outputs[1], [-1, 128])
 
         mu_real = tf.reduce_mean(features, axis=0)  # (128)

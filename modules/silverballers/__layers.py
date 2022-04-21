@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:53:54
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 11:26:13
+@LastEditTime: 2022-04-21 11:03:56
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,12 +10,12 @@
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 from ..applications.layers import FFTlayer, GraphConv, IFFTlayer, TrajEncoding
 
 
-class OuterLayer(keras.layers.Layer):
+class OuterLayer(tf.keras.layers.Layer):
     """
     Compute the outer product of two vectors.
 
@@ -57,3 +57,7 @@ class OuterLayer(keras.layers.Layer):
             return outer
         else:
             return tf.reshape(outer, list(outer.shape[:-2]) + [self.M*self.N])
+
+
+class WaveletLayer(tf.keras.layers.Layer):
+    tf.keras.layers.Layer

@@ -2,17 +2,14 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 15:05:29
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-04-13 20:50:28
+@LastEditTime: 2022-04-21 11:02:08
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List, Tuple
-
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 from tqdm import tqdm
 
 from ... import models as M
@@ -42,7 +39,7 @@ class BaseHandlerModel(M.prediction.Model):
             pi = [int(i) for i in key_points.split('_')]
             self.points_index = tf.cast(pi, tf.float32)
 
-    def call_as_handler(self, inputs: List[tf.Tensor],
+    def call_as_handler(self, inputs: list[tf.Tensor],
                         keypoints: tf.Tensor,
                         keypoints_index: tf.Tensor,
                         training=None, mask=None):
@@ -66,7 +63,7 @@ class BaseHandlerModel(M.prediction.Model):
 
         return tf.transpose(tf.stack(p_all), [1, 0, 2, 3])
 
-    def forward(self, model_inputs: List[tf.Tensor],
+    def forward(self, model_inputs: list[tf.Tensor],
                 training=None,
                 *args, **kwargs):
 
@@ -112,7 +109,7 @@ class BaseHandlerStructure(M.prediction.Structure):
 
     model_type = None
 
-    def __init__(self, Args: List[str],
+    def __init__(self, Args: list[str],
                  *args, **kwargs):
 
         super().__init__(Args, *args, **kwargs)
@@ -149,10 +146,10 @@ class BaseHandlerStructure(M.prediction.Structure):
                                 training_structure=self,
                                 *args, **kwargs)
 
-        opt = keras.optimizers.Adam(self.args.lr)
+        opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def load_forward_dataset(self, model_inputs: Tuple[tf.Tensor], **kwargs):
+    def load_forward_dataset(self, model_inputs: tuple[tf.Tensor], **kwargs):
         trajs = model_inputs[0]
         maps = model_inputs[1]
         proposals = model_inputs[-1]
@@ -166,7 +163,7 @@ class BaseHandlerStructure(M.prediction.Structure):
                                                dataset_name,
                                                loss_dict))
 
-    def l2_keypoints(self, outputs: List[tf.Tensor],
+    def l2_keypoints(self, outputs: list[tf.Tensor],
                      labels: tf.Tensor,
                      *args, **kwargs) -> tf.Tensor:
         """

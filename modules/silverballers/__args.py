@@ -2,21 +2,21 @@
 @Author: Conghao Wong
 @Date: 2021-10-28 19:48:56
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:37:34
+@LastEditTime: 2022-04-21 11:01:37
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 from argparse import Namespace
-from typing import List, Union
+from typing import Union
 
 import modules.models as M
 
 
 class AgentArgs(M.prediction.PredictionArgs):
 
-    def __init__(self, args: Union[Namespace, List[str]],
+    def __init__(self, args: Union[Namespace, list[str]],
                  default_args: Union[Namespace, dict] = None):
 
         super().__init__(args, default_args=default_args)
@@ -30,6 +30,13 @@ class AgentArgs(M.prediction.PredictionArgs):
         where `Kc` is the number of style channels.
         """
         return self._get('K', 1, changeable=True)
+
+    @property
+    def K_train(self) -> int:
+        """
+        Number of multiple generations when training.
+        """
+        return self._get('K_train', 1, changeable=False)
 
     @property
     def Kc(self) -> int:
@@ -83,7 +90,7 @@ class AgentArgs(M.prediction.PredictionArgs):
 
 class HandlerArgs(M.prediction.PredictionArgs):
 
-    def __init__(self, args: Union[Namespace, List[str]],
+    def __init__(self, args: Union[Namespace, list[str]],
                  default_args: Union[Namespace, dict] = None):
 
         super().__init__(args, default_args=default_args)
@@ -108,7 +115,7 @@ class HandlerArgs(M.prediction.PredictionArgs):
 
 class SilverballersArgs(M.prediction.PredictionArgs):
 
-    def __init__(self, args: Union[Namespace, List[str]],
+    def __init__(self, args: Union[Namespace, list[str]],
                  default_args: Union[Namespace, dict] = None):
 
         super().__init__(args, default_args=default_args)

@@ -2,14 +2,13 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 12:28:31
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:20:22
+@LastEditTime: 2022-04-21 11:00:12
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import copy
-from typing import Dict
 
 import numpy as np
 
@@ -34,13 +33,13 @@ class PredictionAgent(base.Agent):
     ```python
     self.traj -> np.ndarray     # historical trajectory
     self.pred -> np.ndarray     # predicted (future) trajectory
-    self.frame_list -> List[int]    # a list of frame index when this agent appeared
-    self.frame_list_future -> List[int]     # agent's future frame index
+    self.frame_list -> list[int]    # a list of frame index when this agent appeared
+    self.frame_list_future -> list[int]     # agent's future frame index
     self.pred_linear -> np.ndarray  # agent's linear prediction
     self.groundtruth -> np.ndarray  # agent's future trajectory (when available)
 
     self.Map  -> np.ndarray   # agent's context map
-    self.loss -> Dict[str, np.ndarray]  # loss of agent's prediction
+    self.loss -> dict[str, np.ndarray]  # loss of agent's prediction
     ```
 
     Public Methods
@@ -49,11 +48,11 @@ class PredictionAgent(base.Agent):
     # copy this manager to a new address
     >>> self.copy() -> BasePredictionAgent
 
-    # get neighbors' trajs -> List[np.ndarray]
+    # get neighbors' trajs -> list[np.ndarray]
     >>> self.get_neighbor_traj()
 
     # get neighbors' linear predictions
-    >>> self.get_pred_traj_neighbor_linear() -> List[np.ndarray]
+    >>> self.get_pred_traj_neighbor_linear() -> list[np.ndarray]
     ```
     """
 
@@ -177,13 +176,13 @@ class PredictionAgent(base.Agent):
         self._map = Map
         self.real2grid = paras
 
-    def zip_data(self) -> Dict[str, object]:
+    def zip_data(self) -> dict[str, object]:
         zipped = {}
         for item in self._save_items:
             zipped[item] = getattr(self, item)
         return zipped
 
-    def load_data(self, zipped_data: Dict[str, object]):
+    def load_data(self, zipped_data: dict[str, object]):
         for item in self._save_items:
             if not item in zipped_data.keys():
                 continue

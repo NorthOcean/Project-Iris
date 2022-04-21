@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2019-12-20 09:39:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:01:47
+@LastEditTime: 2022-04-21 11:00:27
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,7 +10,6 @@
 
 import os
 import re
-from typing import Dict, List, Tuple
 
 import tensorflow as tf
 
@@ -43,8 +42,8 @@ class Model(base.Model):
         def __init__(self, Args, training_structure, *args, **kwargs):
             super().__init__(Args, training_structure, *args, **kwargs)
 
-            self.fc = keras.layers.Dense(64, tf.nn.relu)
-            self.fc1 = keras.layers.Dense(2)
+            self.fc = tf.keras.layers.Dense(64, tf.nn.relu)
+            self.fc1 = tf.keras.layers.Dense(2)
     ```
 
     Then define your model's pipeline in `call` method:
@@ -58,11 +57,11 @@ class Model(base.Model):
     --------------
     ```python
     # forward model with pre-process and post-process
-    (method) forward: (self: Model, model_inputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
+    (method) forward: (self: Model, model_inputs: list[Tensor], training=None, *args, **kwargs) -> list[Tensor]
 
     # Pre/Post-processes
-    (method) pre_process: (self: Model, tensors: List[Tensor], training=None, use_new_para_dict=True, *args, **kwargs) -> List[Tensor]
-    (method) post_process: (self: Model, outputs: List[Tensor], training=None, *args, **kwargs) -> List[Tensor]
+    (method) pre_process: (self: Model, tensors: list[Tensor], training=None, use_new_para_dict=True, *args, **kwargs) -> list[Tensor]
+    (method) post_process: (self: Model, outputs: list[Tensor], training=None, *args, **kwargs) -> list[Tensor]
     ```
     """
 
@@ -128,10 +127,10 @@ class Model(base.Model):
             elif re.match('.*[Uu][Pp].*[Ss][Aa][Mm].*', item):
                 self._preprocess_para[UPSAMPLING] = kwargs[item]
 
-    def pre_process(self, tensors: List[tf.Tensor],
+    def pre_process(self, tensors: list[tf.Tensor],
                     training=None,
                     use_new_para_dict=True,
-                    *args, **kwargs) -> List[tf.Tensor]:
+                    *args, **kwargs) -> list[tf.Tensor]:
 
         trajs = tensors[0]
         items = [MOVE, ROTATE, SCALE, UPSAMPLING]
@@ -147,9 +146,9 @@ class Model(base.Model):
 
         return process.update((trajs,), tensors)
 
-    def post_process(self, outputs: List[tf.Tensor],
+    def post_process(self, outputs: list[tf.Tensor],
                      training=None,
-                     *args, **kwargs) -> List[tf.Tensor]:
+                     *args, **kwargs) -> list[tf.Tensor]:
 
         trajs = outputs[0]
         items = [MOVE, ROTATE, SCALE, UPSAMPLING]
@@ -176,7 +175,7 @@ class Structure(base.Structure):
     metrics in the `__init__` method:
     ```python
     class MyPredictionStructure(Structure):
-        def __init__(self, Args: List[str], *args, **kwargs):
+        def __init__(self, Args: list[str], *args, **kwargs):
             super().__init__(Args, *args, **kwargs)
 
             # model inputs and groundtruths
@@ -195,7 +194,7 @@ class Structure(base.Structure):
     These methods must be rewritten:
     ```python
     # create new model
-    def create_model(self, *args, **kwargs) -> Tuple[Model, keras.optimizers.Optimizer]:
+    def create_model(self, *args, **kwargs) -> tuple[Model, tf.keras.optimizers.Optimizer]:
         ...
     ```
 
@@ -203,7 +202,7 @@ class Structure(base.Structure):
     --------------
     ```python
     # Load args
-    (method) load_args: (self: Structure, current_args: List[str], load_path: str) -> (Namespace | List[str])
+    (method) load_args: (self: Structure, current_args: list[str], load_path: str) -> (Namespace | list[str])
 
     # ----Models----
     # Load model from check point
@@ -218,29 +217,29 @@ class Structure(base.Structure):
 
     # Assign loss functions and metrics
     (method) set_loss: (self: Structure, *args) -> None
-    (method) set_loss_weights: (self: Structure, *args: List[float]) -> None
+    (method) set_loss_weights: (self: Structure, *args: list[float]) -> None
     (method) set_metrics: (self: Structure, *args) -> None
-    (method) set_metrics_weights: (self: Structure, *args: List[float]) -> None
+    (method) set_metrics_weights: (self: Structure, *args: list[float]) -> None
 
     # Create model
-    (method) create_model: (self: Structure, *args, **kwargs) -> Tuple[Model, OptimizerV2]
+    (method) create_model: (self: Structure, *args, **kwargs) -> tuple[Model, OptimizerV2]
 
     # Forward process
-    (method) model_forward: (self: Structure, model_inputs: Tuple[Tensor], training=None, *args, **kwargs) -> Tuple[Tensor]
+    (method) model_forward: (self: Structure, model_inputs: tuple[Tensor], training=None, *args, **kwargs) -> tuple[Tensor]
 
     # ----Datasets----
     # Load train/test/forward dataset
-    (method) load_dataset: (self: Structure, *args, **kwargs) -> Tuple[DatasetV2, DatasetV2]
+    (method) load_dataset: (self: Structure, *args, **kwargs) -> tuple[DatasetV2, DatasetV2]
     (method) load_test_dataset: (self: Structure, *args, **kwargs) -> DatasetV2
     (method) load_forward_dataset: (self: Structure, *args, **kwargs) -> DatasetV2
 
     # ----Training and Test----
     # Loss Functions and Metrics
-    (method) loss: (self: Structure, outputs, labels, loss_name_list: List[str] = ['L2'], *args, **kwargs) -> Tuple[Tensor, Dict[str, Tensor]]
-    (method) metrics: (self: Structure, outputs, labels, loss_name_list=['L2_val'], *args, **kwargs) -> Tuple[Tensor, Dict[str, Tensor]]
+    (method) loss: (self: Structure, outputs, labels, loss_name_list: list[str] = ['L2'], *args, **kwargs) -> tuple[Tensor, dict[str, Tensor]]
+    (method) metrics: (self: Structure, outputs, labels, loss_name_list=['L2_val'], *args, **kwargs) -> tuple[Tensor, dict[str, Tensor]]
 
     # Gradient densest operation
-    (method) gradient_operations: (self: Structure, model_inputs, gt, loss_move_average: Variable, **kwargs) -> Tuple[Tensor, Dict[str, Tensor], Tensor]
+    (method) gradient_operations: (self: Structure, model_inputs, gt, loss_move_average: Variable, **kwargs) -> tuple[Tensor, dict[str, Tensor], Tensor]
 
     # Entrance of train or test
     (method) run_train_or_test: (self: Structure) -> None
@@ -255,14 +254,14 @@ class Structure(base.Structure):
     (method) forward: (self: Structure, dataset: DatasetV2, return_numpy=True, **kwargs) -> ndarray
 
     # Call
-    (method) __call__: (self: Structure, model_inputs, return_numpy=True) -> Tuple[ndarray, list]
+    (method) __call__: (self: Structure, model_inputs, return_numpy=True) -> tuple[ndarray, list]
     ```
     """
 
     agent_type = Agent
     DM_type = DatasetsManager
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = PredictionArgs(Args)
@@ -337,13 +336,13 @@ class Structure(base.Structure):
     def set_loss(self, *args):
         self.loss_list = [arg for arg in args]
 
-    def set_loss_weights(self, *args: List[float]):
+    def set_loss_weights(self, *args: list[float]):
         self.loss_weights = [arg for arg in args]
 
     def set_metrics(self, *args):
         self.metrics_list = [arg for arg in args]
 
-    def set_metrics_weights(self, *args: List[float]):
+    def set_metrics_weights(self, *args: list[float]):
         self.metrics_weights = [arg for arg in args]
 
     def run_test(self):
@@ -385,11 +384,11 @@ class Structure(base.Structure):
 
                 self.test(agents=agents, dataset_name=self.args.test_set)
 
-    def get_inputs_from_agents(self, input_agents: List[agent_type]) -> Tuple[List[tf.Tensor], tf.Tensor]:
+    def get_inputs_from_agents(self, input_agents: list[agent_type]) -> tuple[list[tf.Tensor], tf.Tensor]:
         """
         Get inputs for models who only takes `obs_traj` as input.
 
-        :param input_agents: a list of input agents, type = `List[agent_type]`
+        :param input_agents: a list of input agents, type = `list[agent_type]`
         :return model_inputs: a list of traj tensor, `len(model_inputs) = 1`
         :return gt: ground truth trajs, type = `tf.Tensor`
         """
@@ -401,7 +400,7 @@ class Structure(base.Structure):
         model_inputs.append(gt)
         return tuple(model_inputs)
 
-    def load_dataset(self, *args, **kwargs) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+    def load_dataset(self, *args, **kwargs) -> tuple[tf.data.Dataset, tf.data.Dataset]:
         """
         Load training and val dataset.
 
@@ -431,7 +430,7 @@ class Structure(base.Structure):
         dataset_test = tf.data.Dataset.from_tensor_slices(test_tensor)
         return dataset_test
 
-    def load_forward_dataset(self, model_inputs: List[agent_type],
+    def load_forward_dataset(self, model_inputs: list[agent_type],
                              *args, **kwargs) -> tf.data.Dataset:
         """
         Load forward dataset.
@@ -443,9 +442,9 @@ class Structure(base.Structure):
                         for type_name in self.model_inputs]
         return tf.data.Dataset.from_tensor_slices(tuple(model_inputs))
 
-    def loss(self, outputs: List[tf.Tensor],
+    def loss(self, outputs: list[tf.Tensor],
              labels: tf.Tensor,
-             *args, **kwargs) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+             *args, **kwargs) -> tuple[tf.Tensor, dict[str, tf.Tensor]]:
         """
         Train loss, use ADE by default.
 
@@ -462,9 +461,9 @@ class Structure(base.Structure):
                           mode='loss',
                           *args, **kwargs)
 
-    def metrics(self, outputs: List[tf.Tensor],
+    def metrics(self, outputs: list[tf.Tensor],
                 labels: tf.Tensor,
-                *args, **kwargs) -> Tuple[tf.Tensor, Dict[str, tf.Tensor]]:
+                *args, **kwargs) -> tuple[tf.Tensor, dict[str, tf.Tensor]]:
         """
         Metrics, use [ADE, FDE] by default.
         Use ADE as the validation item.
@@ -484,8 +483,8 @@ class Structure(base.Structure):
     def print_dataset_info(self):
         self.print_parameters(title='dataset options')
 
-    def write_test_results(self, model_outputs: List[tf.Tensor],
-                           agents: Dict[str, List[agent_type]],
+    def write_test_results(self, model_outputs: list[tf.Tensor],
+                           agents: dict[str, list[agent_type]],
                            *args, **kwargs):
 
         testset_name = kwargs['dataset_name']

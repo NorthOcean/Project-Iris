@@ -2,19 +2,16 @@
 @Author: Conghao Wong
 @Date: 2021-12-21 15:17:38
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:05:40
+@LastEditTime: 2022-04-21 10:45:18
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import Tuple
-
 import tensorflow as tf
-from tensorflow import keras
 
 
-class FFTlayer(keras.layers.Layer):
+class FFTlayer(tf.keras.layers.Layer):
     """
     Calculate DFT for the batch inputs.
     """
@@ -22,9 +19,9 @@ class FFTlayer(keras.layers.Layer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.concat = keras.layers.Concatenate()
+        self.concat = tf.keras.layers.Concatenate()
 
-    def call(self, inputs: tf.Tensor, **kwargs) -> Tuple[tf.Tensor, tf.Tensor]:
+    def call(self, inputs: tf.Tensor, **kwargs) -> tuple[tf.Tensor, tf.Tensor]:
         """
         :param inputs: batch inputs, shape = (batch, N, M)
         :return fft: fft results (r and i), shape = ((batch, N, M), (batch, N, M))
@@ -40,7 +37,7 @@ class FFTlayer(keras.layers.Layer):
         return (tf.math.real(ffts), tf.math.imag(ffts))
 
 
-class IFFTlayer(keras.layers.Layer):
+class IFFTlayer(tf.keras.layers.Layer):
     """
     Calculate IDFT for the batch inputs
     """
@@ -48,7 +45,7 @@ class IFFTlayer(keras.layers.Layer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.concat = keras.layers.Concatenate()
+        self.concat = tf.keras.layers.Concatenate()
 
     def call(self, real: tf.Tensor, imag: tf.Tensor, **kwargs) -> tf.Tensor:
         """

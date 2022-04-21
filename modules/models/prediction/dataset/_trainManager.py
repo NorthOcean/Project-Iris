@@ -2,15 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-01-08 09:52:34
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-29 15:51:57
+@LastEditTime: 2022-04-21 11:00:46
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import os
-import random
-from typing import Dict, List, Tuple
 
 import cv2
 import numpy as np
@@ -47,7 +45,7 @@ class DatasetManager(base.DatasetManager):
     --------------
     ```python
     # Sample train data (a list of `PredictionAgent` objects) from dataset
-    (method) sample_train_data: (self: DatasetManager) -> List[PredictionAgent]
+    (method) sample_train_data: (self: DatasetManager) -> list[PredictionAgent]
 
     # Load dataset files
     (method) load_data: (self: DatasetManager) -> DatasetManager
@@ -81,7 +79,7 @@ class DatasetManager(base.DatasetManager):
         self.all_entire_trajectories = self._prepare_agent_data()
         return self
 
-    def sample_train_data(self) -> List[PredictionAgent]:
+    def sample_train_data(self) -> list[PredictionAgent]:
         """
         Read Dataset, load data, and make tain data
         """
@@ -145,12 +143,12 @@ class DatasetManager(base.DatasetManager):
 
         return video_neighbor_list, video_matrix, frame_list
 
-    def _load_csv(self, dataset_name) -> Tuple[Dict[int, np.ndarray], list]:
+    def _load_csv(self, dataset_name) -> tuple[dict[int, np.ndarray], list]:
         """
         Read trajectory data from csv file.
 
         :param dataset_name: name of the dataset. See Details in `datasetManager.py`
-        :return person_data: data sorted by person ids. type = `Dict[int, np.ndarray]`
+        :return person_data: data sorted by person ids. type = `dict[int, np.ndarray]`
         :return frame_list: a list of all frame indexs
         """
         dataset_dir_current = self.dataset_info.dataset_dir
@@ -175,7 +173,7 @@ class DatasetManager(base.DatasetManager):
         self.log('Load dataset {} done.'.format(csv_file_path))
         return person_data, frame_list
 
-    def _prepare_agent_data(self) -> List[EntireTrajectory]:
+    def _prepare_agent_data(self) -> list[EntireTrajectory]:
         """
         Get data of type `EntireTrajectory` from video matrix for each agent in dataset.
         """
@@ -222,7 +220,7 @@ class DatasetManager(base.DatasetManager):
                                            frame_step=frame_step,
                                            add_noise=add_noise)
 
-    def _sample_train_data(self) -> List[PredictionAgent]:
+    def _sample_train_data(self) -> list[PredictionAgent]:
         """
         Sample all train data (type = `PredictionAgent`) from all `EntireTrajectory`.
         """
@@ -268,7 +266,7 @@ class DatasetManager(base.DatasetManager):
                                                          add_noise=False))
         return train_agents
 
-    def make_maps(self, agents: List[PredictionAgent],
+    def make_maps(self, agents: list[PredictionAgent],
                   base_path: str,
                   save_map_file: str = None,
                   save_social_file: str = 'socialMap.npy',
@@ -330,11 +328,11 @@ class DatasetsManager(base.DatasetsManager):
     --------------
     ```python
     # Prepare train agents from `DatasetManager`s
-    (method) load_fromManagers: (self: DatasetsManager, dataset_managers: List[DatasetManager], mode='test') -> List[PredictionAgent]
+    (method) load_fromManagers: (self: DatasetsManager, dataset_managers: list[DatasetManager], mode='test') -> list[PredictionAgent]
 
     # Save and load agents' data
-    (method) zip_and_save: (save_dir, agents: List[PredictionAgent]) -> None
-    (method) load_and_unzip: (cls: Type[DatasetsManager], save_dir) -> List[PredictionAgent]
+    (method) zip_and_save: (save_dir, agents: list[PredictionAgent]) -> None
+    (method) load_and_unzip: (cls: Type[DatasetsManager], save_dir) -> list[PredictionAgent]
     ```
     """
 
@@ -349,8 +347,8 @@ class DatasetsManager(base.DatasetsManager):
     def args(self) -> arg_type:
         return self._args
 
-    def load_fromManagers(self, dataset_managers: List[DatasetManager],
-                          mode='test') -> List[PredictionAgent]:
+    def load_fromManagers(self, dataset_managers: list[DatasetManager],
+                          mode='test') -> list[PredictionAgent]:
         """
         Make or load train files to get train agents.
         (a list of agent managers, type = `PredictionAgent`)
@@ -423,13 +421,13 @@ class DatasetsManager(base.DatasetsManager):
             count += 1
         return all_agents
 
-    def zip_and_save(self, save_dir, agents: List[PredictionAgent]):
+    def zip_and_save(self, save_dir, agents: list[PredictionAgent]):
         save_dict = {}
         for index, agent in enumerate(agents):
             save_dict[str(index)] = agent.zip_data()
         np.savez(save_dir, **save_dict)
 
-    def load_and_unzip(self, save_dir) -> List[PredictionAgent]:
+    def load_and_unzip(self, save_dir) -> list[PredictionAgent]:
         save_dict = np.load(save_dir, allow_pickle=True)
 
         if save_dict['0'].tolist()['__version__'] < PredictionAgent.__version__:
@@ -443,11 +441,11 @@ class DatasetsManager(base.DatasetsManager):
         return [PredictionAgent().load_data(save_dict[key].tolist()) for key in save_dict.keys()]
 
     def load_maps(self, base_path: str,
-                  agents: List[PredictionAgent],
+                  agents: list[PredictionAgent],
                   map_file: str,
                   social_file: str,
                   para_file: str,
-                  centers_file: str) -> List[PredictionAgent]:
+                  centers_file: str) -> list[PredictionAgent]:
         """
         Load maps from the base folder
 

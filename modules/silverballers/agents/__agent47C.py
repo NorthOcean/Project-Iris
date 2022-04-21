@@ -2,16 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 20:27:46
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-04-13 20:51:09
+@LastEditTime: 2022-04-21 11:02:00
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
-
 import tensorflow as tf
-from tensorflow import keras
 
 from ... import applications as A
 from ... import models as M
@@ -48,18 +45,21 @@ class Agent47CModel(M.prediction.Model):
         self.set_preprocess_parameters(move=0)
 
         # Layers
+        # Trajectory encoding (with FFTs)
         self.te = TrajEncoding(self.d//2, tf.nn.relu, useFFT=True)
 
+        # Bilinear structure (outer product + pooling + fc)
         self.outer = OuterLayer(self.d//2, self.d//2, reshape=False)
-        self.pooling = keras.layers.MaxPooling2D(
+        self.pooling = tf.keras.layers.MaxPooling2D(
             pool_size=(2, 2),
             data_format='channels_first')
+        self.outer_fc = tf.keras.layers.Dense(self.d//2, tf.nn.tanh)
 
-        self.outer_fc = keras.layers.Dense(self.d//2, tf.nn.tanh)
-
+        # Random id encoding
         self.ie = TrajEncoding(self.d//2, tf.nn.tanh)
-        self.concat = keras.layers.Concatenate(axis=-1)
+        self.concat = tf.keras.layers.Concatenate(axis=-1)
 
+        # FFT layers
         self.fft = FFTlayer()
         self.ifft = IFFTlayer()
 
@@ -75,19 +75,20 @@ class Agent47CModel(M.prediction.Model):
                                include_top=False)
 
         # Trainable adj matrix and gcn layer
-        self.adj_fc = keras.layers.Dense(self.args.Kc, tf.nn.tanh)
+        # It is used to generate multi-style predictions
+        self.adj_fc = tf.keras.layers.Dense(self.args.Kc, tf.nn.tanh)
         self.gcn = GraphConv(units=self.d)
 
-        # Decoder layers
-        self.decoder_fc1 = keras.layers.Dense(self.d, tf.nn.tanh)
-        self.decoder_fc2 = keras.layers.Dense(4 * self.n_key)
-        self.decoder_reshape = keras.layers.Reshape(
+        # Decoder layers (with spectrums)
+        self.decoder_fc1 = tf.keras.layers.Dense(self.d, tf.nn.tanh)
+        self.decoder_fc2 = tf.keras.layers.Dense(4 * self.n_key)
+        self.decoder_reshape = tf.keras.layers.Reshape(
             [self.args.Kc, self.n_key, 4])
 
-    def call(self, inputs: List[tf.Tensor],
+    def call(self, inputs: list[tf.Tensor],
              training=None, mask=None):
         """
-        Run the first stage `agent47` model.
+        Run the first stage `agent47C` model.
 
         :param inputs: a list of tensors, including `trajs`
             - a batch of observed trajs, shape is `(batch, obs, 2)`
@@ -101,12 +102,14 @@ class Agent47CModel(M.prediction.Model):
         bs = trajs.shape[0]
 
         # feature embedding and encoding -> (batch, obs, d/2)
+        # uses bilinear structure to encode features
         f = self.te.call(trajs)             # (batch, obs, d/2)
         f = self.outer.call(f, f)           # (batch, obs, d/2, d/2)
         f = self.pooling(f)                 # (batch, obs, d/4, d/4)
         f = tf.reshape(f, [f.shape[0], f.shape[1], -1])
         spec_features = self.outer_fc(f)    # (batch, obs, d/2)
 
+        # Sample random predictions
         all_predictions = []
         rep_time = 1 if training else self.args.K
         for _ in range(rep_time):
@@ -115,6 +118,7 @@ class Agent47CModel(M.prediction.Model):
             id_features = self.ie.call(ids)
 
             # transformer inputs
+            # shapes are (batch, obs, d) and (batch, obs, 4)
             t_inputs = self.concat([spec_features, id_features])
             t_outputs = self.concat(self.fft.call(trajs))
 
@@ -147,7 +151,7 @@ class Agent47C(BaseAgentStructure):
     agent-handler based silverballers models.
     """
 
-    def __init__(self, Args: List[str],
+    def __init__(self, Args: list[str],
                  *args, **kwargs):
 
         super().__init__(Args, *args, **kwargs)

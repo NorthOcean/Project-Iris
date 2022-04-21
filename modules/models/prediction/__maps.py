@@ -2,13 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-07-22 11:29:36
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-05 09:26:46
+@LastEditTime: 2022-04-21 11:00:24
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 import cv2
 import numpy as np
@@ -35,7 +35,7 @@ class MapManager(base.BaseObject):
     # build guidanceMap
     >>> MapManager.build_guidance_map(
             self:MapManager,
-            agents:List[PredictionAgent],
+            agents:list[PredictionAgent],
             source=None,
             regulation=True
         ) -> np.ndarray
@@ -52,7 +52,7 @@ class MapManager(base.BaseObject):
     """
 
     def __init__(self, args: PredictionArgs,
-                 agents: List[PredictionAgent] = None,
+                 agents: list[PredictionAgent] = None,
                  init_manager=None):
         """
         init map manager
@@ -82,7 +82,7 @@ class MapManager(base.BaseObject):
         """
         return np.stack([self.W, self.b])   # (2, 2)
 
-    def init_guidance_map(self, agents: Union[List[PredictionAgent], np.ndarray]):
+    def init_guidance_map(self, agents: Union[list[PredictionAgent], np.ndarray]):
         """
         Init the trajectory map via a list of agents.
 
@@ -118,7 +118,7 @@ class MapManager(base.BaseObject):
 
         return guidance_map.astype(np.float32), W, b
 
-    def build_guidance_map(self, agents: Union[List[PredictionAgent], np.ndarray],
+    def build_guidance_map(self, agents: Union[list[PredictionAgent], np.ndarray],
                            source: np.ndarray = None,
                            save: str = None) -> np.ndarray:
         """
@@ -338,7 +338,7 @@ class MapManager(base.BaseObject):
         return new_map + source_map
 
 
-def get_trajectories(agents: List[PredictionAgent],
+def get_trajectories(agents: list[PredictionAgent],
                      return_movement=False,
                      return_destination=False,
                      destination_steps=3) -> list:

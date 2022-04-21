@@ -2,17 +2,14 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:45:53
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-08-03 09:56:44
+@LastEditTime: 2022-04-21 11:02:59
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List, Tuple
-
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 from tqdm import tqdm
 
 from .. import applications as A
@@ -62,7 +59,7 @@ class VIrisBetaModel(M.prediction.Model):
             self.points_index = tf.cast(pi, tf.float32)
 
         # Layers
-        self.concat = keras.layers.Concatenate(axis=-1)
+        self.concat = tf.keras.layers.Concatenate(axis=-1)
 
         self.fft = FFTlayer()
 
@@ -86,7 +83,7 @@ class VIrisBetaModel(M.prediction.Model):
 
         self.decoder = IFFTlayer()
 
-    def call(self, inputs: List[tf.Tensor],
+    def call(self, inputs: list[tf.Tensor],
              points: tf.Tensor,
              points_index: tf.Tensor,
              training=None, mask=None) -> tf.Tensor:
@@ -134,7 +131,7 @@ class VIrisBetaModel(M.prediction.Model):
 
         return p[:, self.args.obs_frames:, :]
 
-    def call_secondStage(self, inputs: List[tf.Tensor],
+    def call_secondStage(self, inputs: list[tf.Tensor],
                          points: tf.Tensor,
                          points_index: tf.Tensor,
                          training=None, mask=None):
@@ -192,7 +189,7 @@ class VIrisBetaModel(M.prediction.Model):
         p = tf.reshape(p, [-1, K, self.args.pred_frames, 2])
         return p
 
-    def forward(self, model_inputs: List[tf.Tensor],
+    def forward(self, model_inputs: list[tf.Tensor],
                 training=None,
                 *args, **kwargs):
 
@@ -236,7 +233,7 @@ class VIrisBeta(M.prediction.Structure):
     Training structure for the second stage `Vertical`
     """
     
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = VArgs(Args)
@@ -258,10 +255,10 @@ class VIrisBeta(M.prediction.Structure):
                                training_structure=self,
                                *args, **kwargs)
 
-        opt = keras.optimizers.Adam(self.args.lr)
+        opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def load_forward_dataset(self, model_inputs: Tuple[tf.Tensor], **kwargs):
+    def load_forward_dataset(self, model_inputs: tuple[tf.Tensor], **kwargs):
         trajs = model_inputs[0]
         maps = model_inputs[1]
         proposals = model_inputs[-1]

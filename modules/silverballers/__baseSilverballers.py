@@ -2,16 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-12-22 11:20:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-04-13 20:50:39
+@LastEditTime: 2022-04-21 11:01:42
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List
-
 import tensorflow as tf
-from tensorflow import keras
 
 from .. import applications as A
 from .. import models as M
@@ -39,7 +36,7 @@ class BaseSilverballersModel(M.prediction.Model):
         if self.linear:
             self.linear_layer = A.layers.LinearInterpolation()
 
-    def call(self, inputs: List[tf.Tensor],
+    def call(self, inputs: list[tf.Tensor],
              training=None, mask=None,
              *args, **kwargs):
 
@@ -89,7 +86,7 @@ class Silverballers(M.prediction.Structure):
     handler_model = None
     silverballer_model = BaseSilverballersModel
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         # set args
@@ -175,7 +172,7 @@ class Silverballers(M.prediction.Structure):
             training_structure=self,
             *args, **kwargs)
 
-        opt = keras.optimizers.Adam(self.args.lr)
+        opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
 
     def print_test_results(self, loss_dict, **kwargs):

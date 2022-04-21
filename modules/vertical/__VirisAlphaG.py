@@ -2,16 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-07-27 19:06:00
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:11:56
+@LastEditTime: 2022-04-21 11:02:53
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List, Tuple
-
 import tensorflow as tf
-from tensorflow import keras
 
 from .. import applications as A
 from .. import models as M
@@ -20,7 +17,7 @@ from .__layers import ContextEncoding, GraphConv, TrajEncoding
 from .__VirisAlpha import VIrisAlpha
 
 
-class VEncoder(keras.Model):
+class VEncoder(tf.keras.Model):
     """
     Encoder used in the first stage generative `Vertical-G`
     """
@@ -50,7 +47,7 @@ class VEncoder(keras.Model):
         self.gcn = GraphConv(units=128,
                              activation=None)
 
-        self.adj_fc = keras.layers.Dense(Args.Kc, tf.nn.tanh)
+        self.adj_fc = tf.keras.layers.Dense(Args.Kc, tf.nn.tanh)
 
     def call(self, trajs: tf.Tensor,
              maps: tf.Tensor,
@@ -83,7 +80,7 @@ class VEncoder(keras.Model):
                              adjMatrix=adj)
 
 
-class VDecoder(keras.Model):
+class VDecoder(tf.keras.Model):
     """
     Decoder used in the first stage generative `Vertical-G`
     """
@@ -95,12 +92,12 @@ class VDecoder(keras.Model):
         super().__init__(*args, **kwargs)
 
         # Generator layers
-        self.g1 = keras.layers.Dense(128, activation=tf.nn.relu)
+        self.g1 = tf.keras.layers.Dense(128, activation=tf.nn.relu)
 
         # Layers
-        self.fc1 = keras.layers.Dense(128, activation=tf.nn.tanh)
-        self.fc2 = keras.layers.Dense(pred_number * 2)
-        self.reshape = keras.layers.Reshape([Args.Kc, pred_number, 2])
+        self.fc1 = tf.keras.layers.Dense(128, activation=tf.nn.tanh)
+        self.fc2 = tf.keras.layers.Dense(pred_number * 2)
+        self.reshape = tf.keras.layers.Reshape([Args.Kc, pred_number, 2])
 
     def call(self, features: tf.Tensor,
              noise: tf.Tensor,
@@ -151,8 +148,8 @@ class VIrisAlphaGModel(M.prediction.Model):
         self.encoder = VEncoder(Args)
         self.decoder = VDecoder(Args, pred_number)
 
-    def call(self, inputs: List[tf.Tensor],
-             training=None, mask=None) -> Tuple[tf.Tensor, tf.Tensor]:
+    def call(self, inputs: list[tf.Tensor],
+             training=None, mask=None) -> tuple[tf.Tensor, tf.Tensor]:
         """
         Run the first stage generative `Vertical-G` model
 
@@ -191,7 +188,7 @@ class VIrisAlphaG(VIrisAlpha):
     Training structure for the generative first stage `Vertical-G`
     """
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.important_args += ['K']
@@ -202,7 +199,7 @@ class VIrisAlphaG(VIrisAlpha):
     def create_model(self, *args, **kwargs):
         return VIrisAlpha.create_model(self, VIrisAlphaGModel)
 
-    def p_loss(self, outputs: List[tf.Tensor],
+    def p_loss(self, outputs: list[tf.Tensor],
                labels: tf.Tensor = None,
                *args, **kwargs) -> tf.Tensor:
         """

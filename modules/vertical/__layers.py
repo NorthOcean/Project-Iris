@@ -2,20 +2,16 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 15:17:59
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-22 19:44:23
+@LastEditTime: 2022-04-21 11:02:31
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import Tuple
-
-import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 
 
-class FFTlayer(keras.layers.Layer):
+class FFTlayer(tf.keras.layers.Layer):
     """
     Calculate DFT for the batch inputs.
     """
@@ -23,9 +19,9 @@ class FFTlayer(keras.layers.Layer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.concat = keras.layers.Concatenate()
+        self.concat = tf.keras.layers.Concatenate()
 
-    def call(self, inputs: tf.Tensor, **kwargs) -> Tuple[tf.Tensor, tf.Tensor]:
+    def call(self, inputs: tf.Tensor, **kwargs) -> tuple[tf.Tensor, tf.Tensor]:
         """
         :param inputs: batch inputs, shape = (batch, N, M)
         :return fft: fft results (r and i), shape = ((batch, N, M), (batch, N, M))
@@ -41,7 +37,7 @@ class FFTlayer(keras.layers.Layer):
         return (tf.math.real(ffts), tf.math.imag(ffts))
 
 
-class IFFTlayer(keras.layers.Layer):
+class IFFTlayer(tf.keras.layers.Layer):
     """
     Calculate IDFT for the batch inputs
     """
@@ -49,7 +45,7 @@ class IFFTlayer(keras.layers.Layer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.concat = keras.layers.Concatenate()
+        self.concat = tf.keras.layers.Concatenate()
 
     def call(self, real: tf.Tensor, imag: tf.Tensor, **kwargs) -> tf.Tensor:
         """
@@ -75,7 +71,7 @@ class IFFTlayer(keras.layers.Layer):
         return self.concat(ffts)
 
 
-class ContextEncoding(keras.layers.Layer):
+class ContextEncoding(tf.keras.layers.Layer):
     """
     Encode context maps into the context feature
     """
@@ -94,10 +90,10 @@ class ContextEncoding(keras.layers.Layer):
 
         super().__init__(*args, **kwargs)
 
-        self.pool = keras.layers.MaxPooling2D([5, 5])
-        self.flatten = keras.layers.Flatten()
-        self.fc = keras.layers.Dense(output_channels * units, activation)
-        self.reshape = keras.layers.Reshape((output_channels, units))
+        self.pool = tf.keras.layers.MaxPooling2D([5, 5])
+        self.flatten = tf.keras.layers.Flatten()
+        self.fc = tf.keras.layers.Dense(output_channels * units, activation)
+        self.reshape = tf.keras.layers.Reshape((output_channels, units))
 
     def call(self, context_map: tf.Tensor, **kwargs) -> tf.Tensor:
         """
@@ -112,7 +108,7 @@ class ContextEncoding(keras.layers.Layer):
         return self.reshape(fc)
 
 
-class TrajEncoding(keras.layers.Layer):
+class TrajEncoding(tf.keras.layers.Layer):
     """
     Encode trajectories into the traj feature
     """
@@ -135,10 +131,10 @@ class TrajEncoding(keras.layers.Layer):
 
         if (self.useFFT):
             self.fft = FFTlayer()
-            self.concat = keras.layers.Concatenate()
-            self.fc2 = keras.layers.Dense(units, tf.nn.relu)
+            self.concat = tf.keras.layers.Concatenate()
+            self.fc2 = tf.keras.layers.Dense(units, tf.nn.relu)
 
-        self.fc1 = keras.layers.Dense(units, activation)
+        self.fc1 = tf.keras.layers.Dense(units, activation)
 
     def call(self, trajs: tf.Tensor, **kwargs) -> tf.Tensor:
         """
@@ -155,7 +151,7 @@ class TrajEncoding(keras.layers.Layer):
         return self.fc1(trajs)
 
 
-class GraphConv(keras.layers.Layer):
+class GraphConv(tf.keras.layers.Layer):
     """
     Graph conv layer
     """
@@ -171,7 +167,7 @@ class GraphConv(keras.layers.Layer):
         """
         super().__init__(*args, **kwargs)
 
-        self.fc = keras.layers.Dense(units, activation)
+        self.fc = tf.keras.layers.Dense(units, activation)
 
     def call(self, features: tf.Tensor,
              adjMatrix: tf.Tensor,

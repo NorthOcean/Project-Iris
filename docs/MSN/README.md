@@ -2,7 +2,7 @@
  * @Author: Conghao Wong
  * @Date: 2021-04-24 00:39:31
  * @LastEditors: Conghao Wong
- * @LastEditTime: 2021-11-17 11:04:07
+ * @LastEditTime: 2022-04-21 11:30:47
  * @Description: file content
  * @Github: https://github.com/conghaowoooong
  * Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,7 +10,7 @@
 
 # Codes for Multi-Style Network for Trajectory Prediction
 
-![MSN](../../figs/msn.gif)
+![MSN](./msn.gif)
 
 ---
 
@@ -25,20 +25,11 @@ We use agents' end-point plannings and their interaction context as the basis fo
 Then, we assume one by one that the target agents will plan their future behaviors according to each of these categorized styles, thus utilizing different style channels to give a series of predictions with significant style differences in parallel.
 Experiments show that the proposed MSN outperforms current state-of-the-art methods up to 10\% - 20\% quantitatively on two widely used datasets, and presents better multi-style characteristics qualitatively.
 
-![Overview](../../figs/msnoverview.png)
+![Overview](./msnoverview.png)
 
 ## Requirements
 
-The packages and versions used in our experiments include:
-
-- tqdm==4.60.0
-- biplist==1.0.3
-- pytest==6.2.5
-- numpy==1.19.3
-- matplotlib==3.4.1
-- tensorflow==2.5.0
-- opencv_python
-
+The packages and versions used in our experiments are included in the [requirements.txt](../../requirements.txt) file.
 We recommend you to install the above versions of the python packages in a virtual environment (like the `conda` environment), otherwise there *COULD* be other problems due to version conflicts.
 
 Please run the following command to install the required packages:

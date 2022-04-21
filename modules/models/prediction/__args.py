@@ -2,14 +2,14 @@
 @Author: Conghao Wong
 @Date: 2020-11-20 09:11:33
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-30 09:38:24
+@LastEditTime: 2022-04-21 11:00:19
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 from argparse import Namespace
-from typing import List, Union
+from typing import Union
 
 from .. import base
 
@@ -21,7 +21,7 @@ class PredictionArgs(base.Args):
     A set of args used in training universal prediction models
     """
 
-    def __init__(self, args: Union[Namespace, List[str]],
+    def __init__(self, args: Union[Namespace, list[str]],
                  default_args: Union[Namespace, dict] = None):
 
         super().__init__(args, default_args=default_args)

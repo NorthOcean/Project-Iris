@@ -2,17 +2,16 @@
 @Author: Conghao Wong
 @Date: 2021-12-21 15:20:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-21 15:22:00
+@LastEditTime: 2022-04-21 10:52:00
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import tensorflow as tf
-from tensorflow import keras
 
 
-class GraphConv(keras.layers.Layer):
+class GraphConv(tf.keras.layers.Layer):
     """
     Graph conv layer
     """
@@ -28,7 +27,7 @@ class GraphConv(keras.layers.Layer):
         """
         super().__init__(*args, **kwargs)
 
-        self.fc = keras.layers.Dense(units, activation)
+        self.fc = tf.keras.layers.Dense(units, activation)
 
     def call(self, features: tf.Tensor,
              adjMatrix: tf.Tensor,

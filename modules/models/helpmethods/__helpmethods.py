@@ -12,11 +12,9 @@ __all__ = ['dir_check', 'softmax', 'predict_linear_for_person',
            'GraphConv_layer', 'GraphConv_func', 'BatchIndex', ]
 
 import os
-from typing import Dict, List, Tuple
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 
 
 def dir_check(target_dir: str) -> str:
@@ -68,13 +66,13 @@ def predict_linear_for_person(position, time_pred, different_weights=0.95) -> np
 
 
 def GraphConv_layer(output_units, activation=None):
-    return keras.layers.Dense(output_units, activation=activation)
+    return tf.keras.layers.Dense(output_units, activation=activation)
 
 
 def GraphConv_func(features, A, output_units=64, activation=None, layer=None):
     dot = tf.matmul(A, features)
     if layer == None:
-        res = keras.layers.Dense(output_units, activation=activation)(dot)
+        res = tf.keras.layers.Dense(output_units, activation=activation)(dot)
     else:
         res = layer(dot)
     return res

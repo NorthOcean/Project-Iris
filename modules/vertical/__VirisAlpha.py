@@ -2,17 +2,13 @@
 @Author: Conghao Wong
 @Date: 2021-07-08 20:58:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:11:52
+@LastEditTime: 2022-04-21 11:02:50
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import List, Tuple
-
-import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 
 from .. import applications as A
 from .. import models as M
@@ -43,7 +39,7 @@ class VIrisAlphaModel(M.prediction.Model):
         self.n_pred = pred_number
 
         # Layers
-        self.concat = keras.layers.Concatenate(axis=-1)
+        self.concat = tf.keras.layers.Concatenate(axis=-1)
 
         self.te = TrajEncoding(units=64,
                                activation=tf.nn.tanh,
@@ -66,14 +62,14 @@ class VIrisAlphaModel(M.prediction.Model):
         self.gcn = GraphConv(units=128,
                              activation=None)
 
-        self.adj_fc = keras.layers.Dense(Args.Kc, tf.nn.tanh)
+        self.adj_fc = tf.keras.layers.Dense(Args.Kc, tf.nn.tanh)
 
-        self.fc1 = keras.layers.Dense(128, activation=tf.nn.tanh)
-        self.fc2 = keras.layers.Dense(self.n_pred * 2)
+        self.fc1 = tf.keras.layers.Dense(128, activation=tf.nn.tanh)
+        self.fc2 = tf.keras.layers.Dense(self.n_pred * 2)
 
-        self.reshape = keras.layers.Reshape([Args.Kc, self.n_pred, 2])
+        self.reshape = tf.keras.layers.Reshape([Args.Kc, self.n_pred, 2])
 
-    def call(self, inputs: List[tf.Tensor],
+    def call(self, inputs: list[tf.Tensor],
              training=None, mask=None) -> tf.Tensor:
         """
         Run the first stage deterministic  `Vertical-D` model
@@ -120,7 +116,7 @@ class VIrisAlpha(M.prediction.Structure):
     Training structure for the deterministic first stage `Vertical-D`
     """
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         self.args = VArgs(Args)
@@ -158,10 +154,10 @@ class VIrisAlpha(M.prediction.Structure):
                            training_structure=self,
                            *args, **kwargs)
 
-        opt = keras.optimizers.Adam(self.args.lr)
+        opt = tf.keras.optimizers.Adam(self.args.lr)
         return model, opt
 
-    def l2_loss(self, outputs: List[tf.Tensor],
+    def l2_loss(self, outputs: list[tf.Tensor],
                 labels: tf.Tensor,
                 *args, **kwargs) -> tf.Tensor:
         """
@@ -170,7 +166,7 @@ class VIrisAlpha(M.prediction.Structure):
         labels_pickled = tf.gather(labels, self.p_index, axis=1)
         return M.prediction.loss.ADE(outputs[0], labels_pickled)
 
-    def min_FDE(self, outputs: List[tf.Tensor],
+    def min_FDE(self, outputs: list[tf.Tensor],
                 labels: tf.Tensor,
                 *args, **kwargs) -> tf.Tensor:
         """

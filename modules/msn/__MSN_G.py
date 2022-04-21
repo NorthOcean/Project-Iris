@@ -2,18 +2,14 @@
 @Author: Conghao Wong
 @Date: 2021-06-24 09:14:08
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:10:31
+@LastEditTime: 2022-04-21 11:01:31
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from typing import Dict, List, Tuple
-
-import numpy as np
 import tensorflow as tf
 from modules.models.helpmethods import BatchIndex
-from tensorflow import keras as keras
 from tqdm import tqdm
 
 from .__alpha import MSNAlpha, MSNAlphaModel
@@ -30,9 +26,9 @@ class _MSNAlphaModelPlus(MSNAlphaModel):
     def __init__(self, Args, training_structure=None, *args, **kwargs):
         super().__init__(Args, training_structure=training_structure, *args, **kwargs)
 
-    def post_process(self, outputs: Tuple[tf.Tensor],
+    def post_process(self, outputs: tuple[tf.Tensor],
                      training=None,
-                     **kwargs) -> Tuple[tf.Tensor]:
+                     **kwargs) -> tuple[tf.Tensor]:
 
         # shape = [(batch, K, 2)]
         outputs = super().post_process(outputs, training=training, **kwargs)
@@ -125,7 +121,7 @@ class MSN_G(MSNAlpha):
     beta_model = MSNBeta_G
     gamma_model = MSNBeta_D
 
-    def __init__(self, Args: List[str], *args, **kwargs):
+    def __init__(self, Args: list[str], *args, **kwargs):
         super().__init__(Args, *args, **kwargs)
 
         # set inputs and groundtruths
