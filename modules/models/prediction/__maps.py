@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-07-22 11:29:36
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-04-21 11:00:24
+@LastEditTime: 2022-05-03 10:47:01
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -19,7 +19,7 @@ from .__args import PredictionArgs
 from .__traj import EntireTrajectory
 from .__utils import activation, calculate_cosine, calculate_length
 
-MASK = cv2.imread('./mask_circle.png')[:, :, 0]/50
+MASK = cv2.imread('./figures/mask_circle.png')[:, :, 0]/50
 MASKS = {}
 
 

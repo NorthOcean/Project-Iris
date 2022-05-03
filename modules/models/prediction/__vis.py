@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2020-08-20 23:05:05
 @LastEditors: Conghao Wong
-@LastEditTime: 2022-04-21 11:00:43
+@LastEditTime: 2022-05-03 10:37:05
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -16,10 +16,10 @@ from .. import base
 from .__agent import PredictionAgent
 
 SMALL_POINTS = True
-OBS_IMAGE = './vis_pngs/obs_small.png' if SMALL_POINTS else './vis_pngs/obs.png'
-GT_IMAGE = './vis_pngs/gt_small.png' if SMALL_POINTS else './vis_pngs/gt.png'
-PRED_IMAGE = './vis_pngs/pred_small.png' if SMALL_POINTS else './vis_pngs/pred.png'
-DISTRIBUTION_IMAGE = './vis_pngs/dis.png'
+OBS_IMAGE = './figures/obs_small.png' if SMALL_POINTS else './figures/obs.png'
+GT_IMAGE = './figures/gt_small.png' if SMALL_POINTS else './figures/gt.png'
+PRED_IMAGE = './figures/pred_small.png' if SMALL_POINTS else './figures/pred.png'
+DISTRIBUTION_IMAGE = './figures/dis.png'
 
 
 class TrajVisualization(base.Visualization):
