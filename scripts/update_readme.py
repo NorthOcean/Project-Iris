@@ -2,22 +2,51 @@
 @Author: Conghao Wong
 @Date: 2021-08-05 15:26:57
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-11-17 10:33:56
+@LastEditTime: 2022-04-21 11:13:00
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
 import re
-from typing import List
-
-from read_comments import read_comments
 
 FLAG = '<!-- DO NOT CHANGE THIS LINE -->'
 TARGET_FILE = './docs/{}/README.md'
+MAX_SPACE = 20
 
 
-def update(md_file, files: List[str], titles: List[str]):
+def read_comments(file) -> list[str]:
+    with open(file, 'r') as f:
+        lines = f.readlines()
+
+    lines = ''.join(lines)
+    args = re.findall('@property[^@]*', lines)
+
+    results = []
+    for arg in args:
+        name = re.findall('(def )(.+)(\()', arg)[0][1]
+        dtype = re.findall('(-> )(.*)(:)', arg)[0][1]
+        changable = re.findall('(changeable=)(.*)(\))', arg)[0][1]
+        default = re.findall('(, )(.*)(, ch)', arg)[0][1]
+        comments = re.findall('(""")([\S\s]+)(""")', arg)[0][1]
+        comments = comments.replace('\n', ' ')
+        for _ in range(MAX_SPACE):
+            comments = comments.replace('  ', ' ')
+
+        comments = re.findall('( *)(.*)( *)', comments)[0][1]
+
+        if comments.endswith('. '):
+            comments = comments[:-1]
+
+        s = '- `--{}`, type=`{}`, changeable=`{}`.\n  {}\n  The default value is `{}`.'.format(
+            name, dtype, changable, comments, default)
+        results.append(s + '\n')
+        print(s)
+
+    return results
+
+
+def update(md_file, files: list[str], titles: list[str]):
 
     new_lines = []
     for f, title in zip(files, titles):
@@ -44,10 +73,10 @@ def update(md_file, files: List[str], titles: List[str]):
 
 
 if __name__ == '__main__':
-    for model in ['MSN', 'Vertical']:
-        files = ['./modules/models/_base/args/args.py',
-                 './modules/models/_prediction/args.py',
-                 './modules/{}/_args.py'.format(model)]
+    for model in ['MSN', 'Vertical', 'Silverballers']:
+        files = ['./modules/models/base/__args/args.py',
+                 './modules/models/prediction/__args.py',
+                 './modules/{}/__args.py'.format(model)]
         titles = ['Basic args',
                   'Prediction args',
                   '{} args'.format(model)]

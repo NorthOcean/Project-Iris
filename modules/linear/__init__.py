@@ -1,12 +1,11 @@
 """
 @Author: Conghao Wong
-@Date: 2021-04-30 15:39:14
+@Date: 2021-09-16 20:02:48
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-12-31 10:07:53
+@LastEditTime: 2021-09-16 20:02:48
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
 """
 
-from . import layers
-from .__transformer._transformer import Transformer, TransformerEncoder
+from .__linear import LinearModel, LinearStructure

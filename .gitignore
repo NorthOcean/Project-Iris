@@ -23,9 +23,8 @@ vislogs
 __pycache__
 
 # test results
-pretrained_models
-VisualTrajs
-online_vis
+weights
+summary
 
 # others
 annotations.txt

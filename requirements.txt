@@ -1,7 +1,8 @@
-tqdm==4.60.0
+tqdm
 biplist==1.0.3
-pytest==6.2.5
-numpy==1.19.3
-matplotlib==3.4.1
-tensorflow==2.5.0
+pytest
+numpy==1.21.5
+matplotlib
+tensorflow==2.8.0
+keras==2.8.0
 opencv_python

@@ -2,7 +2,7 @@
 @Author: Conghao Wong
 @Date: 2021-09-16 20:00:49
 @LastEditors: Conghao Wong
-@LastEditTime: 2021-09-17 14:51:22
+@LastEditTime: 2022-04-21 10:58:55
 @Description: file content
 @Github: https://github.com/conghaowoooong
 @Copyright 2021 Conghao Wong, All Rights Reserved.
@@ -10,8 +10,6 @@
 
 import os
 import shutil
-from typing import List
-
 
 from main import train_or_test
 from modules import models as M
@@ -60,7 +58,7 @@ class TestClass():
                             '--loada', './.github/workflows/test_weights/va_zara1',
                             '--loadb', 'l'])
 
-    def run_with_args(self, args: List[str]):
+    def run_with_args(self, args: list[str]):
         _arg = M.prediction.PredictionArgs(['null.py'] + args)
         train_or_test(_arg, force_args=args)
 
